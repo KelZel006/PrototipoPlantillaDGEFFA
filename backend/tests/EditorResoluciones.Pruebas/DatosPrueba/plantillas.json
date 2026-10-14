@@ -1,0 +1,24 @@
+[
+  {
+    "id": "PLA-001",
+    "version": 1,
+    "nombre": "Aprobación – cooperación bilateral (prueba)",
+    "rubroId": "RUB-001",
+    "subRubroId": "SUB-001",
+    "tipoDocumentoId": "TDO-001",
+    "estado": "Borrador",
+    "descripcion": "Plantilla de prueba con párrafos en las tres secciones.",
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PLA-002",
+    "version": 1,
+    "nombre": "Denegación – asociaciones civiles (prueba)",
+    "rubroId": "RUB-002",
+    "subRubroId": "SUB-003",
+    "tipoDocumentoId": "TDO-002",
+    "estado": "Borrador",
+    "descripcion": "Plantilla de prueba sin párrafos todavía.",
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  }
+]

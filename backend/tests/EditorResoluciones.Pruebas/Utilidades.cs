@@ -30,8 +30,14 @@ public sealed class DirectorioTemporal : IDisposable
 
 public static class Rutas
 {
-    /// <summary>Carpeta real de datos de prueba iniciales del proyecto de la API.</summary>
+    /// <summary>
+    /// Semilla de la aplicación (backend/EditorResoluciones.Api/DatosSemilla). Puede cambiar con el uso,
+    /// por eso solo se le aplican pruebas de coherencia que no dependen de su contenido exacto.
+    /// </summary>
     public static string DatosSemilla { get; } = BuscarDatosSemilla();
+
+    /// <summary>Copia fija de los datos de prueba que usan las pruebas de comportamiento (no cambia con el uso).</summary>
+    public static string DatosPrueba { get; } = Path.Combine(AppContext.BaseDirectory, "DatosPrueba");
 
     private static string BuscarDatosSemilla()
     {
@@ -52,12 +58,12 @@ public static class Rutas
 }
 
 /// <summary>API en memoria que lee y escribe en una carpeta de datos indicada (copiada de la semilla).</summary>
-public sealed class FabricaApi(string directorioDatos) : WebApplicationFactory<Program>
+public sealed class FabricaApi(string directorioDatos, string? semilla = null) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("AlmacenJson:Directorio", directorioDatos);
-        builder.UseSetting("AlmacenJson:DirectorioSemilla", Rutas.DatosSemilla);
+        builder.UseSetting("AlmacenJson:DirectorioSemilla", semilla ?? Rutas.DatosPrueba);
     }
 }

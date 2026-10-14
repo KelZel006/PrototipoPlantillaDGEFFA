@@ -1,1 +1,373 @@
-[]
+[
+  {
+    "id": "HIS-E319207063",
+    "version": 1,
+    "fecha": "2026-10-14T07:40:54.2044855+00:00",
+    "usuario": "usuario.prueba",
+    "coleccion": "parrafos",
+    "entidadId": "PAR-1E01245CC6",
+    "accion": "Creacion",
+    "versionEntidad": 1,
+    "nuevo": {
+      "id": "PAR-1E01245CC6",
+      "version": 1,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 4,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "esta es una prueba para el beneficiario "
+              },
+              {
+                "type": "campo",
+                "attrs": {
+                  "campoId": "beneficiario"
+                }
+              },
+              {
+                "type": "text",
+                "text": " y se requiere hacer el "
+              },
+              {
+                "type": "campo",
+                "attrs": {
+                  "campoId": "numero_solicitud"
+                }
+              },
+              {
+                "type": "text",
+                "text": "  ejercicio correspondiente"
+              }
+            ]
+          }
+        ]
+      },
+      "activo": true,
+      "mostrarSoloSiCumple": true,
+      "condicion": {
+        "operadorLogico": "O",
+        "reglas": [
+          {
+            "campoId": "beneficiario",
+            "operador": "IgualA",
+            "valor": "Beneficiario Ficticio Dos (prueba)"
+          }
+        ],
+        "grupos": []
+      },
+      "camposUsados": [
+        "beneficiario",
+        "numero_solicitud"
+      ],
+      "fechaModificacion": "2026-10-14T07:40:53.9498123+00:00"
+    }
+  },
+  {
+    "id": "HIS-55606D78D2",
+    "version": 1,
+    "fecha": "2026-10-14T07:41:27.4967067+00:00",
+    "usuario": "usuario.prueba",
+    "coleccion": "parrafos",
+    "entidadId": "PAR-003",
+    "accion": "Actualizacion",
+    "versionEntidad": 2,
+    "anterior": {
+      "id": "PAR-003",
+      "version": 1,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 2,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+              }
+            ]
+          }
+        ]
+      },
+      "activo": true,
+      "mostrarSoloSiCumple": false,
+      "camposUsados": [],
+      "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    },
+    "nuevo": {
+      "id": "PAR-003",
+      "version": 2,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 2,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+              }
+            ]
+          }
+        ]
+      },
+      "activo": false,
+      "mostrarSoloSiCumple": false,
+      "camposUsados": [],
+      "fechaModificacion": "2026-10-14T07:41:27.4864652+00:00"
+    }
+  },
+  {
+    "id": "HIS-B96D7DCAD7",
+    "version": 1,
+    "fecha": "2026-10-14T07:41:28.8838159+00:00",
+    "usuario": "usuario.prueba",
+    "coleccion": "parrafos",
+    "entidadId": "PAR-003",
+    "accion": "Actualizacion",
+    "versionEntidad": 3,
+    "anterior": {
+      "id": "PAR-003",
+      "version": 2,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 2,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+              }
+            ]
+          }
+        ]
+      },
+      "activo": false,
+      "mostrarSoloSiCumple": false,
+      "camposUsados": [],
+      "fechaModificacion": "2026-10-14T07:41:27.4864652+00:00"
+    },
+    "nuevo": {
+      "id": "PAR-003",
+      "version": 3,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 2,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+              }
+            ]
+          }
+        ]
+      },
+      "activo": true,
+      "mostrarSoloSiCumple": false,
+      "camposUsados": [],
+      "fechaModificacion": "2026-10-14T07:41:28.8757399+00:00"
+    }
+  },
+  {
+    "id": "HIS-3F39386F56",
+    "version": 1,
+    "fecha": "2026-10-14T07:42:24.1800164+00:00",
+    "usuario": "usuario.prueba",
+    "coleccion": "parrafos",
+    "entidadId": "PAR-004",
+    "accion": "Actualizacion",
+    "versionEntidad": 2,
+    "anterior": {
+      "id": "PAR-004",
+      "version": 1,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 3,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que el monto de exoneración solicitado asciende a "
+              },
+              {
+                "type": "campo",
+                "attrs": {
+                  "campoId": "monto_exoneracion"
+                }
+              },
+              {
+                "type": "text",
+                "text": " y requiere revisión adicional (texto de prueba)."
+              }
+            ]
+          }
+        ]
+      },
+      "activo": true,
+      "mostrarSoloSiCumple": true,
+      "condicion": {
+        "operadorLogico": "O",
+        "reglas": [
+          {
+            "campoId": "monto_exoneracion",
+            "operador": "MayorQue",
+            "valor": "100000"
+          },
+          {
+            "campoId": "tipo_beneficio",
+            "operador": "Contiene",
+            "valor": "Importación"
+          }
+        ],
+        "grupos": []
+      },
+      "camposUsados": [
+        "monto_exoneracion"
+      ],
+      "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    },
+    "nuevo": {
+      "id": "PAR-004",
+      "version": 2,
+      "plantillaId": "PLA-001",
+      "seccion": "Considerando",
+      "orden": 3,
+      "contenido": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Que el "
+              },
+              {
+                "type": "text",
+                "text": "monto de exoneración",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " solicitado asciende a"
+              },
+              {
+                "type": "text",
+                "text": " ",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "campo",
+                "attrs": {
+                  "campoId": "monto_exoneracion"
+                },
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " ",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "y requiere revisión adicional (texto de prueba)."
+              },
+              {
+                "type": "text",
+                "text": " ",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "campo",
+                "attrs": {
+                  "campoId": "fecha_resolucion"
+                },
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " ",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "activo": true,
+      "mostrarSoloSiCumple": true,
+      "condicion": {
+        "operadorLogico": "O",
+        "reglas": [
+          {
+            "campoId": "monto_exoneracion",
+            "operador": "MayorQue",
+            "valor": "100000"
+          },
+          {
+            "campoId": "tipo_beneficio",
+            "operador": "Contiene",
+            "valor": "Importación"
+          }
+        ],
+        "grupos": []
+      },
+      "camposUsados": [
+        "monto_exoneracion",
+        "fecha_resolucion"
+      ],
+      "fechaModificacion": "2026-10-14T07:42:24.1495052+00:00"
+    }
+  }
+]

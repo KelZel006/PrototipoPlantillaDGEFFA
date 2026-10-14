@@ -16,12 +16,12 @@
           "content": [
             {
               "type": "text",
+              "text": "RESOLUCIÓN DE PRUEBA No. ",
               "marks": [
                 {
                   "type": "bold"
                 }
-              ],
-              "text": "RESOLUCIÓN DE PRUEBA No. "
+              ]
             },
             {
               "type": "campo",
@@ -124,7 +124,7 @@
   },
   {
     "id": "PAR-003",
-    "version": 1,
+    "version": 3,
     "plantillaId": "PLA-001",
     "seccion": "Considerando",
     "orden": 2,
@@ -145,11 +145,11 @@
     "activo": true,
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
-    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    "fechaModificacion": "2026-10-14T07:41:28.8757399+00:00"
   },
   {
     "id": "PAR-004",
-    "version": 1,
+    "version": 2,
     "plantillaId": "PLA-001",
     "seccion": "Considerando",
     "orden": 3,
@@ -161,17 +161,82 @@
           "content": [
             {
               "type": "text",
-              "text": "Que el monto de exoneración solicitado asciende a "
+              "text": "Que el "
+            },
+            {
+              "type": "text",
+              "text": "monto de exoneración",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " solicitado asciende a"
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
             },
             {
               "type": "campo",
               "attrs": {
                 "campoId": "monto_exoneracion"
-              }
+              },
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
             },
             {
               "type": "text",
-              "text": " y requiere revisión adicional (texto de prueba)."
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "y requiere revisión adicional (texto de prueba)."
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "fecha_resolucion"
+              },
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
             }
           ]
         }
@@ -196,9 +261,10 @@
       "grupos": []
     },
     "camposUsados": [
-      "monto_exoneracion"
+      "monto_exoneracion",
+      "fecha_resolucion"
     ],
-    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    "fechaModificacion": "2026-10-14T07:42:24.1495052+00:00"
   },
   {
     "id": "PAR-005",
@@ -214,12 +280,12 @@
           "content": [
             {
               "type": "text",
+              "text": "PRIMERO: ",
               "marks": [
                 {
                   "type": "bold"
                 }
-              ],
-              "text": "PRIMERO: "
+              ]
             },
             {
               "type": "text",
@@ -282,12 +348,12 @@
           "content": [
             {
               "type": "text",
+              "text": "SEGUNDO: ",
               "marks": [
                 {
                   "type": "bold"
                 }
-              ],
-              "text": "SEGUNDO: "
+              ]
             },
             {
               "type": "text",
@@ -301,5 +367,64 @@
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
     "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-1E01245CC6",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Considerando",
+    "orden": 4,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "esta es una prueba para el beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " y se requiere hacer el "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": "  ejercicio correspondiente"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "O",
+      "reglas": [
+        {
+          "campoId": "beneficiario",
+          "operador": "IgualA",
+          "valor": "Beneficiario Ficticio Dos (prueba)"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "beneficiario",
+      "numero_solicitud"
+    ],
+    "fechaModificacion": "2026-10-14T07:40:53.9498123+00:00"
   }
 ]

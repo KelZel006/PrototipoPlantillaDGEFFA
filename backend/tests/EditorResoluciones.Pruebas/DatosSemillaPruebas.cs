@@ -73,7 +73,7 @@ public class DatosSemillaPruebas
     public async Task Cada_registro_semilla_cumple_las_reglas_del_servidor()
     {
         using var datos = new DirectorioTemporal();
-        await using var fabrica = new FabricaApi(datos.Ruta);
+        await using var fabrica = new FabricaApi(datos.Ruta, Rutas.DatosSemilla);
         using var alcance = fabrica.Services.CreateScope();
 
         await ValidarColeccion<Rubro>(alcance.ServiceProvider);

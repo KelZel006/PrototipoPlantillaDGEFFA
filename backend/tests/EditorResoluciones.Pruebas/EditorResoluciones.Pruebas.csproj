@@ -25,4 +25,9 @@
     <ProjectReference Include="..\..\EditorResoluciones.Infraestructura\EditorResoluciones.Infraestructura.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Copia fija de los datos de prueba originales: las pruebas no dependen de cómo cambie DatosSemilla. -->
+    <None Update="DatosPrueba\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

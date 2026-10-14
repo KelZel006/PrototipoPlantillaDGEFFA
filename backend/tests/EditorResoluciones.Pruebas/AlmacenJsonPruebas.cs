@@ -21,7 +21,7 @@ public class AlmacenJsonPruebas
     public async Task Archivo_inexistente_con_semilla_copia_los_datos_iniciales()
     {
         using var datos = new DirectorioTemporal();
-        var almacen = Rutas.CrearAlmacen(datos.Ruta, Rutas.DatosSemilla);
+        var almacen = Rutas.CrearAlmacen(datos.Ruta, Rutas.DatosPrueba);
 
         var rubros = await almacen.LeerAsync<Rubro>("rubros");
 

@@ -1,0 +1,7 @@
+[
+  { "id": "SUB-001", "version": 1, "rubroId": "RUB-001", "nombre": "Proyectos de cooperación bilateral (prueba)", "activo": true },
+  { "id": "SUB-002", "version": 1, "rubroId": "RUB-001", "nombre": "Organismos multilaterales (prueba)", "activo": true },
+  { "id": "SUB-003", "version": 1, "rubroId": "RUB-002", "nombre": "Asociaciones civiles (prueba)", "activo": true },
+  { "id": "SUB-004", "version": 1, "rubroId": "RUB-002", "nombre": "Fundaciones (prueba)", "activo": true },
+  { "id": "SUB-005", "version": 1, "rubroId": "RUB-003", "nombre": "Maquinaria y equipo (prueba)", "activo": true }
+]

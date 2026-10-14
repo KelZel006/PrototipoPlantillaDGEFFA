@@ -73,6 +73,10 @@ En VS Code: **Terminal → Ejecutar tarea → Iniciar todo**, o en **Ejecutar y 
 - Al iniciar, la API copia cada archivo de `DatosSemilla/` a `Data/` si todavía no existe ahí. Los cambios se guardan
   en `Data/` y se conservan al reiniciar.
 - **Para volver a los datos iniciales**, detenga la API y borre la carpeta `backend/EditorResoluciones.Api/Data`.
+- Para que los datos actuales pasen a ser los iniciales, copie los `*.json` de `Data/` (sin los `.bak`) a
+  `DatosSemilla/` y súbalos al repositorio.
+- Las pruebas automáticas no usan `DatosSemilla/`: tienen su propia copia fija en
+  `backend/tests/EditorResoluciones.Pruebas/DatosPrueba/`. Así, cambiar los datos iniciales no las rompe.
 - Cada escritura deja la versión anterior del archivo como `*.json.bak`.
 - Si un archivo está dañado, la API no lo sobrescribe. Guarda una copia en `Data/cuarentena/` y responde con un error
   claro (503). Para recuperarlo, restaure el `.bak` o borre el archivo.
