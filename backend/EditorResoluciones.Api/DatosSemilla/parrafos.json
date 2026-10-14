@@ -1,0 +1,161 @@
+[
+  {
+    "id": "PAR-001",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Cabecera",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": { "textAlign": "center" },
+          "content": [
+            { "type": "text", "marks": [{ "type": "bold" }], "text": "RESOLUCIÓN DE PRUEBA No. " },
+            { "type": "campo", "attrs": { "campoId": "numero_solicitud" } }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": { "textAlign": "center" },
+          "content": [
+            { "type": "text", "text": "Documento de prueba generado con datos simulados. Sin validez oficial." }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": ["numero_solicitud"],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-002",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Considerando",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador " },
+            { "type": "campo", "attrs": { "campoId": "operador" } },
+            { "type": "text", "text": ", con número de solicitud " },
+            { "type": "campo", "attrs": { "campoId": "numero_solicitud" } },
+            { "type": "text", "text": " y correspondiente al beneficiario " },
+            { "type": "campo", "attrs": { "campoId": "beneficiario" } },
+            { "type": "text", "text": "." }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicionId": "CON-001",
+    "camposUsados": ["operador", "numero_solicitud", "beneficiario"],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-003",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Considerando",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)." }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-004",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Considerando",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Que el monto de exoneración solicitado asciende a " },
+            { "type": "campo", "attrs": { "campoId": "monto_exoneracion" } },
+            { "type": "text", "text": " y requiere revisión adicional (texto de prueba)." }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicionId": "CON-002",
+    "camposUsados": ["monto_exoneracion"],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-005",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Resuelve",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "marks": [{ "type": "bold" }], "text": "PRIMERO: " },
+            { "type": "text", "text": "Autorizar, en calidad de prueba, el beneficio solicitado por " },
+            { "type": "campo", "attrs": { "campoId": "beneficiario" } },
+            { "type": "text", "text": " en el municipio de " },
+            { "type": "campo", "attrs": { "campoId": "municipio" } },
+            { "type": "text", "text": ", departamento de " },
+            { "type": "campo", "attrs": { "campoId": "departamento" } },
+            { "type": "text", "text": "." }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": ["beneficiario", "municipio", "departamento"],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-006",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Resuelve",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "marks": [{ "type": "bold" }], "text": "SEGUNDO: " },
+            { "type": "text", "text": "Párrafo inactivo de prueba: no debe aparecer en el documento." }
+          ]
+        }
+      ]
+    },
+    "activo": false,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+  }
+]

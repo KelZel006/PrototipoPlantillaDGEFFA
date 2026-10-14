@@ -1,0 +1,65 @@
+.barra-superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-4);
+  padding: var(--espacio-3) var(--espacio-6);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.marca h1 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.marca p {
+  margin: 0;
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+}
+
+.logotipo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radio);
+  background: var(--primario);
+}
+
+.logotipo svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--espacio-5) var(--espacio-6) var(--espacio-6);
+}
+
+@media (max-width: 760px) {
+  .barra-superior {
+    flex-wrap: wrap;
+    padding: var(--espacio-3) var(--espacio-4);
+  }
+
+  .contenedor {
+    padding: var(--espacio-4);
+  }
+}

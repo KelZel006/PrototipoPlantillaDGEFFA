@@ -1,0 +1,5 @@
+[
+  { "id": "TDO-001", "version": 1, "nombre": "Resolución de aprobación (prueba)", "activo": true },
+  { "id": "TDO-002", "version": 1, "nombre": "Resolución de denegación (prueba)", "activo": true },
+  { "id": "TDO-003", "version": 1, "nombre": "Resolución de ampliación (prueba)", "activo": true }
+]

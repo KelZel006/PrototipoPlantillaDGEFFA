@@ -1,0 +1,46 @@
+<section class="tarjeta" aria-labelledby="titulo-datos">
+  <header class="encabezado-tarjeta">
+    <h2 id="titulo-datos">Datos de prueba</h2>
+    <button type="button" class="boton boton-secundario" [disabled]="cargando()" (click)="recargar()">
+      {{ cargando() ? 'Verificando…' : 'Verificar' }}
+    </button>
+  </header>
+
+  @if (error(); as mensaje) {
+    <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+  } @else if (salud(); as s) {
+    <p class="texto-secundario">
+      {{ s.almacenamiento }} ·
+      <span [class.texto-exito]="s.estado === 'correcto'" [class.texto-error]="s.estado !== 'correcto'">
+        estado {{ s.estado }}
+      </span>
+    </p>
+    <div class="tabla-desplazable">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Colección</th>
+            <th scope="col" class="numero">Registros</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (coleccion of s.colecciones; track coleccion.nombre) {
+            <tr>
+              <td><code>{{ coleccion.nombre }}</code></td>
+              <td class="numero">{{ coleccion.disponible ? coleccion.registros : '—' }}</td>
+              <td>
+                @if (coleccion.disponible) {
+                  <span class="insignia insignia-exito">Disponible</span>
+                } @else {
+                  <span class="insignia insignia-error">Error</span>
+                  <span class="detalle-error">{{ coleccion.error }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "BIE-001",
+    "version": 1,
+    "solicitudId": "SOL-002",
+    "codigoArancelario": "9999.10.01",
+    "descripcion": "Equipo de cómputo de prueba",
+    "unidadMedida": "Unidad",
+    "cantidad": 10,
+    "valorEstimado": 45000.50,
+    "esDatoPrueba": true
+  },
+  {
+    "id": "BIE-002",
+    "version": 1,
+    "solicitudId": "SOL-003",
+    "codigoArancelario": "9999.20.01",
+    "descripcion": "Excavadora ficticia modelo A",
+    "unidadMedida": "Unidad",
+    "cantidad": 2,
+    "valorEstimado": 800000.00,
+    "esDatoPrueba": true
+  },
+  {
+    "id": "BIE-003",
+    "version": 1,
+    "solicitudId": "SOL-003",
+    "codigoArancelario": "9999.20.02",
+    "descripcion": "Repuestos de prueba para maquinaria",
+    "unidadMedida": "Lote",
+    "cantidad": 1,
+    "valorEstimado": 250000.00,
+    "esDatoPrueba": true
+  },
+  {
+    "id": "BIE-004",
+    "version": 1,
+    "solicitudId": "SOL-003",
+    "codigoArancelario": "9999.30.01",
+    "descripcion": "Generador eléctrico ficticio",
+    "unidadMedida": "Unidad",
+    "cantidad": 3,
+    "valorEstimado": 150000.00,
+    "esDatoPrueba": true
+  }
+]

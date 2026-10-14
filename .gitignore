@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Datos en ejecución del almacenamiento JSON (se regeneran desde DatosSemilla)
+backend/EditorResoluciones.Api/Data/
+
+# Node / Angular (además de frontend/.gitignore)
+node_modules/
+frontend/.angular/
+frontend/dist/
+
+# Herramientas locales
+.playwright-cli/
+*.log

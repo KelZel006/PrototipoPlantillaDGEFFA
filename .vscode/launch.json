@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (depurar .NET)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "compilar backend",
+      "program": "${workspaceFolder}/backend/EditorResoluciones.Api/bin/Debug/net9.0/EditorResoluciones.Api.dll",
+      "cwd": "${workspaceFolder}/backend/EditorResoluciones.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend (depurar en Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "Frontend (ng serve)",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}/frontend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + Frontend",
+      "configurations": ["API (depurar .NET)", "Frontend (depurar en Chrome)"],
+      "stopAll": true
+    }
+  ]
+}

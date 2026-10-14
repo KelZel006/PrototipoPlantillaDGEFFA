@@ -1,0 +1,5 @@
+[
+  { "id": "RUB-001", "version": 1, "nombre": "Cooperación internacional (prueba)", "activo": true },
+  { "id": "RUB-002", "version": 1, "nombre": "Organizaciones sin fines de lucro (prueba)", "activo": true },
+  { "id": "RUB-003", "version": 1, "nombre": "Régimen de importación temporal (prueba)", "activo": true }
+]

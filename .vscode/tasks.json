@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "compilar backend",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/EditorResoluciones.sln"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "API (dotnet run)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/backend/EditorResoluciones.Api", "--launch-profile", "http"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "dotnet",
+        "pattern": { "regexp": "^x^" },
+        "background": { "activeOnStart": true, "beginsPattern": "Building|Compilando", "endsPattern": "Now listening on|Escuchando" }
+      }
+    },
+    {
+      "label": "Frontend (ng serve)",
+      "type": "shell",
+      "command": "npm start",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": { "activeOnStart": true, "beginsPattern": "Building|Changes detected", "endsPattern": "Local:|bundle generation (complete|failed)" }
+      }
+    },
+    {
+      "label": "Iniciar todo",
+      "dependsOn": ["API (dotnet run)", "Frontend (ng serve)"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "pruebas backend",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "${workspaceFolder}/EditorResoluciones.sln"],
+      "group": "test",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "pruebas frontend",
+      "type": "shell",
+      "command": "npx ng test --watch=false",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

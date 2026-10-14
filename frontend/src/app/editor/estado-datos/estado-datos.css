@@ -1,0 +1,34 @@
+.tabla-desplazable {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: var(--espacio-2) var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabla th {
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+  color: var(--texto-secundario);
+}
+
+.tabla .numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.detalle-error {
+  display: block;
+  margin-top: var(--espacio-1);
+  font-size: var(--texto-pequeno);
+  color: var(--error);
+}

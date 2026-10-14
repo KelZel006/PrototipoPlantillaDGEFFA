@@ -1,0 +1,40 @@
+.selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espacio-4);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  min-width: 0;
+}
+
+.etiqueta {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.icono {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--texto);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.aviso {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  .selector {
+    grid-template-columns: 1fr;
+  }
+}
