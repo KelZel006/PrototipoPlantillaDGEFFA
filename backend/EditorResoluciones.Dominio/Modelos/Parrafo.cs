@@ -26,8 +26,9 @@ public class Parrafo : IEntidad, IConMarcaTiempo
 
     public Seccion Seccion { get; set; }
 
-    [Range(1, 10_000, ErrorMessage = "El orden debe estar entre 1 y 10000.")]
-    public int Orden { get; set; } = 1;
+    /// <summary>Posición dentro de la sección. Con 0, el servidor coloca el párrafo al final.</summary>
+    [Range(0, 10_000, ErrorMessage = "El orden debe estar entre 0 y 10000.")]
+    public int Orden { get; set; }
 
     /// <summary>Contenido estructurado del editor (formato de documento de TipTap/ProseMirror), nunca HTML libre.</summary>
     [Required(ErrorMessage = "El contenido es obligatorio.")]
@@ -35,12 +36,16 @@ public class Parrafo : IEntidad, IConMarcaTiempo
 
     public bool Activo { get; set; } = true;
 
-    /// <summary>Si es verdadero y hay condición, el párrafo solo se muestra cuando la condición se cumple.</summary>
+    /// <summary>
+    /// Si es verdadero y hay condición, el párrafo solo se muestra cuando la condición se cumple.
+    /// Sin condición, el párrafo se muestra siempre (regla del diseño de referencia).
+    /// </summary>
     public bool MostrarSoloSiCumple { get; set; }
 
-    public string? CondicionId { get; set; }
+    /// <summary>Condición de visualización del párrafo; null si no tiene.</summary>
+    public GrupoCondiciones? Condicion { get; set; }
 
-    /// <summary>Identificadores de los campos dinámicos usados en el contenido.</summary>
+    /// <summary>Campos dinámicos insertados en el contenido. Lo calcula el servidor a partir del contenido.</summary>
     public List<string> CamposUsados { get; set; } = [];
 
     public DateTimeOffset FechaModificacion { get; set; }

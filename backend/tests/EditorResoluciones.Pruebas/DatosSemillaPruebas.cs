@@ -81,7 +81,6 @@ public class DatosSemillaPruebas
         await ValidarColeccion<TipoDocumento>(alcance.ServiceProvider);
         await ValidarColeccion<Plantilla>(alcance.ServiceProvider);
         await ValidarColeccion<Campo>(alcance.ServiceProvider);
-        await ValidarColeccion<Condicion>(alcance.ServiceProvider);
         await ValidarColeccion<Parrafo>(alcance.ServiceProvider);
         await ValidarColeccion<Solicitud>(alcance.ServiceProvider);
         await ValidarColeccion<DetalleBien>(alcance.ServiceProvider);

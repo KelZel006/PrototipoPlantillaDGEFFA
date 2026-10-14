@@ -1,0 +1,65 @@
+.pestanas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-4);
+}
+
+.pestana {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  min-height: 52px;
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pestana svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pestana[aria-selected='true'] {
+  border-color: var(--primario);
+  background: var(--primario);
+  color: #fff;
+}
+
+.pestana[aria-disabled='true'] {
+  color: var(--texto-secundario);
+  background: var(--fondo-suave);
+  cursor: not-allowed;
+}
+
+.pestana:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+.proximamente {
+  padding: 1px var(--espacio-2);
+  border-radius: 999px;
+  background: var(--borde);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .pestana {
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--texto-pequeno);
+  }
+}

@@ -1,0 +1,112 @@
+@if (catalogo.error(); as mensaje) {
+  <div class="aviso aviso-error" role="alert">
+    <span>No se pudo cargar el catálogo de campos. {{ mensaje }}</span>
+    <button type="button" class="boton boton-secundario" (click)="catalogo.recargar()">Reintentar</button>
+  </div>
+} @else if (!catalogo.listo()) {
+  <p class="texto-secundario" aria-live="polite">Cargando campos disponibles…</p>
+} @else {
+  <div class="distribucion">
+    <div class="columna-edicion">
+      <app-constructor-condiciones
+        [condicion]="condicion()"
+        [mostrarSoloSiCumple]="mostrarSoloSiCumple()"
+        [campos]="camposCondicion()"
+        (condicionCambio)="condicion.set($event)"
+        (mostrarSoloSiCumpleCambio)="mostrarSoloSiCumple.set($event)"
+      />
+
+      <section class="tarjeta texto" aria-labelledby="titulo-texto">
+        <header class="encabezado-texto">
+          <h3 id="titulo-texto" class="titulo-con-icono">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
+            Texto del {{ nombre().singular }}
+          </h3>
+          <span class="estado-edicion" aria-live="polite">
+            @if (editando()) {
+              <span class="insignia">Editando párrafo {{ posicionEditando() }}</span>
+            } @else {
+              <span class="insignia insignia-nuevo">Nuevo párrafo</span>
+            }
+            @if (guardando()) {
+              <span class="indicador">Guardando…</span>
+            } @else if (sucio()) {
+              <span class="indicador indicador-pendiente">● Cambios sin guardar</span>
+            } @else if (editando()) {
+              <span class="indicador indicador-ok">✓ Guardado</span>
+            }
+          </span>
+        </header>
+
+        <app-editor-texto
+          [campos]="camposSeccion()"
+          [etiqueta]="catalogo.etiqueta"
+          [etiquetaAccesible]="'Texto del ' + nombre().singular"
+          (cambio)="contenido.set($event)"
+        />
+
+        @if (errorGuardado(); as mensaje) {
+          <div class="aviso aviso-error" role="alert">
+            <span>{{ mensaje }}</span>
+            @if (conflicto()) {
+              <button type="button" class="boton boton-secundario boton-compacto" (click)="recargarTrasConflicto()">
+                Recargar listado
+              </button>
+            }
+          </div>
+        }
+
+        @if (sucio() && problemas().length > 0) {
+          <ul class="problemas">
+            @for (problema of problemas(); track problema) {
+              <li>{{ problema }}</li>
+            }
+          </ul>
+        }
+
+        <div class="acciones">
+          <button type="button" class="boton boton-secundario" (click)="limpiarTexto()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" /></svg>
+            Limpiar
+          </button>
+          @if (editando() || sucio()) {
+            <button type="button" class="boton boton-texto" (click)="cancelar()">
+              {{ editando() ? 'Cancelar edición' : 'Descartar' }}
+            </button>
+          }
+          <button type="button" class="boton boton-primario" [disabled]="!puedeGuardar()" (click)="guardar()">
+            @if (editando()) {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg>
+              Actualizar
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              Agregar a la lista
+            }
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="columna-listado">
+      @if (errorLista(); as mensaje) {
+        <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+      } @else if (cargandoLista() && parrafos().length === 0) {
+        <p class="texto-secundario">Cargando párrafos…</p>
+      } @else {
+        <app-lista-parrafos
+          [parrafos]="parrafos()"
+          [titulo]="'Listado de ' + nombre().plural"
+          [editandoId]="editando()?.id ?? null"
+          [ocupado]="ocupado() || guardando()"
+          (editar)="editar($event)"
+          (eliminar)="eliminar($event)"
+          (duplicar)="duplicar($event)"
+          (alternarActivo)="alternarActivo($event)"
+          (mover)="mover($event)"
+        />
+      }
+    </div>
+
+    <app-panel-campos class="columna-campos" [campos]="camposSeccion()" [usados]="usados()" (insertar)="insertarCampo($event)" />
+  </div>
+}

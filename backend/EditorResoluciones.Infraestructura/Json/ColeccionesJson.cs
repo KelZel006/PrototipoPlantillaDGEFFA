@@ -19,7 +19,6 @@ public static class ColeccionesJson
         new("plantillas", "plantillas.json", "PLA", typeof(Plantilla)),
         new("parrafos", "parrafos.json", "PAR", typeof(Parrafo)),
         new("campos", "campos.json", "CAM", typeof(Campo)),
-        new("condiciones", "condiciones.json", "CON", typeof(Condicion)),
         new("solicitudes", "solicitudes.json", "SOL", typeof(Solicitud)),
         new("detallesBienes", "detallesBienes.json", "BIE", typeof(DetalleBien)),
         new("historial", "historial.json", "HIS", typeof(RegistroHistorial)),

@@ -162,19 +162,22 @@ public sealed class ApiPruebas : IDisposable
     [Fact]
     public async Task Rechaza_parrafos_con_referencias_inexistentes_o_datos_nulos()
     {
-        var referencias = new Parrafo
-        {
-            PlantillaId = "PLA-NOEXISTE",
-            Seccion = Seccion.Considerando,
-            CondicionId = "CON-NOEXISTE",
-            CamposUsados = ["campo_inventado"],
-        };
-        var respuesta = await _cliente.PostAsJsonAsync("/api/parrafos", referencias, Json);
+        const string referencias = """
+            {
+              "plantillaId": "PLA-NOEXISTE",
+              "seccion": "Considerando",
+              "contenido": { "type": "doc", "content": [ { "type": "paragraph", "content": [
+                { "type": "campo", "attrs": { "campoId": "campo_inventado" } } ] } ] },
+              "condicion": { "operadorLogico": "Y", "grupos": [],
+                "reglas": [ { "campoId": "otro_inventado", "operador": "IgualA", "valor": "x" } ] }
+            }
+            """;
+        var respuesta = await _cliente.PostAsync("/api/parrafos", new StringContent(referencias, Encoding.UTF8, "application/json"));
         var texto = await respuesta.Content.ReadAsStringAsync();
         Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
         Assert.Contains("PLA-NOEXISTE", texto);
-        Assert.Contains("CON-NOEXISTE", texto);
         Assert.Contains("campo_inventado", texto);
+        Assert.Contains("otro_inventado", texto);
 
         const string conNulos = """{ "plantillaId": "PLA-001", "seccion": "Considerando", "contenido": { "type": "doc" }, "camposUsados": null }""";
         var nulos = await _cliente.PostAsync("/api/parrafos", new StringContent(conNulos, Encoding.UTF8, "application/json"));
@@ -218,7 +221,7 @@ public sealed class ApiPruebas : IDisposable
         using var salud = JsonDocument.Parse(await _cliente.GetStringAsync("/api/salud"));
 
         Assert.Equal("correcto", salud.RootElement.GetProperty("estado").GetString());
-        Assert.Equal(10, salud.RootElement.GetProperty("colecciones").GetArrayLength());
+        Assert.Equal(9, salud.RootElement.GetProperty("colecciones").GetArrayLength());
     }
 
     [Theory]

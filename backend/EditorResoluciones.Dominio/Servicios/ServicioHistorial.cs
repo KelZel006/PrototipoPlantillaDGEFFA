@@ -5,6 +5,15 @@ using EditorResoluciones.Dominio.Repositorios;
 
 namespace EditorResoluciones.Dominio.Servicios;
 
+/// <summary>Un cambio a registrar: el estado anterior y el nuevo (null en creación o eliminación).</summary>
+public sealed record CambioHistorial(
+    string Coleccion,
+    string EntidadId,
+    AccionHistorial Accion,
+    int VersionEntidad,
+    object? Anterior,
+    object? Nuevo);
+
 public interface IServicioHistorial
 {
     Task RegistrarAsync(
@@ -15,6 +24,9 @@ public interface IServicioHistorial
         object? anterior,
         object? nuevo,
         CancellationToken ct);
+
+    /// <summary>Registra todos los cambios de una misma operación en una sola escritura.</summary>
+    Task RegistrarAsync(IReadOnlyList<CambioHistorial> cambios, CancellationToken ct);
 }
 
 /// <summary>Guarda cada creación, actualización y eliminación con el estado anterior y el nuevo.</summary>
@@ -23,27 +35,34 @@ public sealed class ServicioHistorial(
     IUsuarioActual usuario,
     TimeProvider reloj) : IServicioHistorial
 {
-    public async Task RegistrarAsync(
+    public Task RegistrarAsync(
         string coleccion,
         string entidadId,
         AccionHistorial accion,
         int versionEntidad,
         object? anterior,
         object? nuevo,
-        CancellationToken ct)
+        CancellationToken ct) =>
+        RegistrarAsync([new CambioHistorial(coleccion, entidadId, accion, versionEntidad, anterior, nuevo)], ct);
+
+    public async Task RegistrarAsync(IReadOnlyList<CambioHistorial> cambios, CancellationToken ct)
     {
-        var registro = new RegistroHistorial
+        if (cambios.Count == 0)
+            return;
+
+        var fecha = reloj.GetUtcNow();
+        var registros = cambios.Select(cambio => new RegistroHistorial
         {
-            Fecha = reloj.GetUtcNow(),
+            Fecha = fecha,
             Usuario = usuario.Nombre,
-            Coleccion = coleccion,
-            EntidadId = entidadId,
-            Accion = accion,
-            VersionEntidad = versionEntidad,
-            Anterior = Serializar(anterior),
-            Nuevo = Serializar(nuevo),
-        };
-        await repositorio.CrearAsync(registro, ct);
+            Coleccion = cambio.Coleccion,
+            EntidadId = cambio.EntidadId,
+            Accion = cambio.Accion,
+            VersionEntidad = cambio.VersionEntidad,
+            Anterior = Serializar(cambio.Anterior),
+            Nuevo = Serializar(cambio.Nuevo),
+        }).ToList();
+        await repositorio.AplicarLoteAsync(registros, [], ct);
     }
 
     private static JsonElement? Serializar(object? valor) =>

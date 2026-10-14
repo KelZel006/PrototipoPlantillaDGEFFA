@@ -52,14 +52,46 @@ export interface NodoContenido {
 export interface Parrafo extends Entidad {
   plantillaId: string;
   seccion: Seccion;
+  /** Posición en la sección. Con 0, el servidor lo coloca al final. */
   orden: number;
   contenido: NodoContenido;
   activo: boolean;
+  /** Con condición, el párrafo solo se muestra si se cumple. Sin condición se muestra siempre. */
   mostrarSoloSiCumple: boolean;
-  condicionId?: string;
+  condicion?: GrupoCondiciones | null;
+  /** Lo calcula el servidor a partir del contenido. */
   camposUsados: string[];
   fechaModificacion: string;
 }
+
+export type OperadorLogico = 'Y' | 'O';
+
+export type OperadorComparacion =
+  | 'IgualA'
+  | 'DistintoDe'
+  | 'Contiene'
+  | 'NoContiene'
+  | 'EsNulo'
+  | 'NoEsNulo'
+  | 'MayorQue'
+  | 'MenorQue'
+  | 'MayorOIgualQue'
+  | 'MenorOIgualQue';
+
+export interface ReglaCondicion {
+  campoId: string;
+  operador: OperadorComparacion;
+  valor?: string | null;
+}
+
+export interface GrupoCondiciones {
+  operadorLogico: OperadorLogico;
+  reglas: ReglaCondicion[];
+  grupos: GrupoCondiciones[];
+}
+
+/** Operadores permitidos por tipo de dato (los define el servidor). */
+export type OperadoresPorTipo = Record<TipoDato, OperadorComparacion[]>;
 
 export type TipoDato = 'Texto' | 'Numero' | 'Moneda' | 'Fecha' | 'Booleano';
 

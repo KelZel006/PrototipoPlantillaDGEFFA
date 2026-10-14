@@ -59,6 +59,40 @@ public class RepositorioJsonPruebas
     }
 
     [Fact]
+    public async Task Lote_con_un_conflicto_no_aplica_ningun_cambio()
+    {
+        using var datos = new DirectorioTemporal();
+        var repositorio = new RepositorioJson<Rubro>(Rutas.CrearAlmacen(datos.Ruta));
+        var a = await repositorio.CrearAsync(new Rubro { Nombre = "A" });
+        var b = await repositorio.CrearAsync(new Rubro { Nombre = "B" });
+        await repositorio.ActualizarAsync(new Rubro { Id = b.Id, Version = 1, Nombre = "B2" });
+
+        // b viene con versión 1 pero ya está en la 2: no se crea C ni se cambia A.
+        await Assert.ThrowsAsync<ConflictoException>(() => repositorio.AplicarLoteAsync(
+            [new Rubro { Nombre = "C" }],
+            [new Rubro { Id = a.Id, Version = 1, Nombre = "A2" }, new Rubro { Id = b.Id, Version = 1, Nombre = "B3" }]));
+
+        var guardados = await repositorio.ListarAsync();
+        Assert.Equal(["A", "B2"], guardados.Select(r => r.Nombre));
+    }
+
+    [Fact]
+    public async Task Lote_valido_crea_y_actualiza_a_la_vez()
+    {
+        using var datos = new DirectorioTemporal();
+        var repositorio = new RepositorioJson<Rubro>(Rutas.CrearAlmacen(datos.Ruta));
+        var a = await repositorio.CrearAsync(new Rubro { Nombre = "A" });
+
+        var lote = await repositorio.AplicarLoteAsync(
+            [new Rubro { Nombre = "Nuevo" }],
+            [new Rubro { Id = a.Id, Version = 1, Nombre = "A2" }]);
+
+        Assert.StartsWith("RUB-", lote.Creados[0].Id);
+        Assert.Equal(2, lote.Actualizados[0].Version);
+        Assert.Equal(["A2", "Nuevo"], (await repositorio.ListarAsync()).Select(r => r.Nombre));
+    }
+
+    [Fact]
     public async Task Los_datos_persisten_al_crear_un_almacen_nuevo()
     {
         using var datos = new DirectorioTemporal();

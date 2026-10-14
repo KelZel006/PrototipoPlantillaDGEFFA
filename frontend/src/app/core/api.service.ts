@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   Campo,
   Nuevo,
+  OperadoresPorTipo,
   Parrafo,
   Plantilla,
   Rubro,
@@ -50,8 +51,45 @@ export class ApiService {
     return this.http.get<Parrafo[]>(`${this.base}/parrafos`, { params });
   }
 
+  crearParrafo(parrafo: Nuevo<Parrafo>): Observable<Parrafo> {
+    return this.http.post<Parrafo>(`${this.base}/parrafos`, parrafo);
+  }
+
+  actualizarParrafo(parrafo: Parrafo): Observable<Parrafo> {
+    return this.http.put<Parrafo>(`${this.base}/parrafos/${encodeURIComponent(parrafo.id)}`, parrafo);
+  }
+
+  /** Se envía la versión para no borrar un párrafo que otra persona modificó. */
+  eliminarParrafo(parrafo: Parrafo): Observable<void> {
+    return this.http.delete<void>(`${this.base}/parrafos/${encodeURIComponent(parrafo.id)}`, {
+      params: { version: parrafo.version },
+    });
+  }
+
+  duplicarParrafo(id: string): Observable<Parrafo> {
+    return this.http.post<Parrafo>(`${this.base}/parrafos/${encodeURIComponent(id)}/duplicar`, null);
+  }
+
+  /** Guarda el orden completo de una sección en una sola operación. */
+  reordenarParrafos(plantillaId: string, seccion: Seccion, parrafos: Parrafo[]): Observable<Parrafo[]> {
+    return this.http.post<Parrafo[]>(`${this.base}/parrafos/reordenar`, {
+      plantillaId,
+      seccion,
+      elementos: parrafos.map((p) => ({ id: p.id, version: p.version })),
+    });
+  }
+
   campos(): Observable<Campo[]> {
     return this.http.get<Campo[]>(`${this.base}/campos`);
+  }
+
+  operadores(): Observable<OperadoresPorTipo> {
+    return this.http.get<OperadoresPorTipo>(`${this.base}/campos/operadores`);
+  }
+
+  /** Valores que tiene el campo en los datos de prueba (sugerencias para las condiciones). */
+  valoresCampo(campoId: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/campos/${encodeURIComponent(campoId)}/valores`);
   }
 
   salud(): Observable<Salud> {

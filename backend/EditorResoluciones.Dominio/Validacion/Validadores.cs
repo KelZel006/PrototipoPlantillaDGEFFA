@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
+using EditorResoluciones.Dominio.Servicios;
 
 namespace EditorResoluciones.Dominio.Validacion;
 
@@ -91,52 +92,54 @@ public sealed class ValidadorPlantilla(
 
 public sealed class ValidadorParrafo(
     IRepositorio<Plantilla> plantillas,
-    IRepositorio<Condicion> condiciones,
     IRepositorio<Campo> campos) : ValidadorEntidad<Parrafo>
 {
-    private const int ProfundidadMaximaContenido = 20;
-    private const int NodosMaximos = 2000;
-
     public override async Task ValidarGuardadoAsync(Parrafo parrafo, ResultadoValidacion resultado, CancellationToken ct)
     {
         if (!Enum.IsDefined(parrafo.Seccion))
+        {
             resultado.Agregar("seccion", "La sección no es válida.");
+            return;
+        }
 
         if (await plantillas.ObtenerAsync(parrafo.PlantillaId, ct) is null)
             resultado.Agregar("plantillaId", $"La plantilla '{parrafo.PlantillaId}' no existe.");
 
-        if (!string.IsNullOrEmpty(parrafo.CondicionId) && await condiciones.ObtenerAsync(parrafo.CondicionId, ct) is null)
-            resultado.Agregar("condicionId", $"La condición '{parrafo.CondicionId}' no existe.");
+        var catalogo = (await campos.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal);
+        ContenidoEditor.Validar(parrafo.Contenido, Contexto(parrafo.Seccion), catalogo, resultado);
 
-        var catalogo = (await campos.ListarAsync(ct)).Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
-        foreach (var campoId in parrafo.CamposUsados.Where(id => !catalogo.Contains(id)))
-            resultado.Agregar("camposUsados", $"El campo '{campoId}' no existe en el catálogo.");
-
-        if (parrafo.Contenido.Tipo != "doc")
-            resultado.Agregar("contenido", "El contenido debe ser un documento del editor.");
-
-        var nodos = 0;
-        if (!RecorrerContenido(parrafo.Contenido, 1, ref nodos))
-            resultado.Agregar("contenido", "El contenido es demasiado grande o tiene demasiados niveles.");
+        // La condición de un párrafo se evalúa con los datos generales de la solicitud.
+        if (parrafo.Condicion is not null)
+            ReglasCondiciones.Validar(parrafo.Condicion, OrigenesDatos.Solicitudes, catalogo, resultado);
     }
 
-    private static bool RecorrerContenido(NodoContenido nodo, int profundidad, ref int nodos)
+    /// <summary>Contexto de uso de los campos para una sección (coincide con <see cref="Campo.Contextos"/>).</summary>
+    public static string Contexto(Seccion seccion) => seccion.ToString().ToLowerInvariant();
+}
+
+/// <summary>Calcula en el servidor los campos usados y, si hace falta, la posición del párrafo.</summary>
+public sealed class NormalizadorParrafo(IRepositorio<Parrafo> parrafos) : INormalizadorEntidad<Parrafo>
+{
+    public async Task NormalizarAsync(Parrafo parrafo, CancellationToken ct)
     {
-        nodos++;
-        if (profundidad > ProfundidadMaximaContenido || nodos > NodosMaximos)
-            return false;
-        foreach (var hijo in nodo.Contenido ?? [])
+        // No se confía en la lista enviada por el cliente: se obtiene del contenido.
+        parrafo.CamposUsados = ContenidoEditor.CamposUsados(parrafo.Contenido);
+
+        // Una condición sin reglas equivale a no tener condición.
+        if (parrafo.Condicion is { Reglas.Count: 0, Grupos.Count: 0 })
+            parrafo.Condicion = null;
+
+        if (parrafo.Orden == 0)
         {
-            if (!RecorrerContenido(hijo, profundidad + 1, ref nodos))
-                return false;
+            var hermanos = (await parrafos.ListarAsync(ct))
+                .Where(p => p.PlantillaId == parrafo.PlantillaId && p.Seccion == parrafo.Seccion && p.Id != parrafo.Id)
+                .ToList();
+            parrafo.Orden = hermanos.Count == 0 ? 1 : hermanos.Max(p => p.Orden) + 1;
         }
-        return true;
     }
 }
 
-public sealed partial class ValidadorCampo(
-    IRepositorio<Parrafo> parrafos,
-    IRepositorio<Condicion> condiciones) : ValidadorEntidad<Campo>
+public sealed partial class ValidadorCampo(IRepositorio<Parrafo> parrafos) : ValidadorEntidad<Campo>
 {
     [GeneratedRegex("^[a-z][a-z0-9_]{1,59}$")]
     private static partial Regex IdentificadorValido();
@@ -164,54 +167,12 @@ public sealed partial class ValidadorCampo(
 
     public override async Task ValidarEliminacionAsync(Campo campo, ResultadoValidacion resultado, CancellationToken ct)
     {
-        if ((await parrafos.ListarAsync(ct)).Any(p => p.CamposUsados.Contains(campo.Id)))
+        var lista = await parrafos.ListarAsync(ct);
+        if (lista.Any(p => p.CamposUsados.Contains(campo.Id)))
             resultado.Agregar("id", "No se puede eliminar el campo porque lo usan párrafos.");
-        if ((await condiciones.ListarAsync(ct)).Any(c => ValidadorCondicion.CamposUsados(c.Raiz).Contains(campo.Id)))
-            resultado.Agregar("id", "No se puede eliminar el campo porque lo usan condiciones.");
+        if (lista.Any(p => ReglasCondiciones.CamposUsados(p.Condicion).Contains(campo.Id)))
+            resultado.Agregar("id", "No se puede eliminar el campo porque lo usan condiciones de párrafos.");
     }
-}
-
-public sealed class ValidadorCondicion(
-    IRepositorio<Campo> campos,
-    IRepositorio<Parrafo> parrafos) : ValidadorEntidad<Condicion>
-{
-    private static readonly OperadorComparacion[] OperadoresSinValor = [OperadorComparacion.EsNulo, OperadorComparacion.NoEsNulo];
-
-    public override async Task ValidarGuardadoAsync(Condicion condicion, ResultadoValidacion resultado, CancellationToken ct)
-    {
-        if (Profundidad(condicion.Raiz) > Condicion.ProfundidadMaxima)
-            resultado.Agregar("raiz", $"Los grupos de condiciones admiten hasta {Condicion.ProfundidadMaxima} niveles.");
-
-        var reglas = Reglas(condicion.Raiz).ToList();
-        if (reglas.Count == 0)
-            resultado.Agregar("raiz", "La condición debe tener al menos una regla.");
-
-        var catalogo = (await campos.ListarAsync(ct)).Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
-        foreach (var regla in reglas)
-        {
-            if (!catalogo.Contains(regla.CampoId))
-                resultado.Agregar("raiz", $"El campo '{regla.CampoId}' no existe en el catálogo.");
-            if (!Enum.IsDefined(regla.Operador))
-                resultado.Agregar("raiz", "Uno de los operadores no es válido.");
-            else if (!OperadoresSinValor.Contains(regla.Operador) && regla.Valor is null)
-                resultado.Agregar("raiz", $"La regla sobre '{regla.CampoId}' necesita un valor de comparación.");
-        }
-    }
-
-    public override async Task ValidarEliminacionAsync(Condicion condicion, ResultadoValidacion resultado, CancellationToken ct)
-    {
-        if ((await parrafos.ListarAsync(ct)).Any(p => p.CondicionId == condicion.Id))
-            resultado.Agregar("id", "No se puede eliminar la condición porque la usan párrafos.");
-    }
-
-    public static IEnumerable<ReglaCondicion> Reglas(GrupoCondiciones grupo) =>
-        grupo.Reglas.Concat(grupo.Grupos.SelectMany(Reglas));
-
-    public static HashSet<string> CamposUsados(GrupoCondiciones grupo) =>
-        Reglas(grupo).Select(r => r.CampoId).ToHashSet(StringComparer.Ordinal);
-
-    private static int Profundidad(GrupoCondiciones grupo) =>
-        1 + (grupo.Grupos.Count == 0 ? 0 : grupo.Grupos.Max(Profundidad));
 }
 
 public sealed class ValidadorSolicitud(

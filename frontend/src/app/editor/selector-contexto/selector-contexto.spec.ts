@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ContextoService } from '../../core/contexto.service';
+import { InteraccionService } from '../../core/interaccion.service';
 import { SelectorContexto } from './selector-contexto';
 
 describe('SelectorContexto', () => {
@@ -67,8 +68,30 @@ describe('SelectorContexto', () => {
     expect(lista('lista-subrubro').disabled).toBe(false);
     elegir('lista-subrubro', 'SUB-001');
     elegir('lista-tipo', 'TDO-001');
+    await estabilizar();
 
     expect(TestBed.inject(ContextoService).completo()).toBe(true);
+  });
+
+  it('pide confirmación si hay cambios sin guardar y respeta la cancelación', async () => {
+    const contexto = TestBed.inject(ContextoService);
+    const interaccion = TestBed.inject(InteraccionService);
+    contexto.cambiosSinGuardar.set(true);
+    const confirmar = vi.spyOn(interaccion, 'confirmar').mockResolvedValue(false);
+
+    elegir('lista-tipo', 'TDO-001');
+    await estabilizar();
+
+    expect(confirmar).toHaveBeenCalledOnce();
+    expect(contexto.tipoDocumento()).toBeNull();
+    expect(lista('lista-tipo').value).toBe('');
+
+    confirmar.mockResolvedValue(true);
+    elegir('lista-tipo', 'TDO-001');
+    await estabilizar();
+
+    expect(contexto.tipoDocumento()?.id).toBe('TDO-001');
+    expect(contexto.cambiosSinGuardar()).toBe(false);
   });
 
   it('informa los errores de conexión con opción de reintentar', async () => {

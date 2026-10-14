@@ -30,4 +30,10 @@ public static class OrigenesDatos
 
     public static bool PropiedadExiste(string coleccion, string propiedad) =>
         Propiedades(coleccion).Contains(propiedad, StringComparer.Ordinal);
+
+    /// <summary>Propiedad .NET que corresponde a un origen permitido, o null si no existe.</summary>
+    public static System.Reflection.PropertyInfo? Propiedad(string coleccion, string propiedad) =>
+        PropiedadExiste(coleccion, propiedad)
+            ? Colecciones[coleccion].GetProperties().First(p => JsonNamingPolicy.CamelCase.ConvertName(p.Name) == propiedad)
+            : null;
 }

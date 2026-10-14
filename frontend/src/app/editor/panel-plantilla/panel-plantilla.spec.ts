@@ -58,27 +58,18 @@ describe('PanelPlantilla', () => {
     expect(elemento.textContent).toContain('Seleccione Rubro, Sub Rubro y Tipo Documento');
   });
 
-  it('muestra el resumen de párrafos por sección', async () => {
+  it('muestra la plantilla de la combinación elegida', async () => {
     seleccionarCombinacion();
     fixture.detectChanges();
     await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/parrafos').flush([
-      { id: 'P1', seccion: 'Considerando', activo: true, condicionId: 'CON-001' },
-      { id: 'P2', seccion: 'Considerando', activo: false },
-      { id: 'P3', seccion: 'Resuelve', activo: true },
-    ]);
+    const peticion = http.expectOne((r) => r.url === '/api/plantillas');
+    expect(peticion.request.params.get('tipoDocumentoId')).toBe('TDO-001');
+    peticion.flush([plantilla]);
     await estabilizar();
 
-    const secciones = Array.from(elemento.querySelectorAll('.seccion')).map((s) =>
-      Array.from(s.children)
-        .map((parte) => parte.textContent?.replace(/\s+/g, ' ').trim())
-        .join(' '),
-    );
-    expect(secciones[0]).toContain('Cabecera 0 párrafos');
-    expect(secciones[1]).toContain('Considerando 2 párrafos · 1 activo · 1 con condición');
-    expect(secciones[2]).toContain('Resuelve 1 párrafo');
+    expect(elemento.querySelector('h2')?.textContent).toContain('Plantilla de prueba');
+    expect(elemento.textContent).toContain('PLA-001');
+    expect(elemento.textContent).toContain('Borrador');
   });
 
   it('crea la plantilla cuando la combinación no tiene una', async () => {
@@ -99,8 +90,6 @@ describe('PanelPlantilla', () => {
 
     // Tras crearla se vuelve a consultar.
     http.expectOne((r) => r.method === 'GET' && r.url === '/api/plantillas').flush([plantilla]);
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/parrafos').flush([]);
     await estabilizar();
     expect(elemento.textContent).toContain('PLA-001');
   });

@@ -1,0 +1,85 @@
+<section class="tarjeta panel" aria-labelledby="titulo-listado">
+  <h3 id="titulo-listado" class="titulo-con-icono">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /></svg>
+    {{ titulo() }}
+    <span class="insignia">{{ parrafos().length }}</span>
+  </h3>
+
+  <ol class="lista">
+    @for (elemento of elementos(); track elemento.parrafo.id; let primero = $first; let ultimo = $last) {
+      <li
+        class="tarjeta-parrafo"
+        [class.editando]="elemento.parrafo.id === editandoId()"
+        [class.inactivo]="!elemento.parrafo.activo"
+      >
+        <div class="cuerpo">
+          <p class="resumen">{{ elemento.resumen }}</p>
+
+          <div class="condiciones">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+            <span class="etiqueta-condiciones">Condiciones:</span>
+            @switch (elemento.estado) {
+              @case ('siempre') {
+                <span class="insignia">Siempre visible</span>
+              }
+              @case ('condicionado') {
+                <span class="insignia insignia-condicion" [title]="elemento.condicion">{{ elemento.condicion }}</span>
+              }
+              @case ('condicion-inactiva') {
+                <span class="insignia insignia-apagada" [title]="'Guardada sin aplicar: ' + elemento.condicion">
+                  Sin aplicar · {{ elemento.condicion }}
+                </span>
+              }
+            }
+            @if (!elemento.parrafo.activo) {
+              <span class="insignia insignia-error">Inactivo</span>
+            }
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button type="button" class="accion accion-principal" title="Editar" aria-label="Editar párrafo"
+            [disabled]="ocupado()" (click)="editar.emit(elemento.parrafo)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
+          </button>
+          <button type="button" class="accion accion-peligro" title="Eliminar" aria-label="Eliminar párrafo"
+            [disabled]="ocupado()" (click)="eliminar.emit(elemento.parrafo)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
+          </button>
+          <button type="button" class="accion" title="Duplicar" aria-label="Duplicar párrafo"
+            [disabled]="ocupado()" (click)="duplicar.emit(elemento.parrafo)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+          </button>
+          <button type="button" class="accion" [title]="elemento.parrafo.activo ? 'Desactivar' : 'Activar'"
+            [attr.aria-label]="elemento.parrafo.activo ? 'Desactivar párrafo' : 'Activar párrafo'"
+            [attr.aria-pressed]="elemento.parrafo.activo"
+            [disabled]="ocupado()" (click)="alternarActivo.emit(elemento.parrafo)">
+            @if (elemento.parrafo.activo) {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6" /></svg>
+            }
+          </button>
+          <button type="button" class="accion" title="Subir" aria-label="Subir párrafo"
+            [disabled]="ocupado() || primero" (click)="mover.emit({ parrafo: elemento.parrafo, desplazamiento: -1 })">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg>
+          </button>
+          <button type="button" class="accion" title="Bajar" aria-label="Bajar párrafo"
+            [disabled]="ocupado() || ultimo" (click)="mover.emit({ parrafo: elemento.parrafo, desplazamiento: 1 })">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+        </div>
+      </li>
+    } @empty {
+      <li class="vacio">Todavía no hay párrafos en esta sección. Escriba el primero en el editor y pulse «Agregar a la lista».</li>
+    }
+  </ol>
+
+  <aside class="nota">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+    <div>
+      <strong>Condiciones de visualización</strong>
+      <p>Si no se especifican condiciones, el párrafo se mostrará en todos los casos.</p>
+    </div>
+  </aside>
+</section>

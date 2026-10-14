@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using EditorResoluciones.Dominio.Comun;
-
 namespace EditorResoluciones.Dominio.Modelos;
 
 public enum OperadorLogico
@@ -23,25 +20,16 @@ public enum OperadorComparacion
     MenorOIgualQue
 }
 
-/// <summary>Condición de visualización reutilizable por párrafos, tablas, columnas y filas.</summary>
-public class Condicion : IEntidad
-{
-    /// <summary>Profundidad máxima de grupos anidados.</summary>
-    public const int ProfundidadMaxima = 5;
-
-    public string Id { get; set; } = "";
-    public int Version { get; set; }
-
-    [StringLength(150, ErrorMessage = "El nombre admite hasta 150 caracteres.")]
-    public string? Nombre { get; set; }
-
-    [Required(ErrorMessage = "La condición debe tener un grupo raíz.")]
-    public GrupoCondiciones Raiz { get; set; } = new();
-}
-
-/// <summary>Conjunto de reglas y subgrupos combinados con Y u O.</summary>
+/// <summary>
+/// Condición de visualización: reglas y subgrupos combinados con Y u O.
+/// Se guarda dentro del elemento al que pertenece (párrafo, y más adelante tabla, columna o fila),
+/// para que el elemento y su condición se guarden en una sola escritura.
+/// </summary>
 public class GrupoCondiciones
 {
+    /// <summary>Profundidad máxima de grupos anidados (el grupo raíz cuenta como 1).</summary>
+    public const int ProfundidadMaxima = 5;
+
     public OperadorLogico OperadorLogico { get; set; } = OperadorLogico.Y;
     public List<ReglaCondicion> Reglas { get; set; } = [];
     public List<GrupoCondiciones> Grupos { get; set; } = [];

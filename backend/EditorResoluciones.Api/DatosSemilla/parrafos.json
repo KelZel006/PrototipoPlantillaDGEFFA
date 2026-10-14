@@ -10,24 +10,46 @@
       "content": [
         {
           "type": "paragraph",
-          "attrs": { "textAlign": "center" },
+          "attrs": {
+            "textAlign": "center"
+          },
           "content": [
-            { "type": "text", "marks": [{ "type": "bold" }], "text": "RESOLUCIÓN DE PRUEBA No. " },
-            { "type": "campo", "attrs": { "campoId": "numero_solicitud" } }
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "RESOLUCIÓN DE PRUEBA No. "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            }
           ]
         },
         {
           "type": "paragraph",
-          "attrs": { "textAlign": "center" },
+          "attrs": {
+            "textAlign": "center"
+          },
           "content": [
-            { "type": "text", "text": "Documento de prueba generado con datos simulados. Sin validez oficial." }
+            {
+              "type": "text",
+              "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+            }
           ]
         }
       ]
     },
     "activo": true,
     "mostrarSoloSiCumple": false,
-    "camposUsados": ["numero_solicitud"],
+    "camposUsados": [
+      "numero_solicitud"
+    ],
     "fechaModificacion": "2026-10-14T00:00:00+00:00"
   },
   {
@@ -42,21 +64,62 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador " },
-            { "type": "campo", "attrs": { "campoId": "operador" } },
-            { "type": "text", "text": ", con número de solicitud " },
-            { "type": "campo", "attrs": { "campoId": "numero_solicitud" } },
-            { "type": "text", "text": " y correspondiente al beneficiario " },
-            { "type": "campo", "attrs": { "campoId": "beneficiario" } },
-            { "type": "text", "text": "." }
+            {
+              "type": "text",
+              "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", con número de solicitud "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": " y correspondiente al beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
           ]
         }
       ]
     },
     "activo": true,
     "mostrarSoloSiCumple": true,
-    "condicionId": "CON-001",
-    "camposUsados": ["operador", "numero_solicitud", "beneficiario"],
+    "condicion": {
+      "operadorLogico": "Y",
+      "reglas": [
+        {
+          "campoId": "estado_solicitud",
+          "operador": "IgualA",
+          "valor": "En Curso"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "operador",
+      "numero_solicitud",
+      "beneficiario"
+    ],
     "fechaModificacion": "2026-10-14T00:00:00+00:00"
   },
   {
@@ -71,7 +134,10 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)." }
+            {
+              "type": "text",
+              "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+            }
           ]
         }
       ]
@@ -93,17 +159,45 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "text": "Que el monto de exoneración solicitado asciende a " },
-            { "type": "campo", "attrs": { "campoId": "monto_exoneracion" } },
-            { "type": "text", "text": " y requiere revisión adicional (texto de prueba)." }
+            {
+              "type": "text",
+              "text": "Que el monto de exoneración solicitado asciende a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              }
+            },
+            {
+              "type": "text",
+              "text": " y requiere revisión adicional (texto de prueba)."
+            }
           ]
         }
       ]
     },
     "activo": true,
     "mostrarSoloSiCumple": true,
-    "condicionId": "CON-002",
-    "camposUsados": ["monto_exoneracion"],
+    "condicion": {
+      "operadorLogico": "O",
+      "reglas": [
+        {
+          "campoId": "monto_exoneracion",
+          "operador": "MayorQue",
+          "valor": "100000"
+        },
+        {
+          "campoId": "tipo_beneficio",
+          "operador": "Contiene",
+          "valor": "Importación"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "monto_exoneracion"
+    ],
     "fechaModificacion": "2026-10-14T00:00:00+00:00"
   },
   {
@@ -118,21 +212,60 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "marks": [{ "type": "bold" }], "text": "PRIMERO: " },
-            { "type": "text", "text": "Autorizar, en calidad de prueba, el beneficio solicitado por " },
-            { "type": "campo", "attrs": { "campoId": "beneficiario" } },
-            { "type": "text", "text": " en el municipio de " },
-            { "type": "campo", "attrs": { "campoId": "municipio" } },
-            { "type": "text", "text": ", departamento de " },
-            { "type": "campo", "attrs": { "campoId": "departamento" } },
-            { "type": "text", "text": "." }
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "PRIMERO: "
+            },
+            {
+              "type": "text",
+              "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " en el municipio de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "municipio"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", departamento de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "departamento"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
           ]
         }
       ]
     },
     "activo": true,
     "mostrarSoloSiCumple": false,
-    "camposUsados": ["beneficiario", "municipio", "departamento"],
+    "camposUsados": [
+      "beneficiario",
+      "municipio",
+      "departamento"
+    ],
     "fechaModificacion": "2026-10-14T00:00:00+00:00"
   },
   {
@@ -147,8 +280,19 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "marks": [{ "type": "bold" }], "text": "SEGUNDO: " },
-            { "type": "text", "text": "Párrafo inactivo de prueba: no debe aparecer en el documento." }
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "SEGUNDO: "
+            },
+            {
+              "type": "text",
+              "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+            }
           ]
         }
       ]

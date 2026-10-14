@@ -1,0 +1,148 @@
+.editor {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.editor:focus-within {
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px var(--primario-suave);
+}
+
+.editor-excedido,
+.editor-excedido:focus-within {
+  border-color: var(--error);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2);
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo-suave);
+}
+
+.grupo {
+  display: flex;
+  gap: 2px;
+  padding-right: var(--espacio-2);
+  border-right: 1px solid var(--borde);
+}
+
+.herramienta {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.herramienta svg,
+.insertar svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.herramienta:hover {
+  background: var(--primario-suave);
+}
+
+.herramienta[aria-pressed='true'] {
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}
+
+.herramienta:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 1px;
+}
+
+.insertar {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  margin-left: auto;
+  color: var(--texto);
+}
+
+.insertar .control {
+  width: auto;
+  min-width: 170px;
+}
+
+.enlace {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2) var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+}
+
+.enlace label {
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.enlace input {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+.error-enlace {
+  flex-basis: 100%;
+  font-size: var(--texto-pequeno);
+  color: var(--error);
+}
+
+.contenedor-superficie {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.contador {
+  margin: var(--espacio-1) 0 0;
+  text-align: right;
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+  font-variant-numeric: tabular-nums;
+}
+
+.contador-excedido {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* El contenido lo crea TipTap fuera de la plantilla de Angular, por eso se usa :host ::ng-deep. */
+:host ::ng-deep .superficie-editor {
+  min-height: 140px;
+  padding: var(--espacio-3) var(--espacio-4);
+  outline: none;
+  line-height: 1.7;
+}
+
+:host ::ng-deep .superficie-editor p {
+  margin: 0 0 var(--espacio-2);
+}
+
+:host ::ng-deep .superficie-editor ul,
+:host ::ng-deep .superficie-editor ol {
+  margin: 0 0 var(--espacio-2);
+  padding-left: var(--espacio-6);
+}
+
+:host ::ng-deep .superficie-editor a {
+  color: var(--primario-oscuro);
+}

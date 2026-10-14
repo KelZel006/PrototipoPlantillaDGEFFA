@@ -15,6 +15,7 @@ namespace EditorResoluciones.Dominio.Servicios;
 public partial class ServicioEntidades<T>(
     IRepositorio<T> repositorio,
     IEnumerable<IValidadorEntidad<T>> validadores,
+    IEnumerable<INormalizadorEntidad<T>> normalizadores,
     IServicioHistorial historial,
     TimeProvider reloj) where T : class, IEntidad
 {
@@ -33,6 +34,7 @@ public partial class ServicioEntidades<T>(
         var resultado = new ResultadoValidacion();
         if (!string.IsNullOrEmpty(entidad.Id) && !IdentificadorValido().IsMatch(entidad.Id))
             resultado.Agregar("id", "El identificador solo admite letras, números, guion y guion bajo (máximo 64).");
+        await NormalizarAsync(entidad, ct);
         await ValidarGuardadoAsync(entidad, resultado, ct);
         resultado.LanzarSiHayErrores();
 
@@ -49,6 +51,7 @@ public partial class ServicioEntidades<T>(
         if (anterior.Version != entidad.Version)
             throw new ConflictoException(MensajeVersion(anterior.Version, entidad.Version));
 
+        await NormalizarAsync(entidad, ct);
         var resultado = new ResultadoValidacion();
         await ValidarGuardadoAsync(entidad, resultado, ct);
         resultado.LanzarSiHayErrores();
@@ -76,6 +79,12 @@ public partial class ServicioEntidades<T>(
 
     public static string MensajeVersion(int guardada, int recibida) =>
         $"El registro fue modificado por otra operación (versión guardada {guardada}, versión recibida {recibida}). Recargue los datos antes de guardar.";
+
+    private async Task NormalizarAsync(T entidad, CancellationToken ct)
+    {
+        foreach (var normalizador in normalizadores)
+            await normalizador.NormalizarAsync(entidad, ct);
+    }
 
     private async Task ValidarGuardadoAsync(T entidad, ResultadoValidacion resultado, CancellationToken ct)
     {

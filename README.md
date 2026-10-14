@@ -6,7 +6,7 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 2 (estructura base y datos JSON).** Detalle en [docs/FASE2.md](docs/FASE2.md). Plan general
+**Estado actual: Fase 3, sección Considerando.** Detalle en [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
 
 ## Tecnologías
@@ -99,11 +99,16 @@ Todas las colecciones de la tabla ofrecen `GET` (listar), `GET /{id}`, `POST`, `
 | `/api/plantillas` | `rubroId`, `subRubroId`, `tipoDocumentoId` |
 | `/api/parrafos` | `plantillaId`, `seccion` (ordenados por sección y orden) |
 | `/api/campos` | — |
-| `/api/condiciones` | — |
 | `/api/solicitudes` | — |
 | `/api/detalles-bienes` | `solicitudId` |
 
 Otras rutas:
+
+- `POST /api/parrafos/reordenar`: guarda el orden completo de una sección en una sola operación.
+  Cuerpo: `{ plantillaId, seccion, elementos: [{ id, version }] }`.
+- `POST /api/parrafos/{id}/duplicar`: copia el párrafo, con su condición, justo debajo del original.
+- `GET /api/campos/operadores`: operadores de comparación permitidos por tipo de dato.
+- `GET /api/campos/{id}/valores`: valores del campo en los datos de prueba (sugerencias para las condiciones).
 
 - `GET /api/historial?coleccion=&entidadId=`: registro de cambios, solo lectura.
 - `GET /api/salud`: estado de cada archivo JSON.
@@ -126,4 +131,8 @@ Respuestas de error (ProblemDetails, en español):
   al rubro) y se impide eliminar registros que otros usan.
 - **Campos dinámicos.** Su origen solo puede ser una colección y una propiedad de una lista permitida. No se ejecutan
   consultas ni código escrito por el usuario.
+- **Contenido del editor.** Se guarda como JSON de TipTap y el servidor solo acepta párrafos, listas, saltos de línea,
+  campos, negrita, cursiva, subrayado y enlaces http/https/mailto. Calcula por su cuenta los campos usados.
+- **Condiciones.** Cada operador debe corresponder al tipo de dato del campo, y el valor debe tener el formato del
+  tipo (números con punto, fechas AAAA-MM-DD).
 - **Contexto.** Rubro + Sub Rubro + Tipo Documento identifican una única plantilla.

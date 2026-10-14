@@ -11,6 +11,9 @@ export class ContextoService {
   readonly subRubro = signal<SubRubro | null>(null);
   readonly tipoDocumento = signal<TipoDocumento | null>(null);
 
+  /** Lo marca el editor cuando hay cambios sin guardar, para advertir antes de cambiar de plantilla. */
+  readonly cambiosSinGuardar = signal(false);
+
   /** La combinación está completa y es coherente (el sub rubro pertenece al rubro). */
   readonly completo = computed(() => {
     const rubro = this.rubro();

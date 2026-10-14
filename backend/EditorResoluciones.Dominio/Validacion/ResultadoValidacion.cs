@@ -42,6 +42,15 @@ public interface IValidadorEntidad<in T> where T : class, IEntidad
     Task ValidarEliminacionAsync(T entidad, ResultadoValidacion resultado, CancellationToken ct);
 }
 
+/// <summary>
+/// Completa o corrige datos que calcula el servidor antes de validar y guardar
+/// (por ejemplo, los campos usados en un párrafo o su posición al final de la sección).
+/// </summary>
+public interface INormalizadorEntidad<in T> where T : class, IEntidad
+{
+    Task NormalizarAsync(T entidad, CancellationToken ct);
+}
+
 public abstract class ValidadorEntidad<T> : IValidadorEntidad<T> where T : class, IEntidad
 {
     public virtual Task ValidarGuardadoAsync(T entidad, ResultadoValidacion resultado, CancellationToken ct) => Task.CompletedTask;

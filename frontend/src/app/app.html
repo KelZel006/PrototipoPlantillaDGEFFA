@@ -14,5 +14,14 @@
 <main class="contenedor">
   <app-selector-contexto />
   <app-panel-plantilla />
-  <app-estado-datos />
+  @if (plantillaActual.plantilla(); as plantilla) {
+    <app-pestanas-secciones [plantilla]="plantilla" />
+  }
+  <details class="diagnostico">
+    <summary>Estado de los datos de prueba</summary>
+    <app-estado-datos />
+  </details>
 </main>
+
+<app-dialogo-confirmacion />
+<app-avisos />

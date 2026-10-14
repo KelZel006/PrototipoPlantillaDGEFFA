@@ -1,0 +1,99 @@
+<div class="grupo" [class.subgrupo]="nivel() > 1">
+  @if (nivel() > 1 || cantidadElementos() > 1) {
+    <div class="cabecera-grupo">
+      @if (cantidadElementos() > 1) {
+        <div class="conector" role="radiogroup" [attr.aria-label]="'Combinar condiciones del grupo ' + nivel()">
+          <button type="button" role="radio" [attr.aria-checked]="grupo().operadorLogico === 'Y'"
+            title="Todas las condiciones deben cumplirse" (click)="cambiarConector('Y')">Y (todas)</button>
+          <button type="button" role="radio" [attr.aria-checked]="grupo().operadorLogico === 'O'"
+            title="Al menos una condición debe cumplirse" (click)="cambiarConector('O')">O (alguna)</button>
+        </div>
+      }
+      @if (nivel() > 1) {
+        <button type="button" class="boton boton-texto boton-compacto quitar-grupo" (click)="quitar.emit()">Quitar grupo</button>
+      }
+    </div>
+  }
+
+  @for (regla of grupo().reglas; track $index; let i = $index) {
+    @if (i > 0) {
+      <span class="separador">{{ grupo().operadorLogico === 'Y' ? 'y' : 'o' }}</span>
+    }
+    <div class="regla">
+      <label class="celda">
+        <span class="etiqueta-celda">Campo</span>
+        <select class="control" [value]="regla.campoId" (change)="cambiarCampo(i, $any($event.target).value)">
+          <option value="">Seleccione…</option>
+          @for (campo of campos(); track campo.id) {
+            <option [value]="campo.id" [selected]="campo.id === regla.campoId">{{ campo.etiqueta }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="celda">
+        <span class="etiqueta-celda">Operador</span>
+        <select class="control" [disabled]="!regla.campoId" (change)="cambiarOperador(i, $any($event.target).value)">
+          @for (operador of operadores(regla); track operador) {
+            <option [value]="operador" [selected]="operador === regla.operador">{{ etiquetasOperador[operador] }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="celda">
+        <span class="etiqueta-celda">Valor</span>
+        @if (!requiereValor(regla.operador)) {
+          <input class="control" disabled value="—" aria-label="No necesita valor" />
+        } @else if (campo(regla)?.tipoDato === 'Booleano') {
+          <select class="control" (change)="cambiarValor(i, $any($event.target).value)">
+            <option value="true" [selected]="regla.valor === 'true'">Sí</option>
+            <option value="false" [selected]="regla.valor === 'false'">No</option>
+          </select>
+        } @else {
+          <input
+            class="control"
+            [type]="tipoEntrada(campo(regla)?.tipoDato)"
+            step="any"
+            [disabled]="!regla.campoId"
+            [value]="regla.valor ?? ''"
+            [attr.list]="identificador() + '-valores-' + i"
+            (input)="cambiarValor(i, $any($event.target).value)"
+          />
+          <datalist [id]="identificador() + '-valores-' + i">
+            @for (sugerencia of sugerencias(regla) | async; track sugerencia) {
+              <option [value]="sugerencia"></option>
+            }
+          </datalist>
+        }
+      </label>
+
+      <button type="button" class="quitar-regla" title="Quitar condición" aria-label="Quitar condición" (click)="quitarRegla(i)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
+      </button>
+    </div>
+  }
+
+  @for (subgrupo of grupo().grupos; track $index; let i = $index) {
+    @if (grupo().reglas.length > 0 || i > 0) {
+      <span class="separador">{{ grupo().operadorLogico === 'Y' ? 'y' : 'o' }}</span>
+    }
+    <app-grupo-condiciones
+      [grupo]="subgrupo"
+      [campos]="campos()"
+      [nivel]="nivel() + 1"
+      [identificador]="identificador() + '-' + i"
+      (cambio)="cambiarSubgrupo(i, $event)"
+      (quitar)="quitarSubgrupo(i)"
+    />
+  }
+
+  <div class="acciones-grupo">
+    <button type="button" class="boton boton-secundario boton-compacto" (click)="agregarRegla()">
+      <span aria-hidden="true">+</span> Agregar condición
+    </button>
+    @if (puedeAnidar() && grupo().reglas.length > 0) {
+      <button type="button" class="boton boton-texto boton-compacto" (click)="agregarGrupo()">
+        <span aria-hidden="true">+</span> Agregar grupo
+      </button>
+    }
+  </div>
+</div>

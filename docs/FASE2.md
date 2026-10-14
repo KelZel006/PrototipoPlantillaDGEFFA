@@ -36,7 +36,7 @@ una base de datos real. **Resultado: cumplido** (verificación al final).
 | `plantillas.json` | 2 plantillas: `PLA-001` con párrafos y `PLA-002` vacía |
 | `parrafos.json` | 6 párrafos en las tres secciones: con y sin condición, uno inactivo |
 | `campos.json` | Los 11 campos del diseño, más 5 de detalle de bienes para tablas |
-| `condiciones.json` | `CON-001` (estado = "En Curso") y `CON-002` (monto > 100000 **O** tipo contiene "Importación") |
+| `condiciones.json` | `CON-001` (estado = "En Curso") y `CON-002` (monto > 100000 **O** tipo contiene "Importación")  _(en la Fase 3 estas condiciones pasaron a guardarse dentro de cada párrafo y el archivo se eliminó)_ |
 | `solicitudes.json` | 4 solicitudes: `SOL-004` tiene datos faltantes para probar condiciones |
 | `detallesBienes.json` | `SOL-001` con 0 bienes, `SOL-002` con 1 y `SOL-003` con 3 |
 | `historial.json` | Vacío al inicio |

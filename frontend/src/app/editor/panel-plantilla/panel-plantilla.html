@@ -1,60 +1,34 @@
-<section class="tarjeta" aria-labelledby="titulo-plantilla">
-  <header class="encabezado-tarjeta">
-    <h2 id="titulo-plantilla">Plantilla seleccionada</h2>
-    @if (plantilla(); as p) {
-      <span class="insignia" [class.insignia-exito]="p.estado === 'Publicada'">{{ p.estado }}</span>
-    }
-  </header>
-
+<section class="tarjeta panel" aria-labelledby="titulo-plantilla">
   @if (!contexto.completo()) {
-    <p class="texto-secundario">
+    <p class="texto-secundario sin-margen">
       Seleccione Rubro, Sub Rubro y Tipo Documento para cargar la plantilla correspondiente.
     </p>
-  } @else if (cargando()) {
-    <p class="texto-secundario" aria-live="polite">Cargando plantilla…</p>
+  } @else if (actual.cargando()) {
+    <p class="texto-secundario sin-margen" aria-live="polite">Cargando plantilla…</p>
   } @else if (error(); as mensaje) {
     <div class="aviso aviso-error" role="alert">
       <span>{{ mensaje }}</span>
-      <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+      <button type="button" class="boton boton-secundario" (click)="actual.recargar()">Reintentar</button>
     </div>
-  } @else if (sinPlantilla()) {
+  } @else if (actual.sinPlantilla()) {
     <div class="vacio">
-      <p>No existe una plantilla para esta combinación.</p>
+      <p class="sin-margen">No existe una plantilla para esta combinación.</p>
       <button type="button" class="boton boton-primario" [disabled]="creando()" (click)="crearPlantilla()">
         {{ creando() ? 'Creando…' : 'Crear plantilla de prueba' }}
       </button>
-      @if (errorCreacion(); as mensaje) {
-        <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
-      }
     </div>
-  } @else if (plantilla(); as p) {
-    <dl class="datos">
-      <div>
-        <dt>Nombre</dt>
-        <dd>{{ p.nombre }}</dd>
+    @if (errorCreacion(); as mensaje) {
+      <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+    }
+  } @else if (actual.plantilla(); as p) {
+    <div class="resumen">
+      <div class="nombre">
+        <h2 id="titulo-plantilla">{{ p.nombre }}</h2>
+        <span class="insignia" [class.insignia-exito]="p.estado === 'Publicada'">{{ p.estado }}</span>
       </div>
-      <div>
-        <dt>Identificador</dt>
-        <dd><code>{{ p.id }}</code> · versión {{ p.version }}</dd>
-      </div>
-      <div>
-        <dt>Última modificación</dt>
-        <dd>{{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}</dd>
-      </div>
-    </dl>
-
-    <ul class="secciones">
-      @for (resumen of resumenSecciones(); track resumen.seccion) {
-        <li class="seccion">
-          <span class="nombre-seccion">{{ resumen.seccion }}</span>
-          <span class="numero">{{ resumen.total }}</span>
-          <span class="texto-secundario">
-            {{ resumen.total === 1 ? 'párrafo' : 'párrafos' }} · {{ resumen.activos }}
-            {{ resumen.activos === 1 ? 'activo' : 'activos' }} ·
-            {{ resumen.conCondicion }} con condición
-          </span>
-        </li>
-      }
-    </ul>
+      <span class="texto-secundario sin-margen">
+        <code>{{ p.id }}</code> · versión {{ p.version }} · modificada {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
+      </span>
+    </div>
   }
 </section>

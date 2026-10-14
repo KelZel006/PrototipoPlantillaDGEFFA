@@ -1,0 +1,49 @@
+<section class="tarjeta panel" aria-labelledby="titulo-campos">
+  <h3 id="titulo-campos" class="titulo-con-icono">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg>
+    Campos disponibles
+  </h3>
+
+  <label class="buscador">
+    <span class="visualmente-oculto">Buscar campo</span>
+    <input
+      class="control"
+      type="search"
+      placeholder="Buscar campo…"
+      [value]="busqueda()"
+      (input)="busqueda.set($any($event.target).value)"
+    />
+  </label>
+
+  <div class="lista">
+    @for (grupo of grupos(); track grupo.categoria) {
+      <h4 class="categoria">{{ grupo.categoria }}</h4>
+      <ul>
+        @for (campo of grupo.campos; track campo.id) {
+          <li>
+            <button
+              type="button"
+              class="campo"
+              [class.campo-usado]="estaUsado(campo)"
+              [title]="'Insertar ' + campo.etiqueta + ' en la posición del cursor'"
+              (mousedown)="$event.preventDefault()"
+              (click)="insertar.emit(campo)"
+            >
+              <svg class="icono-campo" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /></svg>
+              <span class="datos">
+                <span class="etiqueta">{{ campo.etiqueta }}</span>
+                <span class="tecnico">{{ campo.id }} · {{ nombresTipo[campo.tipoDato] }}</span>
+              </span>
+              @if (estaUsado(campo)) {
+                <span class="insignia insignia-uso">En uso</span>
+              }
+              <span class="mas" aria-hidden="true">+</span>
+            </button>
+          </li>
+        }
+      </ul>
+    } @empty {
+      <p class="texto-secundario">No hay campos que coincidan con «{{ busqueda() }}».</p>
+    }
+  </div>
+</section>

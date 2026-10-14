@@ -1,0 +1,42 @@
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.cabecera p {
+  margin: var(--espacio-1) 0 0;
+}
+
+.interruptor {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.interruptor input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primario);
+}
+
+.nota {
+  margin: 0;
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  background: var(--fondo-suave);
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+}
+
+.nota-aviso {
+  background: var(--prueba-suave);
+  color: var(--prueba);
+}
+
+.nota-error {
+  background: var(--error-suave);
+  color: var(--error);
+}

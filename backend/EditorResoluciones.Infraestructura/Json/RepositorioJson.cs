@@ -59,6 +59,44 @@ public sealed class RepositorioJson<T>(AlmacenJson almacen) : IRepositorio<T> wh
             return true;
         }, ct);
 
+    public Task<LoteAplicado<T>> AplicarLoteAsync(IReadOnlyList<T> crear, IReadOnlyList<T> actualizar, CancellationToken ct = default) =>
+        almacen.ModificarAsync<T, LoteAplicado<T>>(Definicion.Nombre, registros =>
+        {
+            // Primero se comprueba todo; solo si no hay conflictos se modifica la lista.
+            var indices = new List<int>(actualizar.Count);
+            foreach (var entidad in actualizar)
+            {
+                var indice = registros.FindIndex(e => e.Id == entidad.Id);
+                if (indice < 0)
+                    throw new EntidadNoEncontradaException(Definicion.Nombre, entidad.Id);
+                var guardada = registros[indice].Version;
+                if (guardada != entidad.Version)
+                    throw new ConflictoException(ServicioEntidades<T>.MensajeVersion(guardada, entidad.Version));
+                indices.Add(indice);
+            }
+            if (actualizar.Select(e => e.Id).Distinct().Count() != actualizar.Count)
+                throw new ConflictoException("El lote repite registros.");
+            foreach (var entidad in crear.Where(e => !string.IsNullOrWhiteSpace(e.Id)))
+            {
+                if (registros.Any(e => e.Id == entidad.Id))
+                    throw new ConflictoException($"Ya existe un registro con el identificador '{entidad.Id}' en {Definicion.Nombre}.");
+            }
+
+            for (var i = 0; i < actualizar.Count; i++)
+            {
+                actualizar[i].Version++;
+                registros[indices[i]] = actualizar[i];
+            }
+            foreach (var entidad in crear)
+            {
+                if (string.IsNullOrWhiteSpace(entidad.Id))
+                    entidad.Id = GenerarId(registros);
+                entidad.Version = 1;
+                registros.Add(entidad);
+            }
+            return new LoteAplicado<T>(crear, actualizar);
+        }, ct);
+
     private static string GenerarId(List<T> registros)
     {
         string id;

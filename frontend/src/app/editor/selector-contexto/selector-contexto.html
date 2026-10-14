@@ -10,7 +10,7 @@
       id="lista-rubro"
       class="control"
       [value]="contexto.rubro()?.id ?? ''"
-      (change)="alCambiarRubro($any($event.target).value)"
+      (change)="alCambiarRubro($event)"
     >
       <option value="">Seleccione un rubro</option>
       @for (rubro of rubros(); track rubro.id) {
@@ -31,7 +31,7 @@
       class="control"
       [disabled]="!contexto.rubro() || cargandoSubRubros()"
       [value]="contexto.subRubro()?.id ?? ''"
-      (change)="alCambiarSubRubro($any($event.target).value)"
+      (change)="alCambiarSubRubro($event)"
     >
       <option value="">
         @if (!contexto.rubro()) {
@@ -59,7 +59,7 @@
       id="lista-tipo"
       class="control"
       [value]="contexto.tipoDocumento()?.id ?? ''"
-      (change)="alCambiarTipoDocumento($any($event.target).value)"
+      (change)="alCambiarTipoDocumento($event)"
     >
       <option value="">Seleccione un tipo de documento</option>
       @for (tipo of tiposDocumento(); track tipo.id) {

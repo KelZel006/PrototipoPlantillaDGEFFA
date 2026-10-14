@@ -1,0 +1,105 @@
+<div class="editor" [class.editor-excedido]="excedido()">
+  <div class="barra" role="toolbar" aria-label="Formato del texto" (mousedown)="$event.preventDefault()">
+    <div class="grupo">
+      <button type="button" class="herramienta" title="Negrita (Ctrl+B)" aria-label="Negrita"
+        [attr.aria-pressed]="estado().negrita" (click)="alternarNegrita()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Cursiva (Ctrl+I)" aria-label="Cursiva"
+        [attr.aria-pressed]="estado().cursiva" (click)="alternarCursiva()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 4h-9M14 20H5M15 4 9 20" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Subrayado (Ctrl+U)" aria-label="Subrayado"
+        [attr.aria-pressed]="estado().subrayado" (click)="alternarSubrayado()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16" /></svg>
+      </button>
+    </div>
+
+    <div class="grupo">
+      <button type="button" class="herramienta" title="Lista con viñetas" aria-label="Lista con viñetas"
+        [attr.aria-pressed]="estado().vinetas" (click)="alternarVinetas()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Lista numerada" aria-label="Lista numerada"
+        [attr.aria-pressed]="estado().numerada" (click)="alternarNumerada()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10M4 4h1v4M4 8h2M4 14.5a1.5 1.5 0 1 1 2.5 1L4 18h3" /></svg>
+      </button>
+    </div>
+
+    <div class="grupo">
+      <button type="button" class="herramienta" title="Alinear a la izquierda" aria-label="Alinear a la izquierda"
+        [attr.aria-pressed]="estado().alineacion === 'left'" (click)="alinear('left')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Centrar" aria-label="Centrar"
+        [attr.aria-pressed]="estado().alineacion === 'center'" (click)="alinear('center')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Alinear a la derecha" aria-label="Alinear a la derecha"
+        [attr.aria-pressed]="estado().alineacion === 'right'" (click)="alinear('right')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M10 10h10M4 14h16M10 18h10" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Justificar" aria-label="Justificar"
+        [attr.aria-pressed]="estado().alineacion === 'justify'" (click)="alinear('justify')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+      </button>
+    </div>
+
+    <div class="grupo">
+      <button type="button" class="herramienta" title="Enlace" aria-label="Enlace"
+        [attr.aria-pressed]="estado().enlace" (click)="abrirEnlace()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>
+      </button>
+      <button type="button" class="herramienta" title="Quitar formato" aria-label="Quitar formato" (click)="limpiarFormato()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h12M11 6l-3 12M15 14l5 5M20 14l-5 5" /></svg>
+      </button>
+    </div>
+
+    <label class="insertar">
+      <span class="visualmente-oculto">Insertar campo</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5" /></svg>
+      <select class="control control-compacto" (change)="alElegirCampo($event)" (mousedown)="$event.stopPropagation()">
+        <option value="">Insertar campo</option>
+        @for (grupo of grupos(); track grupo.categoria) {
+          <optgroup [label]="grupo.categoria">
+            @for (campo of grupo.campos; track campo.id) {
+              <option [value]="campo.id">{{ campo.etiqueta }}</option>
+            }
+          </optgroup>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (editandoEnlace()) {
+    <div class="enlace">
+      <label for="url-enlace">Dirección del enlace</label>
+      <input
+        id="url-enlace"
+        class="control control-compacto"
+        type="url"
+        [value]="urlEnlace()"
+        (input)="urlEnlace.set($any($event.target).value)"
+        (keydown.enter)="$event.preventDefault(); aplicarEnlace()"
+        (keydown.escape)="cancelarEnlace()"
+      />
+      <button type="button" class="boton boton-primario boton-compacto" (click)="aplicarEnlace()">Aplicar</button>
+      @if (estado().enlace) {
+        <button type="button" class="boton boton-secundario boton-compacto" (click)="quitarEnlace()">Quitar</button>
+      }
+      <button type="button" class="boton boton-texto boton-compacto" (click)="cancelarEnlace()">Cancelar</button>
+      @if (errorEnlace(); as error) {
+        <span class="error-enlace" role="alert">{{ error }}</span>
+      }
+    </div>
+  }
+
+  <div #superficie class="contenedor-superficie"></div>
+</div>
+
+<p class="contador" [class.contador-excedido]="excedido()" aria-live="polite">
+  {{ caracteres() }}/{{ maximo }}
+  @if (excedido()) {
+    <span> · supera el máximo permitido</span>
+  }
+</p>

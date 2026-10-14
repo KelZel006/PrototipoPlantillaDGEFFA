@@ -23,7 +23,16 @@ public interface IRepositorio<T> where T : class, IEntidad
 
     /// <summary>Elimina el registro. Si se indica versión, debe coincidir con la guardada.</summary>
     Task EliminarAsync(string id, int? version, CancellationToken ct = default);
+
+    /// <summary>
+    /// Crea y actualiza varios registros en una sola operación: o se aplican todos o ninguno.
+    /// Cada actualización exige que su versión coincida con la guardada.
+    /// </summary>
+    Task<LoteAplicado<T>> AplicarLoteAsync(IReadOnlyList<T> crear, IReadOnlyList<T> actualizar, CancellationToken ct = default);
 }
+
+/// <summary>Resultado de <see cref="IRepositorio{T}.AplicarLoteAsync"/>: los registros como quedaron guardados.</summary>
+public sealed record LoteAplicado<T>(IReadOnlyList<T> Creados, IReadOnlyList<T> Actualizados);
 
 /// <summary>Estado de lectura de una colección, para el diagnóstico del almacenamiento.</summary>
 public sealed record EstadoColeccion(string Nombre, bool Disponible, int Registros, string? Error);

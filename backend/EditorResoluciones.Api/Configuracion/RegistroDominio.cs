@@ -12,15 +12,17 @@ public static class RegistroDominio
         servicios.AddSingleton<IUsuarioActual, UsuarioPrueba>();
         servicios.AddScoped<IServicioHistorial, ServicioHistorial>();
         servicios.AddScoped(typeof(ServicioEntidades<>));
+        servicios.AddScoped<ServicioParrafos>();
+        servicios.AddScoped<ServicioValoresCampo>();
 
-        // Registra todos los validadores del dominio (ValidadorRubro, ValidadorParrafo, …).
-        var interfaz = typeof(IValidadorEntidad<>);
-        var validadores = typeof(ValidadorEntidad<>).Assembly.GetTypes()
+        // Registra todos los validadores y normalizadores del dominio (ValidadorRubro, NormalizadorParrafo, …).
+        Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>)];
+        var implementaciones = typeof(ValidadorEntidad<>).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false })
             .SelectMany(t => t.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == interfaz)
+                .Where(i => i.IsGenericType && interfaces.Contains(i.GetGenericTypeDefinition()))
                 .Select(i => (Servicio: i, Implementacion: t)));
-        foreach (var (servicio, implementacion) in validadores)
+        foreach (var (servicio, implementacion) in implementaciones)
             servicios.AddScoped(servicio, implementacion);
 
         return servicios;

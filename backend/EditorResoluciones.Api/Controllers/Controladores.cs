@@ -33,7 +33,8 @@ public sealed class PlantillasController(ServicioEntidades<Plantilla> servicio) 
 
 /// <summary>Filtros: <c>?plantillaId=&amp;seccion=</c>. Se devuelven ordenados por sección y orden.</summary>
 [Route("api/parrafos")]
-public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio) : ControladorCrud<Parrafo>(servicio)
+public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio, ServicioParrafos parrafos)
+    : ControladorCrud<Parrafo>(servicio)
 {
     protected override IEnumerable<Parrafo> Filtrar(IEnumerable<Parrafo> registros, IQueryCollection consulta)
     {
@@ -42,13 +43,35 @@ public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio) : Co
             (p, v) => string.Equals(p.Seccion.ToString(), v, StringComparison.OrdinalIgnoreCase));
         return registros.OrderBy(p => p.Seccion).ThenBy(p => p.Orden);
     }
+
+    /// <summary>Aplica un nuevo orden a todos los párrafos de una sección, en una sola operación.</summary>
+    [HttpPost("reordenar")]
+    public async Task<ActionResult<IEnumerable<Parrafo>>> Reordenar([FromBody] SolicitudReorden solicitud, CancellationToken ct) =>
+        Ok(await parrafos.ReordenarAsync(solicitud, ct));
+
+    /// <summary>Copia el párrafo (con su condición) justo debajo del original.</summary>
+    [HttpPost("{id}/duplicar")]
+    public async Task<ActionResult<Parrafo>> Duplicar(string id, CancellationToken ct)
+    {
+        var copia = await parrafos.DuplicarAsync(id, ct);
+        return CreatedAtAction(nameof(Obtener), new { id = copia.Id }, copia);
+    }
 }
 
 [Route("api/campos")]
-public sealed class CamposController(ServicioEntidades<Campo> servicio) : ControladorCrud<Campo>(servicio);
+public sealed class CamposController(ServicioEntidades<Campo> servicio, ServicioValoresCampo valores)
+    : ControladorCrud<Campo>(servicio)
+{
+    /// <summary>Operadores de comparación permitidos para cada tipo de dato.</summary>
+    [HttpGet("operadores")]
+    public ActionResult<IReadOnlyDictionary<TipoDato, OperadorComparacion[]>> Operadores() =>
+        Ok(ReglasCondiciones.OperadoresPorTipo);
 
-[Route("api/condiciones")]
-public sealed class CondicionesController(ServicioEntidades<Condicion> servicio) : ControladorCrud<Condicion>(servicio);
+    /// <summary>Valores distintos del campo en los datos de prueba (sugerencias para las condiciones).</summary>
+    [HttpGet("{id}/valores")]
+    public async Task<ActionResult<IEnumerable<string>>> Valores(string id, CancellationToken ct) =>
+        Ok(await valores.ValoresAsync(id, ct));
+}
 
 [Route("api/solicitudes")]
 public sealed class SolicitudesController(ServicioEntidades<Solicitud> servicio) : ControladorCrud<Solicitud>(servicio);

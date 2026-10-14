@@ -1,0 +1,97 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  min-width: 0;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+.categoria {
+  margin: var(--espacio-2) 0 0;
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--texto-secundario);
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  width: 100%;
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.campo:hover,
+.campo:focus-visible {
+  border-color: var(--primario);
+  background: var(--primario-suave);
+}
+
+.campo-usado {
+  border-color: var(--primario);
+}
+
+.icono-campo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--texto-secundario);
+  stroke-width: 2;
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.etiqueta {
+  font-weight: 500;
+}
+
+.tecnico {
+  overflow: hidden;
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--texto-secundario);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insignia-uso {
+  font-size: 0.7rem;
+}
+
+.mas {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--texto-secundario);
+}

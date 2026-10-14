@@ -3,6 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../core/api.service';
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
+import { InteraccionService } from '../../core/interaccion.service';
 
 /** Las tres listas superiores: Rubro, Sub Rubro (depende del rubro) y Tipo Documento. */
 @Component({
@@ -13,6 +14,7 @@ import { mensajeError } from '../../core/errores';
 export class SelectorContexto {
   private readonly api = inject(ApiService);
   protected readonly contexto = inject(ContextoService);
+  private readonly interaccion = inject(InteraccionService);
 
   private readonly rubrosRecurso = rxResource({ stream: () => this.api.rubros() });
   private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });
@@ -38,16 +40,49 @@ export class SelectorContexto {
     return fallido ? mensajeError(fallido.error()) : null;
   });
 
-  protected alCambiarRubro(id: string): void {
-    this.contexto.seleccionarRubro(this.rubros().find((r) => r.id === id) ?? null);
+  protected async alCambiarRubro(evento: Event): Promise<void> {
+    const id = await this.confirmarCambio(evento, this.contexto.rubro()?.id);
+    if (id !== null) {
+      this.contexto.seleccionarRubro(this.rubros().find((r) => r.id === id) ?? null);
+    }
   }
 
-  protected alCambiarSubRubro(id: string): void {
-    this.contexto.seleccionarSubRubro(this.subRubros().find((s) => s.id === id) ?? null);
+  protected async alCambiarSubRubro(evento: Event): Promise<void> {
+    const id = await this.confirmarCambio(evento, this.contexto.subRubro()?.id);
+    if (id !== null) {
+      this.contexto.seleccionarSubRubro(this.subRubros().find((s) => s.id === id) ?? null);
+    }
   }
 
-  protected alCambiarTipoDocumento(id: string): void {
-    this.contexto.seleccionarTipoDocumento(this.tiposDocumento().find((t) => t.id === id) ?? null);
+  protected async alCambiarTipoDocumento(evento: Event): Promise<void> {
+    const id = await this.confirmarCambio(evento, this.contexto.tipoDocumento()?.id);
+    if (id !== null) {
+      this.contexto.seleccionarTipoDocumento(this.tiposDocumento().find((t) => t.id === id) ?? null);
+    }
+  }
+
+  /**
+   * Cambiar de combinación cambia la plantilla en edición. Si hay cambios sin guardar, se pide confirmación;
+   * si el usuario cancela, la lista vuelve a su valor anterior. Devuelve el nuevo id o null si se canceló.
+   */
+  private async confirmarCambio(evento: Event, actual: string | undefined): Promise<string | null> {
+    const lista = evento.target as HTMLSelectElement;
+    const nuevo = lista.value;
+    if (!this.contexto.cambiosSinGuardar()) {
+      return nuevo;
+    }
+    const aceptado = await this.interaccion.confirmar({
+      titulo: 'Cambios sin guardar',
+      mensaje: 'El párrafo que está editando tiene cambios sin guardar. Si cambia de plantilla, se perderán.',
+      aceptar: 'Descartar cambios',
+      peligro: true,
+    });
+    if (!aceptado) {
+      lista.value = actual ?? '';
+      return null;
+    }
+    this.contexto.cambiosSinGuardar.set(false);
+    return nuevo;
   }
 
   protected recargar(): void {
