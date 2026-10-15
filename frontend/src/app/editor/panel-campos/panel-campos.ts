@@ -31,6 +31,8 @@ export class PanelCampos {
   readonly enTabla = input(false);
 
   readonly insertar = output<Campo>();
+  /** El usuario pidió ocultar el panel para ganar espacio. */
+  readonly ocultar = output<void>();
 
   protected readonly busqueda = signal('');
   protected readonly nombresTipo = NOMBRES_TIPO;

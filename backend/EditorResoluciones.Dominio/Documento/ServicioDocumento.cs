@@ -56,6 +56,9 @@ public sealed class ServicioDocumento(
 
     public const string TextoSinRegistros = "No hay registros para esta solicitud.";
 
+    /// <summary>Etiqueta con la que empieza cada considerando, numerada según el orden en que aparece en el documento.</summary>
+    public const string FormatoConsiderando = "CONSIDERANDO({0}): ";
+
     public async Task<DocumentoResuelto> GenerarAsync(
         string plantillaId,
         string? solicitudId,
@@ -120,6 +123,9 @@ public sealed class ServicioDocumento(
                 }
 
                 var contenido = contexto.Sustituir(parrafo.Contenido, null, ubicacion);
+                // Los considerandos se numeran por su orden en el documento: los omitidos no consumen número.
+                if (seccion == Seccion.Considerando)
+                    contenido = Numerar(contenido, incluidos.Count + 1);
                 incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, contenido));
             }
 
@@ -136,6 +142,35 @@ public sealed class ServicioDocumento(
         var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado);
 
         return new DocumentoResuelto(plantilla, solicitud, reloj.GetUtcNow(), secciones, advertencias.Distinct().ToList(), diseno);
+    }
+
+    /// <summary>
+    /// Antepone "CONSIDERANDO(n): " en negrita al primer párrafo. Si el considerando empieza con una lista o una tabla,
+    /// la etiqueta va en un párrafo propio antes de ella.
+    /// </summary>
+    private static NodoContenido Numerar(NodoContenido documento, int numero)
+    {
+        var etiqueta = new NodoContenido
+        {
+            Tipo = "text",
+            Texto = string.Format(CultureInfo.InvariantCulture, FormatoConsiderando, numero),
+            Marcas = [new MarcaContenido { Tipo = "bold" }],
+        };
+        var bloques = documento.Contenido?.ToList() ?? [];
+        if (bloques.FirstOrDefault() is { Tipo: "paragraph" } primero)
+        {
+            bloques[0] = new NodoContenido
+            {
+                Tipo = primero.Tipo,
+                Atributos = primero.Atributos,
+                Contenido = [etiqueta, .. primero.Contenido ?? []],
+            };
+        }
+        else
+        {
+            bloques.Insert(0, new NodoContenido { Tipo = "paragraph", Contenido = [etiqueta] });
+        }
+        return new NodoContenido { Tipo = documento.Tipo, Atributos = documento.Atributos, Contenido = bloques };
     }
 
     private static string Resumir(NodoContenido contenido, IReadOnlyDictionary<string, Campo> catalogo)

@@ -148,3 +148,32 @@ Se respaldaron los datos del usuario antes de probar y se restauraron al termina
 - Por ahora solo hay una lista de origen: el detalle de bienes. Agregar otras listas implica registrar su colección
   como lista en `OrigenesDatos`.
 - Todavía no hay condiciones por fila; por ejemplo, mostrar solo los bienes con monto mayor a cierto valor.
+
+## Ajustes posteriores (14/10/2026)
+
+Pedido del usuario: la tabla con campos de lista no mostraba datos; numerar cada considerando; poder ocultar el panel
+«Campos disponibles».
+
+- **Tabla sin datos.** No era un fallo de la tabla. La solicitud que se proponía por defecto para `PLA-001`
+  (`SOL-001`) no tenía bienes, a propósito, para probar el caso de cero registros. Se corrigió así:
+  - `SOL-001` tiene ahora 2 bienes de prueba (`BIE-005` y `BIE-006`). El caso de cero registros lo sigue cubriendo
+    `SOL-004`.
+  - En la lista **Solicitud de prueba** se muestra cuántos bienes tiene cada solicitud (por ejemplo, «· 2 bienes» o
+    «· sin bienes»), para saber cuántas filas generará la tabla.
+- **Numeración de los considerandos.**
+  - En el PDF, cada considerando empieza con **«CONSIDERANDO(1):»**, **«CONSIDERANDO(2):»**… en negrita, según el
+    orden en que aparece.
+  - Los que se omiten por su condición **no consumen número**.
+  - Si un considerando empieza con una tabla, la etiqueta va en un párrafo propio antes de ella.
+  - Se quitó el título general «CONSIDERANDO:», que quedaba repetido.
+  - En el listado del editor cada tarjeta activa muestra su número. Es el número previsto; el definitivo depende de
+    las condiciones al generar.
+- **Panel «Campos disponibles» plegable.**
+  - El botón › del panel lo oculta, y queda una pestaña vertical para volver a mostrarlo.
+  - Con el panel oculto, el editor gana espacio (de 639 a 810 px en una pantalla de 1440 px).
+  - La preferencia se recuerda en el navegador. Mientras está oculto, se pueden seguir insertando campos con el menú
+    «Insertar campo» del editor.
+- **Corrección encontrada al verificar.** Con un logo alto, el párrafo del logo heredaba el interlineado del documento
+  y el encabezado tapaba el título. Ahora el encabezado usa interlineado sencillo y un margen superior mayor;
+  comprobado con interlineado doble.
+- **Pruebas:** 104 del backend y 82 del frontend, todas correctas.

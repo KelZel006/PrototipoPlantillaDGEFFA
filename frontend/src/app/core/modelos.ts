@@ -140,6 +140,14 @@ export const INTERLINEADOS = [
 
 export type Interlineado = (typeof INTERLINEADOS)[number]['valor'];
 
+/** Registro de la lista de bienes de una solicitud (alimenta las filas de las tablas). */
+export interface DetalleBien extends Entidad {
+  solicitudId: string;
+  codigoArancelario: string;
+  descripcionArancelaria?: string | null;
+  montoAutorizado?: number | null;
+}
+
 export interface EstadoColeccion {
   nombre: string;
   disponible: boolean;

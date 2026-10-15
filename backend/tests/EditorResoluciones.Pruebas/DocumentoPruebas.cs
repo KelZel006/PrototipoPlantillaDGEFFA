@@ -159,6 +159,39 @@ public sealed class DocumentoPruebas : IDisposable
     }
 
     [Fact]
+    public async Task Numera_los_considerandos_segun_aparecen_en_el_documento()
+    {
+        // Con SOL-001 se incluyen los tres considerandos; con SOL-002 solo PAR-003, que pasa a ser el número 1.
+        var todos = Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Considerando).Parrafos;
+        Assert.Equal(["CONSIDERANDO(1): ", "CONSIDERANDO(2): ", "CONSIDERANDO(3): "],
+            todos.Select(p => p.Contenido.Contenido![0].Contenido![0].Texto));
+        Assert.Equal("bold", todos[0].Contenido.Contenido![0].Contenido![0].Marcas![0].Tipo);
+        Assert.StartsWith("CONSIDERANDO(1): Que mediante resolución", Texto(todos[0].Contenido));
+
+        var unSolo = Seccion(await Generar("SOL-002"), Dominio.Modelos.Seccion.Considerando).Parrafos;
+        Assert.StartsWith("CONSIDERANDO(1): Que la solicitud cumple", Texto(Assert.Single(unSolo).Contenido));
+
+        // La cabecera y el resuelve no se numeran.
+        Assert.DoesNotContain("CONSIDERANDO", Texto(Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Resuelve).Parrafos[0].Contenido));
+    }
+
+    [Fact]
+    public async Task Un_considerando_que_empieza_con_tabla_lleva_la_etiqueta_en_un_parrafo_propio()
+    {
+        var tabla = new JsonObject
+        {
+            ["type"] = "table",
+            ["content"] = new JsonArray(Fila(Celda("tableCell", TextoNodo("celda")))),
+        };
+        (await PublicarParrafo(tabla)).EnsureSuccessStatusCode();
+
+        var ultimo = Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Considerando).Parrafos.Last().Contenido;
+
+        Assert.Equal(["paragraph", "table"], ultimo.Contenido!.Select(n => n.Tipo));
+        Assert.Equal("CONSIDERANDO(4): ", ultimo.Contenido![0].Contenido![0].Texto);
+    }
+
+    [Fact]
     public async Task Omite_los_parrafos_cuya_condicion_no_se_cumple()
     {
         // SOL-002: En Revisión, monto 45000.50 y beneficio de ventas.

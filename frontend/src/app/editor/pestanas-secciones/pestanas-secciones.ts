@@ -33,7 +33,12 @@ export class PestanasSecciones {
     },
     {
       seccion: 'Considerando',
-      nombre: { texto: 'Texto del Considerando', listado: 'Listado de Considerandos', elemento: 'Considerando' },
+      nombre: {
+        texto: 'Texto del Considerando',
+        listado: 'Listado de Considerandos',
+        elemento: 'Considerando',
+        etiquetaNumerada: 'CONSIDERANDO',
+      },
       disponible: true,
     },
     {

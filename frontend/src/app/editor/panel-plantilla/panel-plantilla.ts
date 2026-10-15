@@ -35,12 +35,30 @@ export class PanelPlantilla {
     stream: () => this.api.solicitudes(),
   });
 
+  private readonly bienesRecurso = rxResource({
+    params: () => this.actual.plantilla()?.id,
+    stream: () => this.api.detallesBienes(),
+  });
+
+  /** Cantidad de registros de la lista de bienes por solicitud: indica cuántas filas generará una tabla de lista. */
+  private readonly bienesPorSolicitud = computed(() => {
+    const conteo = new Map<string, number>();
+    for (const bien of this.bienesRecurso.hasValue() ? this.bienesRecurso.value() : []) {
+      conteo.set(bien.solicitudId, (conteo.get(bien.solicitudId) ?? 0) + 1);
+    }
+    return conteo;
+  });
+
   /** Solicitudes de prueba; primero las del mismo rubro y sub rubro que la plantilla. */
   protected readonly solicitudes = computed(() => {
     const plantilla = this.actual.plantilla();
     const lista = this.solicitudesRecurso.hasValue() ? this.solicitudesRecurso.value() : [];
     return lista
-      .map((s) => ({ ...s, mismaCombinacion: !!plantilla && s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId }))
+      .map((s) => ({
+        ...s,
+        mismaCombinacion: !!plantilla && s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId,
+        bienes: this.bienesPorSolicitud().get(s.id) ?? 0,
+      }))
       .sort((a, b) => Number(b.mismaCombinacion) - Number(a.mismaCombinacion));
   });
 

@@ -38,7 +38,8 @@
           <option value="" [selected]="solicitudElegida() === ''">Sin datos (mostrar los campos)</option>
           @for (s of solicitudes(); track s.id) {
             <option [value]="s.id" [selected]="s.id === solicitudElegida()">
-              {{ s.numeroSolicitud }} – {{ s.beneficiario ?? 'sin beneficiario' }}{{ s.mismaCombinacion ? '' : ' (otro rubro)' }}
+              {{ s.numeroSolicitud }} – {{ s.beneficiario ?? 'sin beneficiario' }} ·
+              {{ s.bienes === 0 ? 'sin bienes' : s.bienes === 1 ? '1 bien' : s.bienes + ' bienes' }}{{ s.mismaCombinacion ? '' : ' (otro rubro)' }}
             </option>
           }
         </select>

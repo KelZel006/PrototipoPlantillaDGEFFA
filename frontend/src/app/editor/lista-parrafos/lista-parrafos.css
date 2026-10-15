@@ -212,3 +212,8 @@
   font-size: var(--texto-pequeno);
   color: var(--texto-secundario);
 }
+
+.numeracion {
+  margin-right: var(--espacio-1);
+  color: var(--primario-oscuro);
+}

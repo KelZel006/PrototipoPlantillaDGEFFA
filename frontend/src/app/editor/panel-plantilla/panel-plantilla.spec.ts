@@ -68,6 +68,7 @@ describe('PanelPlantilla', () => {
     peticion.flush([plantilla]);
     await estabilizar();
     http.expectOne('/api/solicitudes').flush([]);
+    http.expectOne('/api/detalles-bienes').flush([]);
     await estabilizar();
 
     expect(elemento.querySelector('h2')?.textContent).toContain('Plantilla de prueba');
@@ -89,6 +90,10 @@ describe('PanelPlantilla', () => {
       http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
       await estabilizar();
       http.expectOne('/api/solicitudes').flush(solicitudes);
+      http.expectOne('/api/detalles-bienes').flush([
+        { id: 'BIE-1', version: 1, solicitudId: 'SOL-001', codigoArancelario: '1' },
+        { id: 'BIE-2', version: 1, solicitudId: 'SOL-001', codigoArancelario: '2' },
+      ]);
       await estabilizar();
     };
     const botonPdf = () =>
@@ -106,7 +111,11 @@ describe('PanelPlantilla', () => {
     it('propone primero la solicitud de la misma combinación y abre el PDF', async () => {
       await cargarPlantilla();
       const opciones = Array.from(elemento.querySelectorAll('.solicitud option')).map((o) => o.textContent?.trim());
-      expect(opciones).toEqual(['Sin datos (mostrar los campos)', 'P-1 – Uno', 'P-4 – Otro (otro rubro)']);
+      expect(opciones.map((o) => o?.replace(/\s+/g, ' '))).toEqual([
+        'Sin datos (mostrar los campos)',
+        'P-1 – Uno · 2 bienes',
+        'P-4 – Otro · sin bienes (otro rubro)',
+      ]);
 
       botonPdf().click();
       await estabilizar();
@@ -168,6 +177,7 @@ describe('PanelPlantilla', () => {
     http.expectOne((r) => r.method === 'GET' && r.url === '/api/plantillas').flush([plantilla]);
     await estabilizar();
     http.expectOne('/api/solicitudes').flush([]);
+    http.expectOne('/api/detalles-bienes').flush([]);
     await estabilizar();
     expect(elemento.textContent).toContain('PLA-001');
   });

@@ -30,6 +30,7 @@ import {
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
+import { PreferenciasService } from '../../core/preferencias.service';
 import { Campo, GrupoCondiciones, NodoContenido, Parrafo, Plantilla, Seccion, esCampoLista } from '../../core/modelos';
 import { ConstructorCondiciones } from '../constructor-condiciones/constructor-condiciones';
 import { EditorTexto } from '../editor-texto/editor-texto';
@@ -44,6 +45,8 @@ export interface NombreSeccion {
   listado: string;
   /** Nombre de un elemento, por ejemplo "Considerando" o "Párrafo de cabecera". */
   elemento: string;
+  /** Si se indica, cada elemento se numera en el documento, por ejemplo "CONSIDERANDO" → "CONSIDERANDO(1):". */
+  etiquetaNumerada?: string;
 }
 
 interface Borrador {
@@ -77,6 +80,7 @@ export class EditorSeccion {
   protected readonly catalogo = inject(CatalogoService);
   private readonly interaccion = inject(InteraccionService);
   private readonly contexto = inject(ContextoService);
+  protected readonly preferencias = inject(PreferenciasService);
 
   readonly plantilla = input.required<Plantilla>();
   readonly seccion = input.required<Seccion>();

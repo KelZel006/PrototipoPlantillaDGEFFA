@@ -30,6 +30,11 @@ export class ListaParrafos {
 
   readonly parrafos = input.required<Parrafo[]>();
   readonly titulo = input.required<string>();
+  /**
+   * Etiqueta con la que se numeran los párrafos en el documento (por ejemplo, "CONSIDERANDO"). Se numeran solo los
+   * activos; al generar, los que no cumplan su condición tampoco consumen número.
+   */
+  readonly etiquetaNumerada = input<string | null>(null);
   readonly editandoId = input<string | null>(null);
   /** Mientras se guarda algo, las acciones se deshabilitan. */
   readonly ocupado = input(false);
@@ -48,12 +53,15 @@ export class ListaParrafos {
     }
   }
 
-  protected readonly elementos = computed(() =>
-    this.parrafos().map((parrafo) => ({
+  protected readonly elementos = computed(() => {
+    let numero = 0;
+    const etiqueta = this.etiquetaNumerada();
+    return this.parrafos().map((parrafo) => ({
+      numeracion: etiqueta && parrafo.activo ? `${etiqueta}(${++numero}):` : null,
       parrafo,
       resumen: textoPlano(parrafo.contenido, this.catalogo.etiqueta),
       estado: estadoCondicion(parrafo),
       condicion: parrafo.condicion ? describirGrupo(parrafo.condicion, this.catalogo.porId()) : '',
-    })),
-  );
+    }));
+  });
 }

@@ -49,7 +49,8 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         var pagina = seccion.PageSetup;
         pagina.PageFormat = PageFormat.Letter;
         // Los márgenes crecen con el logo y con las líneas del pie para que no se encimen con el texto.
-        pagina.TopMargin = Unit.FromCentimeter(diseno.Logo is null ? 2.8 : 4.2);
+        // Con logo: distancia del encabezado (1.2) + logo (1.8) + aviso de prueba (~0.5) + separación.
+        pagina.TopMargin = Unit.FromCentimeter(diseno.Logo is null ? 2.8 : 4.6);
         pagina.BottomMargin = Unit.FromCentimeter(2.5 + 0.42 * lineasPie.Count);
         pagina.LeftMargin = Unit.FromCentimeter(2.5);
         pagina.RightMargin = Unit.FromCentimeter(2.5);
@@ -61,6 +62,8 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         {
             var parrafoLogo = seccion.Headers.Primary.AddParagraph();
             parrafoLogo.Format.SpaceAfter = Unit.FromPoint(4);
+            // Sin esto el párrafo hereda el interlineado del documento (1.5 o doble) y el encabezado invade el texto.
+            parrafoLogo.Format.LineSpacingRule = LineSpacingRule.Single;
             parrafoLogo.Format.Alignment = diseno.AlineacionLogo switch
             {
                 AlineacionLogo.Izquierda => ParagraphAlignment.Left,
@@ -111,7 +114,6 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
 
     private static string? TituloSeccion(Seccion seccion) => seccion switch
     {
-        Seccion.Considerando => "CONSIDERANDO:",
         Seccion.Resuelve => "POR TANTO, RESUELVE:",
         _ => null,
     };

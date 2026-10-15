@@ -6,7 +6,7 @@
 } @else if (!catalogo.listo()) {
   <p class="texto-secundario" aria-live="polite">Cargando campos disponibles…</p>
 } @else {
-  <div class="distribucion">
+  <div class="distribucion" [class.sin-campos]="!preferencias.camposVisibles()">
     <div class="columna-edicion">
       <app-constructor-condiciones
         [condicion]="condicion()"
@@ -97,6 +97,7 @@
         <app-lista-parrafos
           [parrafos]="parrafos()"
           [titulo]="nombre().listado"
+          [etiquetaNumerada]="nombre().etiquetaNumerada ?? null"
           [editandoId]="editando()?.id ?? null"
           [ocupado]="ocupado() || guardando()"
           (editar)="editar($event)"
@@ -109,6 +110,25 @@
       }
     </div>
 
-    <app-panel-campos class="columna-campos" [campos]="camposSeccion()" [usados]="usados()" [enTabla]="enTabla()" (insertar)="insertarCampo($event)" />
+    @if (preferencias.camposVisibles()) {
+      <app-panel-campos
+        class="columna-campos"
+        [campos]="camposSeccion()"
+        [usados]="usados()"
+        [enTabla]="enTabla()"
+        (insertar)="insertarCampo($event)"
+        (ocultar)="preferencias.camposVisibles.set(false)"
+      />
+    } @else {
+      <button
+        type="button"
+        class="mostrar-campos"
+        title="Mostrar el panel de campos disponibles"
+        (click)="preferencias.camposVisibles.set(true)"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+        <span>Campos disponibles</span>
+      </button>
+    }
   </div>
 }

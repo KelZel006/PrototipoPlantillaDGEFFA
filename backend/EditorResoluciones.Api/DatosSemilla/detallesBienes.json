@@ -50,5 +50,31 @@
     "esDatoPrueba": true,
     "descripcionArancelaria": "Grupos electrógenos (prueba)",
     "montoAutorizado": 135000
+  },
+  {
+    "id": "BIE-005",
+    "version": 1,
+    "solicitudId": "SOL-001",
+    "codigoArancelario": "9999.40.01",
+    "descripcion": "Vehículo de prueba para el proyecto",
+    "unidadMedida": "Unidad",
+    "cantidad": 1,
+    "valorEstimado": 650000,
+    "descripcionArancelaria": "Vehículos para transporte de personas (prueba)",
+    "montoAutorizado": 600000,
+    "esDatoPrueba": true
+  },
+  {
+    "id": "BIE-006",
+    "version": 1,
+    "solicitudId": "SOL-001",
+    "codigoArancelario": "9999.50.01",
+    "descripcion": "Equipo médico de prueba",
+    "unidadMedida": "Lote",
+    "cantidad": 1,
+    "valorEstimado": 300000,
+    "descripcionArancelaria": "Instrumentos y aparatos de medicina (prueba)",
+    "montoAutorizado": 280000,
+    "esDatoPrueba": true
   }
 ]

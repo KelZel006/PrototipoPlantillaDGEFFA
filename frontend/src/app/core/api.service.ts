@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   Campo,
+  DetalleBien,
   Interlineado,
   Nuevo,
   OperadoresPorTipo,
@@ -112,6 +113,10 @@ export class ApiService {
   /** Valores que tiene el campo en los datos de prueba (sugerencias para las condiciones). */
   valoresCampo(campoId: string): Observable<string[]> {
     return this.http.get<string[]>(`${this.base}/campos/${encodeURIComponent(campoId)}/valores`);
+  }
+
+  detallesBienes(): Observable<DetalleBien[]> {
+    return this.http.get<DetalleBien[]>(`${this.base}/detalles-bienes`);
   }
 
   solicitudes(): Observable<Solicitud[]> {

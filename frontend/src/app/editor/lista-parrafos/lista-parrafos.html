@@ -25,7 +25,12 @@
           <svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4" /><circle cx="15" cy="6" r="1.4" /><circle cx="9" cy="12" r="1.4" /><circle cx="15" cy="12" r="1.4" /><circle cx="9" cy="18" r="1.4" /><circle cx="15" cy="18" r="1.4" /></svg>
         </span>
         <div class="cuerpo" cdkDragHandle>
-          <p class="resumen">{{ elemento.resumen }}</p>
+          <p class="resumen">
+            @if (elemento.numeracion) {
+              <strong class="numeracion" title="Así se numerará en el documento si se cumple su condición">{{ elemento.numeracion }}</strong>
+            }
+            {{ elemento.resumen }}
+          </p>
 
           <div class="condiciones">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>

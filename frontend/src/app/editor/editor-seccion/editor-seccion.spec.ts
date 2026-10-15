@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ContextoService } from '../../core/contexto.service';
 import { InteraccionService } from '../../core/interaccion.service';
+import { PreferenciasService } from '../../core/preferencias.service';
 import { Campo, NodoContenido, Parrafo } from '../../core/modelos';
 import { CAMPOS, OPERADORES, PLANTILLA, parrafo } from '../../pruebas/datos-prueba';
 import { EditorTexto } from '../editor-texto/editor-texto';
@@ -101,6 +102,25 @@ describe('EditorSeccion', () => {
 
     expect(elemento.textContent).toContain('Cambios sin guardar');
     http.expectNone(parrafosUrl);
+  });
+
+  it('permite ocultar y volver a mostrar el panel de campos, y lo recuerda', () => {
+    const preferencias = TestBed.inject(PreferenciasService);
+    expect(elemento.querySelector('app-panel-campos')).not.toBeNull();
+
+    elemento.querySelector<HTMLButtonElement>('[aria-label="Ocultar el panel de campos"]')!.click();
+    fixture.detectChanges();
+    TestBed.tick();
+    expect(elemento.querySelector('app-panel-campos')).toBeNull();
+    expect(elemento.querySelector('.distribucion')?.classList).toContain('sin-campos');
+    expect(localStorage.getItem('editor-resoluciones.camposVisibles')).toBe('no');
+
+    elemento.querySelector<HTMLButtonElement>('.mostrar-campos')!.click();
+    fixture.detectChanges();
+    TestBed.tick();
+    expect(elemento.querySelector('app-panel-campos')).not.toBeNull();
+    expect(preferencias.camposVisibles()).toBe(true);
+    expect(localStorage.getItem('editor-resoluciones.camposVisibles')).toBe('si');
   });
 
   it('no permite agregar un párrafo vacío', () => {
@@ -207,14 +227,14 @@ describe('EditorSeccion', () => {
     });
     reorden.flush([{ ...lista[1], orden: 1, version: 2 }, { ...lista[0], orden: 2, version: 2 }]);
     await refrescar();
-    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent)).toEqual(['Segundo', 'Primero']);
+    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent?.trim())).toEqual(['Segundo', 'Primero']);
   });
 
   it('guarda el orden al arrastrar una tarjeta', async () => {
     fixture.debugElement.query(By.directive(ListaParrafos)).componentInstance.reordenar.emit({ desde: 1, hasta: 0 });
     // El nuevo orden se muestra de inmediato.
     fixture.detectChanges();
-    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent)).toEqual(['Segundo', 'Primero']);
+    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent?.trim())).toEqual(['Segundo', 'Primero']);
 
     const reorden = http.expectOne('/api/parrafos/reordenar');
     expect(reorden.request.body.elementos.map((e: { id: string }) => e.id)).toEqual(['P2', 'P1']);
@@ -225,7 +245,7 @@ describe('EditorSeccion', () => {
     expect(interaccion.avisos().some((a) => a.tipo === 'error')).toBe(true);
     http.expectOne(parrafosUrl).flush(lista);
     await refrescar();
-    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent)).toEqual(['Primero', 'Segundo']);
+    expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent?.trim())).toEqual(['Primero', 'Segundo']);
   });
 
   it('pide confirmación antes de descartar cambios al editar otro párrafo', async () => {

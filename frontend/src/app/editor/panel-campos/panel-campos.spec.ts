@@ -51,6 +51,13 @@ describe('PanelCampos', () => {
     expect(botonLista().disabled).toBe(false);
   });
 
+  it('tiene un botón para ocultar el panel', () => {
+    let ocultado = false;
+    fixture.componentInstance.ocultar.subscribe(() => (ocultado = true));
+    elemento.querySelector<HTMLButtonElement>('[aria-label="Ocultar el panel de campos"]')!.click();
+    expect(ocultado).toBe(true);
+  });
+
   it('marca los campos usados en el párrafo y emite el campo a insertar', () => {
     const insertados: string[] = [];
     fixture.componentInstance.insertar.subscribe((campo) => insertados.push(campo.id));

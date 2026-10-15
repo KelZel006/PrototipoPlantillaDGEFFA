@@ -69,9 +69,18 @@ describe('ListaParrafos', () => {
   });
 
   it('muestra los campos con su etiqueta y marca el párrafo en edición', () => {
-    expect(tarjetas()[2].querySelector('.resumen')?.textContent).toBe('Operador {Operador}');
+    expect(tarjetas()[2].querySelector('.resumen')?.textContent?.trim()).toBe('Operador {Operador}');
     expect(tarjetas()[1].classList).toContain('editando');
     expect(tarjetas()[2].classList).toContain('inactivo');
+  });
+
+  it('numera los párrafos activos con la etiqueta de la sección', () => {
+    fixture.componentRef.setInput('etiquetaNumerada', 'CONSIDERANDO');
+    fixture.detectChanges();
+
+    // P3 está inactivo: no lleva número.
+    const numeros = tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null);
+    expect(numeros).toEqual(['CONSIDERANDO(1):', 'CONSIDERANDO(2):', null]);
   });
 
   it('no permite subir el primero ni bajar el último', () => {
