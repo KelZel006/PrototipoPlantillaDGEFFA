@@ -153,3 +153,15 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.espacio-firmas {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+}
+
+.espacio-firmas input {
+  width: 90px;
+}

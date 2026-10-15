@@ -232,3 +232,24 @@ Pedido del usuario:
 
 Nota: las advertencias de generación (datos faltantes, párrafos omitidos) ya no aparecen en el PDF. Si se necesitan para
 revisar, se pueden mostrar en la pantalla al generar.
+
+## Espacio entre firmas e interlineado de 0.8 a 2.0 (15/10/2026)
+
+Pedido del usuario: poder manejar el espacio entre firmas, e interlineado de 0.8, 0.9, 1, 1.1… hasta 2.
+
+- **Espacio entre firmas.**
+  - Nuevo campo en «Diseño del documento: logo, pie de página y firmas». Se guarda con la plantilla
+    (`espacioFirmasCm`).
+  - Es el espacio, en centímetros, antes de **cada bloque de firma** del listado de Firmas: separa las firmas entre sí
+    y la primera del texto anterior.
+  - Admite valores de 0 a 10 cm, con un decimal. El predeterminado es 1.2 cm, el mismo que había antes.
+  - El servidor rechaza valores fuera de rango.
+  - Para dos firmas en el mismo nivel, una al lado de la otra, se puede usar una tabla en la pestaña Firmas.
+- **Interlineado de 0.8 a 2.0, de 0.1 en 0.1** (13 opciones; 1.0 es sencillo y 2.0 es doble).
+  - El predeterminado sigue siendo 1.5. Desaparece el 1.15.
+  - El servidor rechaza cualquier otro valor.
+  - Las firmas usan como mínimo interlineado 1.0, para que la línea de firma no se monte sobre el nombre.
+- **Verificación.** PDF con 3 firmas, 3 cm de espacio e interlineado 0.8 y 2.0. Los datos del usuario se respaldaron
+  antes y se restauraron después. Captura en
+  [diseno/fase3f-firmas-interlineado.png](diseno/fase3f-firmas-interlineado.png).
+- **Pruebas:** 125 del backend y 86 del frontend, todas correctas.

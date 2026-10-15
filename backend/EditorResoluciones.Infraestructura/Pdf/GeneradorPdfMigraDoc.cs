@@ -91,12 +91,14 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
             if (titulo is not null)
                 seccion.AddParagraph(titulo).Style = "TituloSeccion";
 
-            // Las firmas van separadas del texto anterior.
-            if (parte.Seccion == Seccion.Firmas)
-                seccion.AddParagraph().Format.SpaceBefore = Unit.FromCentimeter(1.2);
-
             foreach (var parrafo in parte.Parrafos)
-                AgregarBloques(parrafo.Contenido.Contenido ?? [], seccion.AddParagraph, seccion, anchoUtil, 0);
+            {
+                // Cada bloque de firma lleva el espacio configurado antes (separa las firmas entre sí y del texto anterior).
+                if (parte.Seccion == Seccion.Firmas)
+                    AgregarEspacio(seccion, diseno.EspacioFirmasCm);
+                AgregarBloques(parrafo.Contenido.Contenido ?? [], seccion.AddParagraph, seccion, anchoUtil, 0,
+                    parte.Seccion == Seccion.Firmas ? "Firma" : null);
+            }
         }
 
         if (!hayContenido)
@@ -107,6 +109,18 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         using var memoria = new MemoryStream();
         renderizador.PdfDocument.Save(memoria, false);
         return memoria.ToArray();
+    }
+
+    /// <summary>Espacio vertical exacto: un párrafo vacío de altura mínima con el espacio antes indicado.</summary>
+    private static void AgregarEspacio(Section seccion, double centimetros)
+    {
+        if (centimetros <= 0)
+            return;
+        var espacio = seccion.AddParagraph();
+        espacio.Format.SpaceBefore = Unit.FromCentimeter(centimetros);
+        espacio.Format.SpaceAfter = 0;
+        espacio.Format.LineSpacingRule = LineSpacingRule.Exactly;
+        espacio.Format.LineSpacing = Unit.FromPoint(1);
     }
 
     /// <summary>Título centrado que precede a la sección; Cabecera, Considerando y Firmas no llevan título.</summary>
@@ -129,23 +143,9 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         normal.Font.Name = Fuente;
         normal.Font.Size = 11;
         normal.ParagraphFormat.SpaceAfter = Unit.FromPoint(8);
-        switch (interlineado)
-        {
-            case <= 1.0:
-                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Single;
-                break;
-            case >= 2.0:
-                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Double;
-                break;
-            case 1.5:
-                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.OnePtFive;
-                break;
-            default:
-                // Con la regla Multiple, el valor se interpreta como factor (por ejemplo, 1.15).
-                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Multiple;
-                normal.ParagraphFormat.LineSpacing = interlineado;
-                break;
-        }
+        // Con la regla Multiple, el valor se interpreta como factor del interlineado sencillo (0.8 a 2.0).
+        normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Multiple;
+        normal.ParagraphFormat.LineSpacing = interlineado;
         normal.ParagraphFormat.Alignment = ParagraphAlignment.Justify;
 
         var titulo = pdf.Styles.AddStyle("TituloSeccion", StyleNames.Normal);
@@ -160,6 +160,11 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         aviso.ParagraphFormat.Alignment = ParagraphAlignment.Center;
         aviso.ParagraphFormat.SpaceAfter = 0;
         aviso.ParagraphFormat.LineSpacingRule = LineSpacingRule.Single;
+
+        // Firmas: con interlineado menor a 1, la línea de firma se montaría sobre el nombre.
+        var firma = pdf.Styles.AddStyle("Firma", StyleNames.Normal);
+        firma.ParagraphFormat.LineSpacingRule = LineSpacingRule.Multiple;
+        firma.ParagraphFormat.LineSpacing = Math.Max(1.0, interlineado);
 
         var estiloPie = pdf.Styles.AddStyle("Pie", StyleNames.Normal);
         estiloPie.Font.Size = 8.5;

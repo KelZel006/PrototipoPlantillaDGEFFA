@@ -40,6 +40,8 @@ export interface Plantilla extends Entidad {
   alineacionLogo?: AlineacionLogo;
   /** Texto del pie de página del documento (varias líneas). */
   piePagina?: string | null;
+  /** Espacio en centímetros antes de cada bloque de firma. */
+  espacioFirmasCm?: number;
   fechaModificacion: string;
 }
 
@@ -132,14 +134,17 @@ export function esCampoLista(campo: Pick<Campo, 'origen'>): boolean {
 }
 
 /** Interlineados que se pueden elegir al generar el PDF (los acepta el servidor). */
-export const INTERLINEADOS = [
-  { valor: '1', nombre: 'Sencillo' },
-  { valor: '1.15', nombre: '1.15' },
-  { valor: '1.5', nombre: '1.5' },
-  { valor: '2', nombre: 'Doble' },
-] as const;
+export type Interlineado = string;
 
-export type Interlineado = (typeof INTERLINEADOS)[number]['valor'];
+/** De 0.8 a 2.0, de 0.1 en 0.1 (los mismos que acepta el servidor). */
+export const INTERLINEADOS: readonly { valor: Interlineado; nombre: string }[] = Array.from({ length: 13 }, (_, i) => {
+  const valor = ((8 + i) / 10).toFixed(1);
+  const nombre = valor === '1.0' ? '1.0 (sencillo)' : valor === '2.0' ? '2.0 (doble)' : valor;
+  return { valor, nombre };
+});
+
+/** Límites del espacio entre firmas, en centímetros (los mismos que valida el servidor). */
+export const ESPACIO_FIRMAS = { minimo: 0, maximo: 10, predeterminado: 1.2 } as const;
 
 /** Registro de la lista de bienes de una solicitud (alimenta las filas de las tablas). */
 export interface DetalleBien extends Entidad {

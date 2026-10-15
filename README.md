@@ -112,7 +112,8 @@ Otras rutas:
 
 - `GET /api/plantillas/{id}/pdf?solicitudId=&interlineado=`: PDF de prueba con Cabecera, Considerando y Resuelve.
   Con `solicitudId` se sustituyen los campos, se aplican las condiciones y las filas con campos de lista se repiten
-  por cada registro. `interlineado` puede ser `1`, `1.15`, `1.5` (predeterminado) o `2`.
+  por cada registro. `interlineado` va de `0.8` a `2.0`, de 0.1 en 0.1 (predeterminado `1.5`). El espacio entre firmas se guarda en la
+  plantilla (`espacioFirmasCm`, de 0 a 10 cm).
 - `POST /api/plantillas/{id}/logo` (multipart, campo `archivo`) y `DELETE /api/plantillas/{id}/logo`: logo del
   encabezado (PNG o JPEG hasta 1 MB, validado por su contenido). `GET /api/archivos/{id}` devuelve la imagen.
 - `POST /api/parrafos/reordenar`: guarda el orden completo de una sección en una sola operación.

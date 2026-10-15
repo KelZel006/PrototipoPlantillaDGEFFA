@@ -1,7 +1,7 @@
 <details class="diseno" [open]="abierto()" (toggle)="abierto.set($any($event.target).open)">
   <summary>
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h8M8 17h8" /></svg>
-    Diseño del documento: logo y pie de página
+    Diseño del documento: logo, pie de página y firmas
     @if (sucio()) {
       <span class="pendiente">● Cambios sin guardar</span>
     }
@@ -68,11 +68,29 @@
       ></textarea>
       <p class="contador" [class.contador-excedido]="excedido()">{{ pie().length }}/{{ maximoPie }} · hasta 8 líneas</p>
 
+      <label class="etiqueta" [for]="uid + '-firmas'">Espacio entre firmas</label>
+      <div class="espacio-firmas">
+        <input
+          [id]="uid + '-firmas'"
+          class="control control-compacto"
+          type="number"
+          [min]="limitesEspacio.minimo"
+          [max]="limitesEspacio.maximo"
+          step="0.1"
+          [value]="espacioFirmas()"
+          (input)="espacioFirmas.set($any($event.target).valueAsNumber)"
+        />
+        <span>cm antes de cada bloque de firma</span>
+      </div>
+      @if (espacioInvalido()) {
+        <p class="error" role="alert">Use un valor entre {{ limitesEspacio.minimo }} y {{ limitesEspacio.maximo }} cm.</p>
+      }
+
       <div class="acciones-pie">
         @if (sucio()) {
           <button type="button" class="boton boton-texto boton-compacto" (click)="descartar()">Descartar</button>
         }
-        <button type="button" class="boton boton-primario boton-compacto" [disabled]="!sucio() || excedido() || guardando()" (click)="guardar()">
+        <button type="button" class="boton boton-primario boton-compacto" [disabled]="!sucio() || excedido() || espacioInvalido() || guardando()" (click)="guardar()">
           {{ guardando() ? 'Guardando…' : 'Guardar diseño' }}
         </button>
       </div>

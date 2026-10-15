@@ -135,15 +135,18 @@ describe('PanelPlantilla', () => {
       lista.value = '';
       lista.dispatchEvent(new Event('change'));
       const interlineado = elemento.querySelector<HTMLSelectElement>('.interlineado select')!;
-      expect(Array.from(interlineado.options).map((o) => o.textContent?.trim())).toEqual(['Sencillo', '1.15', '1.5', 'Doble']);
-      interlineado.value = '2';
+      expect(Array.from(interlineado.options).map((o) => o.value)).toEqual([
+        '0.8', '0.9', '1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9', '2.0',
+      ]);
+      expect(interlineado.value).toBe('1.5');
+      interlineado.value = '0.9';
       interlineado.dispatchEvent(new Event('change'));
 
       botonPdf().click();
       await estabilizar();
       const peticion = http.expectOne((r) => r.url === '/api/plantillas/PLA-001/pdf');
       expect(peticion.request.params.has('solicitudId')).toBe(false);
-      expect(peticion.request.params.get('interlineado')).toBe('2');
+      expect(peticion.request.params.get('interlineado')).toBe('0.9');
       peticion.flush(new Blob([JSON.stringify({ title: 'Registro no encontrado.' })], { type: 'application/json' }), {
         status: 404,
         statusText: 'Not Found',

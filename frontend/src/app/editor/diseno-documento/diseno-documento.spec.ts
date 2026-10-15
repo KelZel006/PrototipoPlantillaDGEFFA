@@ -65,6 +65,10 @@ describe('DisenoDocumento', () => {
     texto.value = 'Dirección de prueba\nTeléfono 0000-0000';
     texto.dispatchEvent(new Event('input'));
     elemento.querySelector<HTMLInputElement>('input[type="radio"][value="Derecha"]')!.click();
+    const espacio = elemento.querySelector<HTMLInputElement>('input[type="number"]')!;
+    expect(espacio.value).toBe('1.2');
+    espacio.value = '2.5';
+    espacio.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     expect(elemento.textContent).toContain('Cambios sin guardar');
 
@@ -75,6 +79,7 @@ describe('DisenoDocumento', () => {
       version: 2,
       piePagina: 'Dirección de prueba\nTeléfono 0000-0000',
       alineacionLogo: 'Derecha',
+      espacioFirmasCm: 2.5,
       logoId: 'ARC-1',
     });
     guardado.flush({ ...conLogo, version: 3, piePagina: 'Dirección de prueba\nTeléfono 0000-0000', alineacionLogo: 'Derecha' });
@@ -96,6 +101,16 @@ describe('DisenoDocumento', () => {
     TestBed.tick();
     fixture.detectChanges();
     expect(panel.open).toBe(true);
+  });
+
+  it('no permite guardar un espacio entre firmas fuera de rango', () => {
+    const espacio = elemento.querySelector<HTMLInputElement>('input[type="number"]')!;
+    espacio.value = '12';
+    espacio.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(elemento.querySelector('[role="alert"]')?.textContent).toContain('entre 0 y 10 cm');
+    expect(boton('Guardar diseño')!.disabled).toBe(true);
   });
 
   it('pide confirmación antes de quitar el logo', async () => {

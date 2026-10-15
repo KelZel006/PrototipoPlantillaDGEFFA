@@ -25,8 +25,16 @@ public sealed record DocumentoResuelto(
     IReadOnlyList<string> Advertencias,
     DisenoDocumento Diseno);
 
-/// <summary>Presentación del documento: logo del encabezado, texto del pie de página e interlineado.</summary>
-public sealed record DisenoDocumento(byte[]? Logo, AlineacionLogo AlineacionLogo, string? PiePagina, double Interlineado);
+/// <summary>
+/// Presentación del documento: logo del encabezado, texto del pie de página, interlineado y espacio (en cm) que se deja
+/// antes de cada bloque de firma.
+/// </summary>
+public sealed record DisenoDocumento(
+    byte[]? Logo,
+    AlineacionLogo AlineacionLogo,
+    string? PiePagina,
+    double Interlineado,
+    double EspacioFirmasCm);
 
 /// <summary>Marcas internas del documento resuelto (no se guardan; solo indican cómo presentar un campo).</summary>
 public static class MarcasDocumento

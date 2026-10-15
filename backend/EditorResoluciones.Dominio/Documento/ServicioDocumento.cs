@@ -13,9 +13,11 @@ public static class Interlineados
 {
     public const double Predeterminado = 1.5;
 
-    public static IReadOnlyList<double> Permitidos { get; } = [1.0, 1.15, 1.5, 2.0];
+    /// <summary>De 0.8 a 2.0, de 0.1 en 0.1.</summary>
+    public static IReadOnlyList<double> Permitidos { get; } =
+        Enumerable.Range(8, 13).Select(decimas => decimas / 10.0).ToList();
 
-    /// <summary>Interpreta el valor recibido ("1", "1.15", "1.5" o "2"). Sin valor, usa el predeterminado.</summary>
+    /// <summary>Interpreta el valor recibido (por ejemplo "0.8", "1.1" o "2"). Sin valor, usa el predeterminado.</summary>
     public static double Interpretar(string? valor)
     {
         if (string.IsNullOrWhiteSpace(valor))
@@ -27,7 +29,7 @@ public static class Interlineados
         }
 
         var resultado = new ResultadoValidacion();
-        resultado.Agregar("interlineado", "El interlineado debe ser 1, 1.15, 1.5 o 2.");
+        resultado.Agregar("interlineado", "El interlineado debe estar entre 0.8 y 2, de 0.1 en 0.1.");
         resultado.LanzarSiHayErrores();
         return Predeterminado;
     }
@@ -136,7 +138,7 @@ public sealed class ServicioDocumento(
             if (logo is null)
                 advertencias.Add("No se encontró el archivo del logo de la plantilla; el documento se generó sin logo.");
         }
-        var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado);
+        var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado, plantilla.EspacioFirmasCm);
 
         return new DocumentoResuelto(plantilla, solicitud, reloj.GetUtcNow(), secciones, advertencias.Distinct().ToList(), diseno);
     }

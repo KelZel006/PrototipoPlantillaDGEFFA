@@ -3,7 +3,7 @@ import { identificadorUnico } from '../../compartido/identificador';
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
-import { AlineacionLogo, Plantilla } from '../../core/modelos';
+import { AlineacionLogo, ESPACIO_FIRMAS, Plantilla } from '../../core/modelos';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
 
 /** Límites que también aplica el servidor. */
@@ -38,12 +38,25 @@ export class DisenoDocumento {
   // cuando la plantilla cambia de versión por otra acción (por ejemplo, al cargar el logo).
   protected readonly pie = signal('');
   protected readonly alineacion = signal<AlineacionLogo>('Centro');
-  private readonly base = signal({ pie: '', alineacion: 'Centro' as AlineacionLogo });
+  protected readonly espacioFirmas = signal<number>(ESPACIO_FIRMAS.predeterminado);
+  private readonly base = signal({
+    pie: '',
+    alineacion: 'Centro' as AlineacionLogo,
+    espacioFirmas: ESPACIO_FIRMAS.predeterminado as number,
+  });
+  protected readonly limitesEspacio = ESPACIO_FIRMAS;
 
   protected readonly sucio = computed(
-    () => this.pie() !== this.base().pie || this.alineacion() !== this.base().alineacion,
+    () =>
+      this.pie() !== this.base().pie ||
+      this.alineacion() !== this.base().alineacion ||
+      this.espacioFirmas() !== this.base().espacioFirmas,
   );
   protected readonly excedido = computed(() => this.pie().length > MAXIMO_PIE);
+  protected readonly espacioInvalido = computed(() => {
+    const espacio = this.espacioFirmas();
+    return !Number.isFinite(espacio) || espacio < ESPACIO_FIRMAS.minimo || espacio > ESPACIO_FIRMAS.maximo;
+  });
   protected readonly urlLogo = computed(() => {
     const id = this.plantilla().logoId;
     return id ? this.api.urlArchivo(id) : null;
@@ -127,13 +140,18 @@ export class DisenoDocumento {
   }
 
   protected guardar(): void {
-    if (!this.sucio() || this.excedido() || this.guardando()) {
+    if (!this.sucio() || this.excedido() || this.espacioInvalido() || this.guardando()) {
       return;
     }
     this.guardando.set(true);
     const pie = this.pie().trim();
     this.api
-      .actualizarPlantilla({ ...this.plantilla(), piePagina: pie === '' ? null : pie, alineacionLogo: this.alineacion() })
+      .actualizarPlantilla({
+        ...this.plantilla(),
+        piePagina: pie === '' ? null : pie,
+        alineacionLogo: this.alineacion(),
+        espacioFirmasCm: Math.round(this.espacioFirmas() * 10) / 10,
+      })
       .subscribe({
         next: (plantilla) => {
           this.guardando.set(false);
@@ -153,9 +171,14 @@ export class DisenoDocumento {
   }
 
   private reiniciar(plantilla: Plantilla): void {
-    const base = { pie: plantilla.piePagina ?? '', alineacion: plantilla.alineacionLogo ?? 'Centro' };
+    const base = {
+      pie: plantilla.piePagina ?? '',
+      alineacion: plantilla.alineacionLogo ?? 'Centro',
+      espacioFirmas: plantilla.espacioFirmasCm ?? ESPACIO_FIRMAS.predeterminado,
+    };
     this.base.set(base);
     this.pie.set(base.pie);
     this.alineacion.set(base.alineacion);
+    this.espacioFirmas.set(base.espacioFirmas);
   }
 }

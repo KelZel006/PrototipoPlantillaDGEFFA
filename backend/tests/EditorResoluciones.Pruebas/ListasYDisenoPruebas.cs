@@ -202,15 +202,48 @@ public sealed class ListasYDisenoPruebas : IDisposable
         plantilla.AlineacionLogo = AlineacionLogo.Izquierda;
         (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json)).EnsureSuccessStatusCode();
 
-        var documento = await Generar("SOL-001", 1.15);
+        var documento = await Generar("SOL-001", 1.1);
 
         Assert.Equal("Dirección de prueba\nTeléfono 0000-0000", documento.Diseno.PiePagina);
         Assert.Equal(AlineacionLogo.Izquierda, documento.Diseno.AlineacionLogo);
         Assert.Equal(Png, documento.Diseno.Logo);
-        Assert.Equal(1.15, documento.Diseno.Interlineado);
+        Assert.Equal(1.1, documento.Diseno.Interlineado);
 
-        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001&interlineado=1.15");
+        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001&interlineado=1.1");
         Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+    }
+
+    [Fact]
+    public void Ofrece_interlineados_de_0_8_a_2_de_0_1_en_0_1()
+    {
+        Assert.Equal([0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0], Interlineados.Permitidos);
+    }
+
+    [Fact]
+    public async Task Guarda_el_espacio_entre_firmas_y_lo_lleva_al_documento()
+    {
+        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
+        Assert.Equal(1.2, plantilla.EspacioFirmasCm);
+
+        plantilla.EspacioFirmasCm = 3.5;
+        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json)).EnsureSuccessStatusCode();
+
+        Assert.Equal(3.5, (await Generar("SOL-001")).Diseno.EspacioFirmasCm);
+        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(10.5)]
+    public async Task Rechaza_un_espacio_entre_firmas_fuera_de_rango(double espacio)
+    {
+        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
+        plantilla.EspacioFirmasCm = espacio;
+
+        var respuesta = await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json);
+
+        Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
+        Assert.Contains("entre 0 y 10 cm", await respuesta.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -226,10 +259,15 @@ public sealed class ListasYDisenoPruebas : IDisposable
     }
 
     [Theory]
+    [InlineData("0.8", HttpStatusCode.OK)]
+    [InlineData("0.9", HttpStatusCode.OK)]
     [InlineData("1", HttpStatusCode.OK)]
-    [InlineData("1.15", HttpStatusCode.OK)]
+    [InlineData("1.0", HttpStatusCode.OK)]
+    [InlineData("1.3", HttpStatusCode.OK)]
     [InlineData("2", HttpStatusCode.OK)]
-    [InlineData("3", HttpStatusCode.BadRequest)]
+    [InlineData("0.7", HttpStatusCode.BadRequest)]
+    [InlineData("1.15", HttpStatusCode.BadRequest)]
+    [InlineData("2.1", HttpStatusCode.BadRequest)]
     [InlineData("doble", HttpStatusCode.BadRequest)]
     public async Task Valida_el_interlineado_del_pdf(string interlineado, HttpStatusCode esperado)
     {

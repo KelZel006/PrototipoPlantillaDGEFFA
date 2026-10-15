@@ -51,5 +51,9 @@ public class Plantilla : IEntidad, IConMarcaTiempo
     [StringLength(500, ErrorMessage = "El pie de página admite hasta 500 caracteres.")]
     public string? PiePagina { get; set; }
 
+    /// <summary>Espacio en centímetros antes de cada bloque de firma (también separa las firmas del texto anterior).</summary>
+    [Range(0.0, 10.0, ErrorMessage = "El espacio entre firmas debe estar entre 0 y 10 cm.")]
+    public double EspacioFirmasCm { get; set; } = 1.2;
+
     public DateTimeOffset FechaModificacion { get; set; }
 }
