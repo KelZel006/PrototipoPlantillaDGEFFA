@@ -30,5 +30,27 @@
         <code>{{ p.id }}</code> · versión {{ p.version }} · modificada {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
       </span>
     </div>
+
+    <div class="generar">
+      <label class="solicitud">
+        <span>Solicitud de prueba</span>
+        <select class="control control-compacto" (change)="solicitudElegida.set($any($event.target).value)">
+          <option value="" [selected]="solicitudElegida() === ''">Sin datos (mostrar los campos)</option>
+          @for (s of solicitudes(); track s.id) {
+            <option [value]="s.id" [selected]="s.id === solicitudElegida()">
+              {{ s.numeroSolicitud }} – {{ s.beneficiario ?? 'sin beneficiario' }}{{ s.mismaCombinacion ? '' : ' (otro rubro)' }}
+            </option>
+          }
+        </select>
+      </label>
+      <button type="button" class="boton boton-primario" [disabled]="generando()" (click)="generarPdf()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M12 11v6M9 14l3 3 3-3" /></svg>
+        {{ generando() ? 'Generando…' : 'Generar PDF' }}
+      </button>
+      <span class="texto-secundario sin-margen nota-pdf">
+        Orden del documento: Cabecera, Considerando y Resuelve. Con una solicitud se reemplazan los campos y se aplican
+        las condiciones.
+      </span>
+    </div>
   }
 </section>

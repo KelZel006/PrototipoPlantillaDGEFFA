@@ -1,6 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DetalleProblema } from './modelos';
 
+/**
+ * Igual que mensajeError, para peticiones que esperan un archivo: el detalle del error llega como Blob.
+ */
+export async function mensajeErrorArchivo(error: unknown): Promise<string> {
+  if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
+    try {
+      const detalle = JSON.parse(await error.error.text()) as DetalleProblema;
+      return mensajeError(new HttpErrorResponse({ status: error.status, error: detalle }));
+    } catch {
+      // El cuerpo no era JSON: se usa el mensaje genérico.
+    }
+  }
+  return mensajeError(error);
+}
+
 /** Convierte un error de la API en un mensaje comprensible en español. */
 export function mensajeError(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) {

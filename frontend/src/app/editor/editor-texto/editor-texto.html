@@ -55,6 +55,14 @@
       </button>
     </div>
 
+    <div class="grupo">
+      <button type="button" class="herramienta" aria-label="Insertar tabla"
+        [title]="estado().enTabla ? 'No se puede insertar una tabla dentro de otra' : 'Insertar tabla'"
+        [disabled]="estado().enTabla" [attr.aria-pressed]="creandoTabla()" (click)="abrirTabla()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M3 15h18M9 4v16M15 4v16" /></svg>
+      </button>
+    </div>
+
     <label class="insertar">
       <span class="visualmente-oculto">Insertar campo</span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5" /></svg>
@@ -73,9 +81,9 @@
 
   @if (editandoEnlace()) {
     <div class="enlace">
-      <label for="url-enlace">Dirección del enlace</label>
+      <label [for]="uid + '-url'">Dirección del enlace</label>
       <input
-        id="url-enlace"
+        [id]="uid + '-url'"
         class="control control-compacto"
         type="url"
         [value]="urlEnlace()"
@@ -91,6 +99,43 @@
       @if (errorEnlace(); as error) {
         <span class="error-enlace" role="alert">{{ error }}</span>
       }
+    </div>
+  }
+
+  @if (creandoTabla()) {
+    <div class="enlace crear-tabla">
+      <label>
+        Filas
+        <input class="control control-compacto numero" type="number" min="1" [max]="filasMaximas"
+          [value]="filasTabla()" (input)="filasTabla.set(+$any($event.target).value)" />
+      </label>
+      <label>
+        Columnas
+        <input class="control control-compacto numero" type="number" min="1" [max]="columnasMaximas"
+          [value]="columnasTabla()" (input)="columnasTabla.set(+$any($event.target).value)" />
+      </label>
+      <label class="casilla">
+        <input type="checkbox" [checked]="tablaConEncabezado()" (change)="tablaConEncabezado.set($any($event.target).checked)" />
+        Primera fila como encabezado
+      </label>
+      <button type="button" class="boton boton-primario boton-compacto" (click)="confirmarTabla()">Insertar</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="cancelarTabla()">Cancelar</button>
+      <span class="ayuda">Máximo {{ columnasMaximas }} columnas y {{ filasMaximas }} filas.</span>
+    </div>
+  }
+
+  @if (estado().enTabla) {
+    <div class="barra barra-tabla" role="toolbar" aria-label="Acciones de la tabla" (mousedown)="$event.preventDefault()">
+      <span class="etiqueta-barra">Tabla:</span>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="agregarFila('antes')">+ Fila arriba</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="agregarFila('despues')">+ Fila abajo</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="agregarColumna('antes')">+ Columna izquierda</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="agregarColumna('despues')">+ Columna derecha</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="eliminarFila()">− Fila</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="eliminarColumna()">− Columna</button>
+      <button type="button" class="boton boton-texto boton-compacto" (click)="alternarFilaEncabezado()">Fila de encabezado</button>
+      <button type="button" class="boton boton-texto boton-compacto" title="Combina las celdas seleccionadas o separa una celda combinada" (click)="combinarCeldas()">Combinar / separar</button>
+      <button type="button" class="boton boton-texto boton-compacto texto-peligro" (click)="eliminarTabla()">Eliminar tabla</button>
     </div>
   }
 

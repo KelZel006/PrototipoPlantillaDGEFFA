@@ -63,3 +63,12 @@
     font-size: var(--texto-pequeno);
   }
 }
+
+.cambios {
+  color: var(--prueba);
+  font-size: 0.8rem;
+}
+
+.pestana[aria-selected='true'] .cambios {
+  color: #ffd27a;
+}

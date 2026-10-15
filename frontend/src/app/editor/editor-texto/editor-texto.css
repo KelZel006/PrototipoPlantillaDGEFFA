@@ -146,3 +146,81 @@
 :host ::ng-deep .superficie-editor a {
   color: var(--primario-oscuro);
 }
+
+.herramienta:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.crear-tabla label {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.crear-tabla .numero {
+  width: 70px;
+}
+
+.crear-tabla .casilla {
+  font-weight: 400;
+}
+
+.ayuda {
+  flex-basis: 100%;
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+}
+
+.barra-tabla {
+  gap: 2px;
+  background: var(--primario-suave);
+}
+
+.etiqueta-barra {
+  margin-right: var(--espacio-1);
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+  color: var(--primario-oscuro);
+}
+
+.texto-peligro {
+  color: var(--error);
+}
+
+/* Tablas dentro del editor (las crea TipTap). */
+:host ::ng-deep .superficie-editor table {
+  width: 100%;
+  margin: var(--espacio-2) 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+:host ::ng-deep .superficie-editor th,
+:host ::ng-deep .superficie-editor td {
+  position: relative;
+  padding: var(--espacio-1) var(--espacio-2);
+  border: 1px solid #b9c4d4;
+  vertical-align: top;
+}
+
+:host ::ng-deep .superficie-editor th {
+  background: #e8eef6;
+  font-weight: 600;
+  text-align: left;
+}
+
+:host ::ng-deep .superficie-editor td p,
+:host ::ng-deep .superficie-editor th p {
+  margin: 0;
+}
+
+:host ::ng-deep .superficie-editor .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(47 111 228 / 15%);
+  pointer-events: none;
+}

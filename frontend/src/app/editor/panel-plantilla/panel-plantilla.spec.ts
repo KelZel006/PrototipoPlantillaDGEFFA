@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import { ContextoService } from '../../core/contexto.service';
+import { InteraccionService } from '../../core/interaccion.service';
 import { PanelPlantilla } from './panel-plantilla';
 
 registerLocaleData(localeEs);
@@ -66,10 +67,79 @@ describe('PanelPlantilla', () => {
     expect(peticion.request.params.get('tipoDocumentoId')).toBe('TDO-001');
     peticion.flush([plantilla]);
     await estabilizar();
+    http.expectOne('/api/solicitudes').flush([]);
+    await estabilizar();
 
     expect(elemento.querySelector('h2')?.textContent).toContain('Plantilla de prueba');
     expect(elemento.textContent).toContain('PLA-001');
     expect(elemento.textContent).toContain('Borrador');
+  });
+
+  describe('generar PDF', () => {
+    const solicitudes = [
+      { id: 'SOL-004', version: 1, numeroSolicitud: 'P-4', beneficiario: 'Otro', rubroId: 'RUB-002', subRubroId: 'SUB-003', esDatoPrueba: true },
+      { id: 'SOL-001', version: 1, numeroSolicitud: 'P-1', beneficiario: 'Uno', rubroId: 'RUB-001', subRubroId: 'SUB-001', esDatoPrueba: true },
+    ];
+    let ventana: { location: { href: string }; close: ReturnType<typeof vi.fn> };
+
+    const cargarPlantilla = async () => {
+      seleccionarCombinacion();
+      fixture.detectChanges();
+      await estabilizar();
+      http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
+      await estabilizar();
+      http.expectOne('/api/solicitudes').flush(solicitudes);
+      await estabilizar();
+    };
+    const botonPdf = () =>
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Generar PDF'))!;
+
+    beforeEach(() => {
+      ventana = { location: { href: '' }, close: vi.fn() };
+      vi.spyOn(window, 'open').mockReturnValue(ventana as unknown as Window);
+      URL.createObjectURL = vi.fn(() => 'blob:pdf-de-prueba');
+      URL.revokeObjectURL = vi.fn();
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('propone primero la solicitud de la misma combinación y abre el PDF', async () => {
+      await cargarPlantilla();
+      const opciones = Array.from(elemento.querySelectorAll('.solicitud option')).map((o) => o.textContent?.trim());
+      expect(opciones).toEqual(['Sin datos (mostrar los campos)', 'P-1 – Uno', 'P-4 – Otro (otro rubro)']);
+
+      botonPdf().click();
+      await estabilizar();
+      const peticion = http.expectOne((r) => r.url === '/api/plantillas/PLA-001/pdf');
+      expect(peticion.request.params.get('solicitudId')).toBe('SOL-001');
+      expect(peticion.request.responseType).toBe('blob');
+      peticion.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
+      await estabilizar();
+
+      expect(ventana.location.href).toBe('blob:pdf-de-prueba');
+    });
+
+    it('sin solicitud no envía el parámetro y muestra los errores del servidor', async () => {
+      await cargarPlantilla();
+      const lista = elemento.querySelector<HTMLSelectElement>('.solicitud select')!;
+      lista.value = '';
+      lista.dispatchEvent(new Event('change'));
+
+      botonPdf().click();
+      await estabilizar();
+      const peticion = http.expectOne((r) => r.url === '/api/plantillas/PLA-001/pdf');
+      expect(peticion.request.params.has('solicitudId')).toBe(false);
+      peticion.flush(new Blob([JSON.stringify({ title: 'Registro no encontrado.' })], { type: 'application/json' }), {
+        status: 404,
+        statusText: 'Not Found',
+      });
+      await estabilizar();
+      await estabilizar();
+
+      expect(ventana.close).toHaveBeenCalled();
+      const interaccion = TestBed.inject(InteraccionService);
+      expect(interaccion.avisos().map((a) => a.texto)).toContain('No se pudo generar el PDF. Registro no encontrado.');
+    });
   });
 
   it('crea la plantilla cuando la combinación no tiene una', async () => {
@@ -90,6 +160,8 @@ describe('PanelPlantilla', () => {
 
     // Tras crearla se vuelve a consultar.
     http.expectOne((r) => r.method === 'GET' && r.url === '/api/plantillas').flush([plantilla]);
+    await estabilizar();
+    http.expectOne('/api/solicitudes').flush([]);
     await estabilizar();
     expect(elemento.textContent).toContain('PLA-001');
   });

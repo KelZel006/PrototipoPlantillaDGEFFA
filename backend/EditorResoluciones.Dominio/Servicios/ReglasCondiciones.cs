@@ -32,6 +32,35 @@ public static class ReglasCondiciones
             [TipoDato.Booleano] = [OperadorComparacion.IgualA, OperadorComparacion.DistintoDe, .. Nulidad],
         };
 
+    private static readonly Dictionary<OperadorComparacion, string> NombresOperador = new()
+    {
+        [OperadorComparacion.IgualA] = "igual a",
+        [OperadorComparacion.DistintoDe] = "distinto de",
+        [OperadorComparacion.Contiene] = "contiene",
+        [OperadorComparacion.NoContiene] = "no contiene",
+        [OperadorComparacion.EsNulo] = "está vacío",
+        [OperadorComparacion.NoEsNulo] = "no está vacío",
+        [OperadorComparacion.MayorQue] = "mayor que",
+        [OperadorComparacion.MenorQue] = "menor que",
+        [OperadorComparacion.MayorOIgualQue] = "mayor o igual que",
+        [OperadorComparacion.MenorOIgualQue] = "menor o igual que",
+    };
+
+    /// <summary>Descripción legible, por ejemplo "Estado de Solicitud igual a En Curso y (A o B)".</summary>
+    public static string Describir(GrupoCondiciones grupo, IReadOnlyDictionary<string, Campo> catalogo)
+    {
+        var conector = grupo.OperadorLogico == OperadorLogico.Y ? " y " : " o ";
+        var partes = grupo.Reglas.Select(regla =>
+            {
+                var etiqueta = catalogo.TryGetValue(regla.CampoId, out var campo) ? campo.Etiqueta : regla.CampoId;
+                return RequiereValor(regla.Operador)
+                    ? $"{etiqueta} {NombresOperador[regla.Operador]} {regla.Valor}"
+                    : $"{etiqueta} {NombresOperador[regla.Operador]}";
+            })
+            .Concat(grupo.Grupos.Where(g => Reglas(g).Any()).Select(g => $"({Describir(g, catalogo)})"));
+        return string.Join(conector, partes);
+    }
+
     public static bool RequiereValor(OperadorComparacion operador) => !Nulidad.Contains(operador);
 
     public static IEnumerable<ReglaCondicion> Reglas(GrupoCondiciones grupo) =>

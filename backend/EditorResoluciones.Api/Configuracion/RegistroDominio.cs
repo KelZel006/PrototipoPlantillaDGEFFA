@@ -1,4 +1,5 @@
 using EditorResoluciones.Dominio.Comun;
+using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Servicios;
 using EditorResoluciones.Dominio.Validacion;
 
@@ -14,6 +15,7 @@ public static class RegistroDominio
         servicios.AddScoped(typeof(ServicioEntidades<>));
         servicios.AddScoped<ServicioParrafos>();
         servicios.AddScoped<ServicioValoresCampo>();
+        servicios.AddScoped<ServicioDocumento>();
 
         // Registra todos los validadores y normalizadores del dominio (ValidadorRubro, NormalizadorParrafo, …).
         Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>)];

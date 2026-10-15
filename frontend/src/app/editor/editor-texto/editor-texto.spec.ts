@@ -93,7 +93,56 @@ describe('EditorTexto', () => {
       'Justificar',
       'Enlace',
       'Quitar formato',
+      'Insertar tabla',
     ]);
+  });
+});
+
+describe('EditorTexto: tablas', () => {
+  let fixture: ComponentFixture<EditorTexto>;
+  let elemento: HTMLElement;
+  let cambios: NodoContenido[];
+
+  beforeEach(async () => {
+    fixture = TestBed.createComponent(EditorTexto);
+    elemento = fixture.nativeElement;
+    cambios = [];
+    fixture.componentInstance.cambio.subscribe((doc) => cambios.push(doc));
+    fixture.componentRef.setInput('campos', CAMPOS);
+    fixture.componentRef.setInput('etiqueta', (id: string) => id);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  });
+
+  afterEach(() => fixture.destroy());
+
+  const tabla = () => cambios.at(-1)!.content!.find((n) => n.type === 'table')!;
+
+  it('inserta una tabla con fila de encabezado y muestra sus acciones', () => {
+    fixture.componentInstance.insertarTabla(2, 3, true);
+    fixture.detectChanges();
+
+    const filas = tabla().content!;
+    expect(filas).toHaveLength(2);
+    expect(filas[0].content!.map((c) => c.type)).toEqual(['tableHeader', 'tableHeader', 'tableHeader']);
+    expect(filas[1].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell', 'tableCell']);
+
+    expect(elemento.querySelector('[aria-label="Acciones de la tabla"]')).not.toBeNull();
+    expect(elemento.querySelector<HTMLButtonElement>('[aria-label="Insertar tabla"]')!.disabled).toBe(true);
+  });
+
+  it('ajusta filas y columnas a los límites del servidor', () => {
+    fixture.componentInstance.insertarTabla(0, 40, false);
+    const filas = tabla().content!;
+    expect(filas).toHaveLength(1);
+    expect(filas[0].content).toHaveLength(12);
+  });
+
+  it('no inserta una tabla dentro de otra', () => {
+    fixture.componentInstance.insertarTabla(2, 2, false);
+    const antes = cambios.length;
+    fixture.componentInstance.insertarTabla(2, 2, false);
+    expect(cambios.length).toBe(antes);
   });
 });
 

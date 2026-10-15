@@ -16,11 +16,11 @@
         (mostrarSoloSiCumpleCambio)="mostrarSoloSiCumple.set($event)"
       />
 
-      <section class="tarjeta texto" aria-labelledby="titulo-texto">
+      <section class="tarjeta texto" [attr.aria-labelledby]="uid + '-titulo'">
         <header class="encabezado-texto">
-          <h3 id="titulo-texto" class="titulo-con-icono">
+          <h3 [id]="uid + '-titulo'" class="titulo-con-icono">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /></svg>
-            Texto del {{ nombre().singular }}
+            {{ nombre().texto }}
           </h3>
           <span class="estado-edicion" aria-live="polite">
             @if (editando()) {
@@ -41,7 +41,7 @@
         <app-editor-texto
           [campos]="camposSeccion()"
           [etiqueta]="catalogo.etiqueta"
-          [etiquetaAccesible]="'Texto del ' + nombre().singular"
+          [etiquetaAccesible]="nombre().texto"
           (cambio)="contenido.set($event)"
         />
 
@@ -95,7 +95,7 @@
       } @else {
         <app-lista-parrafos
           [parrafos]="parrafos()"
-          [titulo]="'Listado de ' + nombre().plural"
+          [titulo]="nombre().listado"
           [editandoId]="editando()?.id ?? null"
           [ocupado]="ocupado() || guardando()"
           (editar)="editar($event)"
@@ -103,6 +103,7 @@
           (duplicar)="duplicar($event)"
           (alternarActivo)="alternarActivo($event)"
           (mover)="mover($event)"
+          (reordenar)="reordenar($event)"
         />
       }
     </div>

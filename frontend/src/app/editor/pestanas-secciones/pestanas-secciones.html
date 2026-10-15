@@ -6,7 +6,7 @@
       class="pestana"
       [id]="'pestana-' + pestana.seccion"
       [attr.aria-selected]="pestana.seccion === activa()"
-      [attr.aria-controls]="'panel-' + pestana.seccion"
+      [attr.aria-controls]="pestana.disponible ? 'panel-' + pestana.seccion : null"
       [attr.aria-disabled]="!pestana.disponible"
       [title]="pestana.disponible ? pestana.seccion : pestana.seccion + ': se habilitará en una fase posterior'"
       (click)="seleccionar(pestana)"
@@ -23,6 +23,9 @@
         }
       }
       <span>{{ pestana.seccion }}</span>
+      @if (contexto.seccionesConCambios().has(pestana.seccion)) {
+        <span class="cambios" title="Cambios sin guardar" aria-label="Cambios sin guardar">●</span>
+      }
       @if (!pestana.disponible) {
         <span class="proximamente">Próximamente</span>
       }
@@ -30,6 +33,16 @@
   }
 </div>
 
-<div class="panel" role="tabpanel" [id]="'panel-' + activa()" [attr.aria-labelledby]="'pestana-' + activa()">
-  <app-editor-seccion [plantilla]="plantilla()" [seccion]="activa()" [nombre]="pestanaActiva().nombre" />
-</div>
+@for (pestana of pestanas; track pestana.seccion) {
+  @if (pestana.disponible) {
+    <div
+      class="panel"
+      role="tabpanel"
+      [id]="'panel-' + pestana.seccion"
+      [attr.aria-labelledby]="'pestana-' + pestana.seccion"
+      [hidden]="pestana.seccion !== activa()"
+    >
+      <app-editor-seccion [plantilla]="plantilla()" [seccion]="pestana.seccion" [nombre]="pestana.nombre" />
+    </div>
+  }
+}

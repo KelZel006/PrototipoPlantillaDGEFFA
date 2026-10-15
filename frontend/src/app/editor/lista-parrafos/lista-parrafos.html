@@ -1,18 +1,30 @@
-<section class="tarjeta panel" aria-labelledby="titulo-listado">
-  <h3 id="titulo-listado" class="titulo-con-icono">
+<section class="tarjeta panel" [attr.aria-labelledby]="uid + '-titulo'">
+  <h3 [id]="uid + '-titulo'" class="titulo-con-icono">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /></svg>
     {{ titulo() }}
     <span class="insignia">{{ parrafos().length }}</span>
   </h3>
 
-  <ol class="lista">
+  <ol
+    class="lista"
+    cdkDropList
+    [cdkDropListDisabled]="ocupado()"
+    (cdkDropListDropped)="soltar($event)"
+    [attr.aria-describedby]="uid + '-ayuda'"
+  >
     @for (elemento of elementos(); track elemento.parrafo.id; let primero = $first; let ultimo = $last) {
       <li
+        cdkDrag
+        cdkDragLockAxis="y"
         class="tarjeta-parrafo"
         [class.editando]="elemento.parrafo.id === editandoId()"
         [class.inactivo]="!elemento.parrafo.activo"
       >
-        <div class="cuerpo">
+        <div class="tarjeta-placeholder" *cdkDragPlaceholder></div>
+        <span class="asa" cdkDragHandle title="Arrastre para cambiar el orden" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4" /><circle cx="15" cy="6" r="1.4" /><circle cx="9" cy="12" r="1.4" /><circle cx="15" cy="12" r="1.4" /><circle cx="9" cy="18" r="1.4" /><circle cx="15" cy="18" r="1.4" /></svg>
+        </span>
+        <div class="cuerpo" cdkDragHandle>
           <p class="resumen">{{ elemento.resumen }}</p>
 
           <div class="condiciones">
@@ -74,6 +86,10 @@
       <li class="vacio">Todavía no hay párrafos en esta sección. Escriba el primero en el editor y pulse «Agregar a la lista».</li>
     }
   </ol>
+
+  <p class="ayuda-arrastre" [id]="uid + '-ayuda'">
+    Arrastre una tarjeta para cambiar el orden en que aparecerá en el documento. También puede usar las flechas.
+  </p>
 
   <aside class="nota">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>

@@ -104,6 +104,17 @@ export interface Campo extends Entidad {
   descripcion?: string;
 }
 
+/** Solicitud ficticia con la que se prueba la generación del documento. */
+export interface Solicitud extends Entidad {
+  numeroSolicitud: string;
+  operador?: string;
+  beneficiario?: string;
+  rubroId: string;
+  subRubroId: string;
+  estado?: string;
+  esDatoPrueba: boolean;
+}
+
 export interface EstadoColeccion {
   nombre: string;
   disponible: boolean;

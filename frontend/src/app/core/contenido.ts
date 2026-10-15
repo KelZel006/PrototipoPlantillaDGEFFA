@@ -104,6 +104,10 @@ export function textoPlano(doc: NodoContenido, etiqueta: ResolverEtiqueta): stri
       partes.push(id ? textoCampo(etiqueta(id)) : '');
     } else if (nodo.type === 'hardBreak') {
       partes.push(' ');
+    } else if (nodo.type === 'table') {
+      // Igual que en el servidor: el resumen no muestra el contenido de las celdas.
+      partes.push(' [Tabla] ');
+      return;
     }
     for (const hijo of nodo.content ?? []) {
       visitar(hijo);

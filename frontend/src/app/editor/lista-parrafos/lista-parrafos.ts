@@ -1,4 +1,6 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import { Component, computed, inject, input, output } from '@angular/core';
+import { identificadorUnico } from '../../compartido/identificador';
 import { CatalogoService } from '../../core/catalogo.service';
 import { describirGrupo, tieneReglas } from '../../core/condiciones';
 import { textoPlano } from '../../core/contenido';
@@ -17,11 +19,14 @@ export function estadoCondicion(parrafo: Parrafo): EstadoCondicion {
 /** Listado de párrafos de la sección con sus acciones y el resumen de sus condiciones. */
 @Component({
   selector: 'app-lista-parrafos',
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder],
   templateUrl: './lista-parrafos.html',
   styleUrl: './lista-parrafos.css',
 })
 export class ListaParrafos {
   private readonly catalogo = inject(CatalogoService);
+
+  protected readonly uid = identificadorUnico('listado');
 
   readonly parrafos = input.required<Parrafo[]>();
   readonly titulo = input.required<string>();
@@ -34,6 +39,14 @@ export class ListaParrafos {
   readonly duplicar = output<Parrafo>();
   readonly alternarActivo = output<Parrafo>();
   readonly mover = output<{ parrafo: Parrafo; desplazamiento: -1 | 1 }>();
+  /** Nuevo orden tras arrastrar una tarjeta: posición de origen y de destino. */
+  readonly reordenar = output<{ desde: number; hasta: number }>();
+
+  protected soltar(evento: Pick<CdkDragDrop<unknown>, 'previousIndex' | 'currentIndex'>): void {
+    if (evento.previousIndex !== evento.currentIndex) {
+      this.reordenar.emit({ desde: evento.previousIndex, hasta: evento.currentIndex });
+    }
+  }
 
   protected readonly elementos = computed(() =>
     this.parrafos().map((parrafo) => ({

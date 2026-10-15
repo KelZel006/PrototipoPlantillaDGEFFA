@@ -1,3 +1,4 @@
+import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -13,6 +14,7 @@ import {
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
+import { identificadorUnico } from '../../compartido/identificador';
 import { ApiService } from '../../core/api.service';
 import { CatalogoService } from '../../core/catalogo.service';
 import { copiarGrupo, grupoVacio, normalizarCondicion, problemasCondicion } from '../../core/condiciones';
@@ -34,9 +36,14 @@ import { EditorTexto } from '../editor-texto/editor-texto';
 import { ListaParrafos } from '../lista-parrafos/lista-parrafos';
 import { PanelCampos } from '../panel-campos/panel-campos';
 
+/** Textos de la sección en la interfaz. */
 export interface NombreSeccion {
-  singular: string;
-  plural: string;
+  /** Título del editor, por ejemplo "Texto del Considerando". */
+  texto: string;
+  /** Título del listado, por ejemplo "Listado de Considerandos". */
+  listado: string;
+  /** Nombre de un elemento, por ejemplo "Considerando" o "Párrafo de cabecera". */
+  elemento: string;
 }
 
 interface Borrador {
@@ -75,6 +82,7 @@ export class EditorSeccion {
   readonly seccion = input.required<Seccion>();
   readonly nombre = input.required<NombreSeccion>();
 
+  protected readonly uid = identificadorUnico('texto');
   private readonly editorTexto = viewChild(EditorTexto);
 
   private readonly parrafosRecurso = rxResource({
@@ -116,7 +124,7 @@ export class EditorSeccion {
   protected readonly problemas = computed(() => {
     const problemas: string[] = [];
     if (!tieneContenido(this.contenido())) {
-      problemas.push(`Escriba el texto del ${this.nombre().singular.toLowerCase()}.`);
+      problemas.push(`Escriba el texto del ${this.nombre().elemento.toLowerCase()}.`);
     }
     if (contarCaracteres(this.contenido(), this.catalogo.etiqueta) > MAXIMO_CARACTERES) {
       problemas.push(`El texto supera los ${MAXIMO_CARACTERES} caracteres.`);
@@ -136,8 +144,8 @@ export class EditorSeccion {
       untracked(() => this.cargarBorrador(null));
     });
     // El selector de contexto consulta este indicador antes de cambiar de plantilla.
-    effect(() => this.contexto.cambiosSinGuardar.set(this.sucio()));
-    inject(DestroyRef).onDestroy(() => this.contexto.cambiosSinGuardar.set(false));
+    effect(() => this.contexto.marcarCambios(this.seccion(), this.sucio()));
+    inject(DestroyRef).onDestroy(() => this.contexto.marcarCambios(this.seccion(), false));
   }
 
   protected alSalir(evento: BeforeUnloadEvent): void {
@@ -198,7 +206,7 @@ export class EditorSeccion {
     peticion.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.interaccion.avisar('exito', `${this.nombre().singular} ${editando ? 'actualizado' : 'agregado'}.`);
+        this.interaccion.avisar('exito', `${this.nombre().elemento} ${editando ? 'actualizado' : 'agregado'}.`);
         this.cargarBorrador(null);
         this.refrescar();
       },
@@ -225,7 +233,7 @@ export class EditorSeccion {
   protected async eliminar(parrafo: Parrafo): Promise<void> {
     const resumen = textoPlano(parrafo.contenido, this.catalogo.etiqueta);
     const aceptado = await this.interaccion.confirmar({
-      titulo: `Eliminar ${this.nombre().singular.toLowerCase()}`,
+      titulo: `Eliminar ${this.nombre().elemento.toLowerCase()}`,
       mensaje: `Se eliminará el párrafo «${resumen.length > 120 ? resumen.slice(0, 120) + '…' : resumen}». Esta acción no se puede deshacer.`,
       aceptar: 'Eliminar',
       peligro: true,
@@ -252,14 +260,20 @@ export class EditorSeccion {
     );
   }
 
+  /** Subir o bajar una posición con las flechas. */
   protected mover(evento: { parrafo: Parrafo; desplazamiento: -1 | 1 }): void {
+    const origen = this.parrafos().findIndex((p) => p.id === evento.parrafo.id);
+    this.reordenar({ desde: origen, hasta: origen + evento.desplazamiento });
+  }
+
+  /** Lleva un párrafo de una posición a otra (arrastrar y soltar) y guarda el orden de toda la sección. */
+  protected reordenar({ desde, hasta }: { desde: number; hasta: number }): void {
     const lista = [...this.parrafos()];
-    const origen = lista.findIndex((p) => p.id === evento.parrafo.id);
-    const destino = origen + evento.desplazamiento;
-    if (origen < 0 || destino < 0 || destino >= lista.length) {
+    if (desde === hasta || desde < 0 || hasta < 0 || desde >= lista.length || hasta >= lista.length) {
       return;
     }
-    [lista[origen], lista[destino]] = [lista[destino], lista[origen]];
+    moveItemInArray(lista, desde, hasta);
+    // Se muestra el nuevo orden de inmediato; si el servidor lo rechaza, se vuelve a cargar la lista.
     this.parrafos.set(lista);
     this.ocupado.set(true);
     this.api.reordenarParrafos(this.plantilla().id, this.seccion(), lista).subscribe({

@@ -28,3 +28,36 @@
 .nombre h2 {
   overflow-wrap: anywhere;
 }
+
+.generar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+  padding-top: var(--espacio-3);
+  border-top: 1px solid var(--borde);
+}
+
+.solicitud {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: min(100%, 320px);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.generar .boton svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nota-pdf {
+  flex-basis: 100%;
+  font-size: var(--texto-pequeno);
+}

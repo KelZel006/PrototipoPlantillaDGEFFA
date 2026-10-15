@@ -97,6 +97,21 @@ describe('ListaParrafos', () => {
     expect(eventos).toEqual(['editar P1', 'eliminar P2', 'duplicar P2', 'activo P3', 'mover P2 -1']);
   });
 
+  it('emite el nuevo orden al soltar una tarjeta en otra posición', () => {
+    const ordenes: { desde: number; hasta: number }[] = [];
+    fixture.componentInstance.reordenar.subscribe((o) => ordenes.push(o));
+    const soltar = (fixture.componentInstance as unknown as {
+      soltar: (e: { previousIndex: number; currentIndex: number }) => void;
+    }).soltar.bind(fixture.componentInstance);
+
+    soltar({ previousIndex: 0, currentIndex: 2 });
+    soltar({ previousIndex: 1, currentIndex: 1 });
+
+    expect(ordenes).toEqual([{ desde: 0, hasta: 2 }]);
+    expect(elemento.querySelector('[cdkDropList], .cdk-drop-list')).not.toBeNull();
+    expect(elemento.querySelectorAll('.cdk-drag').length).toBe(3);
+  });
+
   it('deshabilita las acciones mientras se guarda', () => {
     fixture.componentRef.setInput('ocupado', true);
     fixture.detectChanges();

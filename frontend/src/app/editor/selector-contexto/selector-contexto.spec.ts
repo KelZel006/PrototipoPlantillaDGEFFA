@@ -76,7 +76,7 @@ describe('SelectorContexto', () => {
   it('pide confirmación si hay cambios sin guardar y respeta la cancelación', async () => {
     const contexto = TestBed.inject(ContextoService);
     const interaccion = TestBed.inject(InteraccionService);
-    contexto.cambiosSinGuardar.set(true);
+    contexto.marcarCambios('Considerando', true);
     const confirmar = vi.spyOn(interaccion, 'confirmar').mockResolvedValue(false);
 
     elegir('lista-tipo', 'TDO-001');

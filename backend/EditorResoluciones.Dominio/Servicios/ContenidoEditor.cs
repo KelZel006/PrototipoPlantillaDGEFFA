@@ -29,7 +29,22 @@ public static class ContenidoEditor
         ["orderedList"] = ["start", "type"],
         ["listItem"] = [],
         [NodoCampo] = ["campoId"],
+        ["table"] = [],
+        ["tableRow"] = [],
+        ["tableHeader"] = ["colspan", "rowspan", "colwidth"],
+        ["tableCell"] = ["colspan", "rowspan", "colwidth"],
     };
+
+    /// <summary>Hijos permitidos de los nodos con estructura fija (las tablas).</summary>
+    private static readonly Dictionary<string, string[]> HijosPermitidos = new(StringComparer.Ordinal)
+    {
+        ["table"] = ["tableRow"],
+        ["tableRow"] = ["tableHeader", "tableCell"],
+    };
+
+    /// <summary>Límites de una tabla dentro de un párrafo.</summary>
+    public const int ColumnasMaximas = 12;
+    public const int FilasMaximas = 100;
 
     private static readonly string[] EnLinea = ["text", NodoCampo, "hardBreak"];
 
@@ -62,6 +77,37 @@ public static class ContenidoEditor
             NodoCampo => CampoId(n) is { } id && catalogo.TryGetValue(id, out var campo) ? campo.Etiqueta.Length + 2 : 0,
             _ => 0,
         });
+
+    /// <summary>Texto plano con los campos como "{Etiqueta}" y las tablas como "[Tabla]"; sirve para resúmenes.</summary>
+    public static string TextoPlano(NodoContenido raiz, IReadOnlyDictionary<string, Campo> catalogo)
+    {
+        var partes = new System.Text.StringBuilder();
+        void Visitar(NodoContenido nodo)
+        {
+            switch (nodo.Tipo)
+            {
+                case "text":
+                    partes.Append(nodo.Texto);
+                    return;
+                case NodoCampo:
+                    var id = CampoId(nodo) ?? "";
+                    partes.Append('{').Append(catalogo.TryGetValue(id, out var campo) ? campo.Etiqueta : id).Append('}');
+                    return;
+                case "table":
+                    partes.Append(" [Tabla] ");
+                    return;
+                case "hardBreak":
+                    partes.Append(' ');
+                    return;
+            }
+            foreach (var hijo in nodo.Contenido ?? [])
+                Visitar(hijo);
+            if (nodo.Tipo is "paragraph" or "listItem")
+                partes.Append(' ');
+        }
+        Visitar(raiz);
+        return System.Text.RegularExpressions.Regex.Replace(partes.ToString(), @"\s+", " ").Trim();
+    }
 
     /// <summary>Verdadero si hay texto visible o al menos un campo.</summary>
     public static bool TieneContenido(NodoContenido raiz) =>
@@ -127,6 +173,15 @@ public static class ContenidoEditor
             case NodoCampo:
                 ValidarCampo(nodo, contexto, catalogo, resultado);
                 break;
+            case "table":
+                ValidarTabla(nodo, resultado);
+                break;
+        }
+
+        if (HijosPermitidos.TryGetValue(nodo.Tipo, out var hijosPermitidos) &&
+            (nodo.Contenido ?? []).Any(h => !hijosPermitidos.Contains(h.Tipo)))
+        {
+            resultado.Agregar(clave, $"La estructura de la tabla no es válida ({nodo.Tipo}).");
         }
 
         if (nodo.Tipo != "text" && nodo.Texto is not null)
@@ -167,6 +222,42 @@ public static class ContenidoEditor
         else if (!campo.Contextos.Contains(contexto))
             resultado.Agregar("contenido", $"El campo '{campo.Etiqueta}' no se puede usar en {contexto}.");
     }
+
+    private static void ValidarTabla(NodoContenido tabla, ResultadoValidacion resultado)
+    {
+        var filas = tabla.Contenido ?? [];
+        if (filas.Count == 0)
+            resultado.Agregar("contenido", "La tabla no tiene filas.");
+        if (filas.Count > FilasMaximas)
+            resultado.Agregar("contenido", $"La tabla admite hasta {FilasMaximas} filas.");
+
+        foreach (var celda in filas.SelectMany(f => f.Contenido ?? []))
+        {
+            foreach (var nombre in (string[])["colspan", "rowspan"])
+            {
+                if (celda.Atributos is not null && celda.Atributos.TryGetValue(nombre, out var valor) &&
+                    valor.ValueKind != JsonValueKind.Null &&
+                    (valor.ValueKind != JsonValueKind.Number || !valor.TryGetInt32(out var numero) || numero < 1 || numero > ColumnasMaximas))
+                {
+                    resultado.Agregar("contenido", $"El valor de '{nombre}' de una celda no es válido.");
+                }
+            }
+        }
+
+        if (filas.SelectMany(f => f.Contenido ?? []).Any(celda => Recorrer(celda).Any(n => n.Tipo == "table")))
+            resultado.Agregar("contenido", "No se admiten tablas dentro de otra tabla.");
+
+        var columnas = filas.Select(f => (f.Contenido ?? []).Sum(Expansion)).DefaultIfEmpty(0).Max();
+        if (columnas > ColumnasMaximas)
+            resultado.Agregar("contenido", $"La tabla admite hasta {ColumnasMaximas} columnas.");
+    }
+
+    /// <summary>Columnas que ocupa una celda (colspan).</summary>
+    public static int Expansion(NodoContenido celda) =>
+        celda.Atributos is not null && celda.Atributos.TryGetValue("colspan", out var valor) &&
+        valor.ValueKind == JsonValueKind.Number && valor.TryGetInt32(out var numero) && numero > 0
+            ? numero
+            : 1;
 
     private static void ValidarAtributos(
         string elemento,

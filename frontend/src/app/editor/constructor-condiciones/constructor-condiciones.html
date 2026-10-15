@@ -1,6 +1,6 @@
-<section class="tarjeta" aria-labelledby="titulo-condiciones">
+<section class="tarjeta" [attr.aria-labelledby]="uid + '-titulo'">
   <header class="cabecera">
-    <h3 id="titulo-condiciones" class="titulo-con-icono">
+    <h3 [id]="uid + '-titulo'" class="titulo-con-icono">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /></svg>
       Condiciones de Visualización
     </h3>
@@ -16,7 +16,7 @@
     <span>Mostrar solo si se cumple la condición</span>
   </label>
 
-  <app-grupo-condiciones [grupo]="condicion()" [campos]="campos()" (cambio)="condicionCambio.emit($event)" />
+  <app-grupo-condiciones [grupo]="condicion()" [campos]="campos()" [identificador]="uid" (cambio)="condicionCambio.emit($event)" />
 
   @if (!conReglas()) {
     <p class="nota">Si no se especifican condiciones, el párrafo se mostrará en todos los casos.</p>

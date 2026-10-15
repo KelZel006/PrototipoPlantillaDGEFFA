@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -10,6 +10,7 @@ import {
   Rubro,
   Salud,
   Seccion,
+  Solicitud,
   SubRubro,
   TipoDocumento,
 } from './modelos';
@@ -90,6 +91,23 @@ export class ApiService {
   /** Valores que tiene el campo en los datos de prueba (sugerencias para las condiciones). */
   valoresCampo(campoId: string): Observable<string[]> {
     return this.http.get<string[]>(`${this.base}/campos/${encodeURIComponent(campoId)}/valores`);
+  }
+
+  solicitudes(): Observable<Solicitud[]> {
+    return this.http.get<Solicitud[]>(`${this.base}/solicitudes`);
+  }
+
+  /**
+   * PDF de prueba de la plantilla (Cabecera, Considerando y Resuelve). Con una solicitud se sustituyen
+   * los campos y se aplican las condiciones.
+   */
+  generarPdf(plantillaId: string, solicitudId: string | null): Observable<HttpResponse<Blob>> {
+    const params: Record<string, string> = solicitudId ? { solicitudId } : {};
+    return this.http.get(`${this.base}/plantillas/${encodeURIComponent(plantillaId)}/pdf`, {
+      params,
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 
   salud(): Observable<Salud> {

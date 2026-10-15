@@ -1,5 +1,7 @@
+using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Repositorios;
 using EditorResoluciones.Infraestructura.Json;
+using EditorResoluciones.Infraestructura.Pdf;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EditorResoluciones.Infraestructura;
@@ -15,6 +17,7 @@ public static class RegistroInfraestructura
         servicios.AddSingleton<AlmacenJson>();
         servicios.AddSingleton(typeof(IRepositorio<>), typeof(RepositorioJson<>));
         servicios.AddSingleton<IDiagnosticoAlmacenamiento, DiagnosticoAlmacenamientoJson>();
+        servicios.AddSingleton<IGeneradorPdf, GeneradorPdfMigraDoc>();
         return servicios;
     }
 }

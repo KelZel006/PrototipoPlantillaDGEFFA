@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { Rubro, SubRubro, TipoDocumento } from './modelos';
+import { Rubro, Seccion, SubRubro, TipoDocumento } from './modelos';
 
 /**
  * Selección de las tres listas (Rubro, Sub Rubro y Tipo Documento).
@@ -11,8 +11,31 @@ export class ContextoService {
   readonly subRubro = signal<SubRubro | null>(null);
   readonly tipoDocumento = signal<TipoDocumento | null>(null);
 
-  /** Lo marca el editor cuando hay cambios sin guardar, para advertir antes de cambiar de plantilla. */
-  readonly cambiosSinGuardar = signal(false);
+  /** Secciones con cambios sin guardar; las marca cada editor de sección. */
+  readonly seccionesConCambios = signal<ReadonlySet<Seccion>>(new Set());
+
+  /** Hay cambios sin guardar en alguna sección: se advierte antes de cambiar de plantilla o generar el PDF. */
+  readonly cambiosSinGuardar = computed(() => this.seccionesConCambios().size > 0);
+
+  marcarCambios(seccion: Seccion, conCambios: boolean): void {
+    this.seccionesConCambios.update((actuales) => {
+      if (actuales.has(seccion) === conCambios) {
+        return actuales;
+      }
+      const nuevas = new Set(actuales);
+      if (conCambios) {
+        nuevas.add(seccion);
+      } else {
+        nuevas.delete(seccion);
+      }
+      return nuevas;
+    });
+  }
+
+  /** El usuario aceptó descartar los cambios; los editores vuelven a empezar al cambiar la plantilla. */
+  descartarCambios(): void {
+    this.seccionesConCambios.set(new Set());
+  }
 
   /** La combinación está completa y es coherente (el sub rubro pertenece al rubro). */
   readonly completo = computed(() => {

@@ -10,8 +10,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { Editor, JSONContent } from '@tiptap/core';
+import { TableKit } from '@tiptap/extension-table';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { StarterKit } from '@tiptap/starter-kit';
+import { identificadorUnico } from '../../compartido/identificador';
 import { MAXIMO_CARACTERES, ResolverEtiqueta, contarCaracteres, documentoVacio } from '../../core/contenido';
 import { Campo, NodoContenido } from '../../core/modelos';
 import { NodoCampo } from './nodo-campo';
@@ -25,6 +27,7 @@ interface EstadoBarra {
   vinetas: boolean;
   numerada: boolean;
   enlace: boolean;
+  enTabla: boolean;
   alineacion: Alineacion;
 }
 
@@ -35,8 +38,13 @@ const ESTADO_INICIAL: EstadoBarra = {
   vinetas: false,
   numerada: false,
   enlace: false,
+  enTabla: false,
   alineacion: 'left',
 };
+
+/** Límites de una tabla; coinciden con los del servidor. */
+export const COLUMNAS_MAXIMAS = 12;
+export const FILAS_MAXIMAS = 100;
 
 const PROTOCOLOS_PERMITIDOS = ['http:', 'https:', 'mailto:'];
 
@@ -59,6 +67,8 @@ export function enlacePermitido(url: string): boolean {
   styleUrl: './editor-texto.css',
 })
 export class EditorTexto implements OnDestroy {
+  protected readonly uid = identificadorUnico('editor');
+
   /** Campos que se pueden insertar en esta sección (también se usan para mostrar sus etiquetas). */
   readonly campos = input.required<Campo[]>();
   readonly etiqueta = input.required<ResolverEtiqueta>();
@@ -75,6 +85,13 @@ export class EditorTexto implements OnDestroy {
   protected readonly caracteres = signal(0);
   protected readonly excedido = computed(() => this.caracteres() > MAXIMO_CARACTERES);
   protected readonly maximo = MAXIMO_CARACTERES;
+
+  protected readonly creandoTabla = signal(false);
+  protected readonly filasTabla = signal(3);
+  protected readonly columnasTabla = signal(3);
+  protected readonly tablaConEncabezado = signal(true);
+  protected readonly columnasMaximas = COLUMNAS_MAXIMAS;
+  protected readonly filasMaximas = FILAS_MAXIMAS;
 
   protected readonly editandoEnlace = signal(false);
   protected readonly urlEnlace = signal('');
@@ -150,6 +167,7 @@ export class EditorTexto implements OnDestroy {
   }
 
   protected abrirEnlace(): void {
+    this.creandoTabla.set(false);
     const actual = (this.editor?.getAttributes('link')['href'] as string | undefined) ?? '';
     this.urlEnlace.set(actual || 'https://');
     this.errorEnlace.set(null);
@@ -174,6 +192,68 @@ export class EditorTexto implements OnDestroy {
   protected cancelarEnlace(): void {
     this.editandoEnlace.set(false);
     this.editor?.commands.focus();
+  }
+
+  /** Inserta una tabla en el cursor. No se permiten tablas dentro de otra tabla. */
+  insertarTabla(filas: number, columnas: number, conEncabezado: boolean): void {
+    if (!this.editor || this.editor.isActive('table')) {
+      return;
+    }
+    const acotar = (valor: number, maximo: number) => Math.min(Math.max(Math.trunc(valor) || 1, 1), maximo);
+    this.editor
+      .chain()
+      .focus()
+      .insertTable({
+        rows: acotar(filas, FILAS_MAXIMAS),
+        cols: acotar(columnas, COLUMNAS_MAXIMAS),
+        withHeaderRow: conEncabezado,
+      })
+      .run();
+  }
+
+  protected abrirTabla(): void {
+    this.editandoEnlace.set(false);
+    this.creandoTabla.set(true);
+  }
+
+  protected confirmarTabla(): void {
+    this.insertarTabla(this.filasTabla(), this.columnasTabla(), this.tablaConEncabezado());
+    this.creandoTabla.set(false);
+  }
+
+  protected cancelarTabla(): void {
+    this.creandoTabla.set(false);
+    this.editor?.commands.focus();
+  }
+
+  protected agregarFila(posicion: 'antes' | 'despues'): void {
+    const cadena = this.editor?.chain().focus();
+    (posicion === 'antes' ? cadena?.addRowBefore() : cadena?.addRowAfter())?.run();
+  }
+
+  protected agregarColumna(posicion: 'antes' | 'despues'): void {
+    const cadena = this.editor?.chain().focus();
+    (posicion === 'antes' ? cadena?.addColumnBefore() : cadena?.addColumnAfter())?.run();
+  }
+
+  protected eliminarFila(): void {
+    this.editor?.chain().focus().deleteRow().run();
+  }
+
+  protected eliminarColumna(): void {
+    this.editor?.chain().focus().deleteColumn().run();
+  }
+
+  protected alternarFilaEncabezado(): void {
+    this.editor?.chain().focus().toggleHeaderRow().run();
+  }
+
+  protected combinarCeldas(): void {
+    this.editor?.chain().focus().mergeOrSplit().run();
+  }
+
+  protected eliminarTabla(): void {
+    this.editor?.chain().focus().deleteTable().run();
   }
 
   protected alElegirCampo(evento: Event): void {
@@ -205,6 +285,7 @@ export class EditorTexto implements OnDestroy {
           },
         }),
         TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
+        TableKit.configure({ table: { resizable: false, HTMLAttributes: { class: 'tabla-editor' } } }),
         NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id) }),
       ],
       editorProps: {
@@ -239,6 +320,7 @@ export class EditorTexto implements OnDestroy {
       vinetas: editor.isActive('bulletList'),
       numerada: editor.isActive('orderedList'),
       enlace: editor.isActive('link'),
+      enTabla: editor.isActive('table'),
       alineacion,
     });
     this.caracteres.set(contarCaracteres(editor.getJSON() as NodoContenido, this.etiqueta()));

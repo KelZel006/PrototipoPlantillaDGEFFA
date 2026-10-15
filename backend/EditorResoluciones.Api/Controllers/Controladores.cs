@@ -1,3 +1,4 @@
+using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
 using EditorResoluciones.Dominio.Servicios;
@@ -21,8 +22,25 @@ public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> se
 
 /// <summary>Filtros: <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=</c>.</summary>
 [Route("api/plantillas")]
-public sealed class PlantillasController(ServicioEntidades<Plantilla> servicio) : ControladorCrud<Plantilla>(servicio)
+public sealed class PlantillasController(
+    ServicioEntidades<Plantilla> servicio,
+    ServicioDocumento documentos,
+    IGeneradorPdf generadorPdf) : ControladorCrud<Plantilla>(servicio)
 {
+    /// <summary>
+    /// PDF de prueba con Cabecera, Considerando y Resuelve, en ese orden. Con <c>?solicitudId=</c> se sustituyen
+    /// los campos y se aplican las condiciones; sin ella, los campos se muestran como {Etiqueta}.
+    /// </summary>
+    [HttpGet("{id}/pdf")]
+    [Produces("application/pdf")]
+    public async Task<IActionResult> Pdf(string id, [FromQuery] string? solicitudId, CancellationToken ct)
+    {
+        var documento = await documentos.GenerarAsync(id, solicitudId, ct);
+        var bytes = generadorPdf.Generar(documento);
+        var sufijo = string.IsNullOrEmpty(solicitudId) ? "plantilla" : solicitudId;
+        return File(bytes, "application/pdf", $"resolucion-prueba_{id}_{sufijo}.pdf");
+    }
+
     protected override IEnumerable<Plantilla> Filtrar(IEnumerable<Plantilla> registros, IQueryCollection consulta)
     {
         registros = PorParametro(registros, consulta, "rubroId", (p, v) => p.RubroId == v);

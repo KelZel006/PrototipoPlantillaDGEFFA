@@ -45,6 +45,17 @@ describe('ContextoService', () => {
     expect(contexto.subRubro()).toEqual(subDeA);
   });
 
+  it('lleva los cambios sin guardar por sección', () => {
+    contexto.marcarCambios('Cabecera', true);
+    contexto.marcarCambios('Considerando', true);
+    contexto.marcarCambios('Cabecera', false);
+    expect([...contexto.seccionesConCambios()]).toEqual(['Considerando']);
+    expect(contexto.cambiosSinGuardar()).toBe(true);
+
+    contexto.descartarCambios();
+    expect(contexto.cambiosSinGuardar()).toBe(false);
+  });
+
   it('rechaza un sub rubro de otro rubro', () => {
     contexto.seleccionarRubro(rubroA);
     contexto.seleccionarSubRubro(subDeB);

@@ -6,7 +6,8 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 3, sección Considerando.** Detalle en [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
+**Estado actual: Fase 3b (tablas, orden por arrastre, PDF y pestaña Cabecera).** Detalle en [docs/FASE3B.md](docs/FASE3B.md),
+[docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
 
 ## Tecnologías
@@ -108,6 +109,8 @@ Todas las colecciones de la tabla ofrecen `GET` (listar), `GET /{id}`, `POST`, `
 
 Otras rutas:
 
+- `GET /api/plantillas/{id}/pdf?solicitudId=`: PDF de prueba con Cabecera, Considerando y Resuelve. Con
+  `solicitudId` se sustituyen los campos y se aplican las condiciones; sin él, los campos se muestran como `{Etiqueta}`.
 - `POST /api/parrafos/reordenar`: guarda el orden completo de una sección en una sola operación.
   Cuerpo: `{ plantillaId, seccion, elementos: [{ id, version }] }`.
 - `POST /api/parrafos/{id}/duplicar`: copia el párrafo, con su condición, justo debajo del original.
@@ -126,6 +129,14 @@ Respuestas de error (ProblemDetails, en español):
 | 404 | El registro no existe |
 | 409 | Versión desactualizada o identificador repetido |
 | 503 | Archivo de datos dañado |
+
+## PDF
+
+- Se genera con **PDFsharp-MigraDoc 6.2.4 (licencia MIT)**. **No actualizar a la 6.5.0 o posterior** sin revisar la
+  licencia: desde esa versión es AGPL-3.0.
+- Usa las fuentes de Windows (Arial). Para generar PDF en Linux habrá que incluir un archivo de fuente con el proyecto.
+- Cada página lleva la marca «DOCUMENTO DE PRUEBA · DATOS SIMULADOS · SIN VALIDEZ OFICIAL». La última página resume
+  qué párrafos se incluyeron y cuáles no, con el motivo.
 
 ## Reglas de los datos
 

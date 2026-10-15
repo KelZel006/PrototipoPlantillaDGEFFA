@@ -1,4 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
+import { identificadorUnico } from '../../compartido/identificador';
 import { Campo, TipoDato } from '../../core/modelos';
 
 const NOMBRES_TIPO: Record<TipoDato, string> = {
@@ -21,6 +22,8 @@ function normalizar(texto: string): string {
   styleUrl: './panel-campos.css',
 })
 export class PanelCampos {
+  protected readonly uid = identificadorUnico('campos');
+
   readonly campos = input.required<Campo[]>();
   /** Campos presentes en el párrafo en edición. */
   readonly usados = input<string[]>([]);

@@ -1,15 +1,19 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
+import { ContextoService } from '../../core/contexto.service';
 import { Plantilla, Seccion } from '../../core/modelos';
 import { EditorSeccion, NombreSeccion } from '../editor-seccion/editor-seccion';
 
 interface Pestana {
   seccion: Seccion;
   nombre: NombreSeccion;
-  /** Las secciones se habilitan por fases; por ahora solo Considerando. */
+  /** Las secciones se habilitan por fases. */
   disponible: boolean;
 }
 
-/** Pestañas Cabecera, Considerando y Resuelve. */
+/**
+ * Pestañas Cabecera, Considerando y Resuelve. Las secciones disponibles quedan montadas y solo se oculta
+ * la inactiva, para que cada una conserve su borrador al cambiar de pestaña.
+ */
 @Component({
   selector: 'app-pestanas-secciones',
   imports: [EditorSeccion],
@@ -17,12 +21,26 @@ interface Pestana {
   styleUrl: './pestanas-secciones.css',
 })
 export class PestanasSecciones {
+  protected readonly contexto = inject(ContextoService);
+
   readonly plantilla = input.required<Plantilla>();
 
   protected readonly pestanas: Pestana[] = [
-    { seccion: 'Cabecera', nombre: { singular: 'Encabezado', plural: 'Encabezados' }, disponible: false },
-    { seccion: 'Considerando', nombre: { singular: 'Considerando', plural: 'Considerandos' }, disponible: true },
-    { seccion: 'Resuelve', nombre: { singular: 'Resuelve', plural: 'Resuelves' }, disponible: false },
+    {
+      seccion: 'Cabecera',
+      nombre: { texto: 'Texto de la Cabecera', listado: 'Listado de la Cabecera', elemento: 'Párrafo de cabecera' },
+      disponible: true,
+    },
+    {
+      seccion: 'Considerando',
+      nombre: { texto: 'Texto del Considerando', listado: 'Listado de Considerandos', elemento: 'Considerando' },
+      disponible: true,
+    },
+    {
+      seccion: 'Resuelve',
+      nombre: { texto: 'Texto del Resuelve', listado: 'Listado de Resuelve', elemento: 'Resuelve' },
+      disponible: false,
+    },
   ];
 
   protected readonly activa = signal<Seccion>('Considerando');
@@ -31,9 +49,5 @@ export class PestanasSecciones {
     if (pestana.disponible) {
       this.activa.set(pestana.seccion);
     }
-  }
-
-  protected pestanaActiva(): Pestana {
-    return this.pestanas.find((p) => p.seccion === this.activa())!;
   }
 }

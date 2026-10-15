@@ -51,6 +51,17 @@ describe('contenido del editor', () => {
     expect(textoPlano(documento, etiqueta)).toBe('Para {Operador} y {Operador} {Número de Solicitud}');
   });
 
+  it('resume las tablas sin mostrar sus celdas', () => {
+    const conTabla: NodoContenido = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Bienes:' }] },
+        { type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'celda' }] }] }] }] },
+      ],
+    };
+    expect(textoPlano(conTabla, etiqueta)).toBe('Bienes: [Tabla]');
+  });
+
   it('quita los atributos nulos que agrega el editor', () => {
     const limpio = limpiarDocumento(documento);
     expect(limpio.content![0].attrs).toBeUndefined();

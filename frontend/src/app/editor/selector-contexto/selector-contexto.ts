@@ -81,7 +81,7 @@ export class SelectorContexto {
       lista.value = actual ?? '';
       return null;
     }
-    this.contexto.cambiosSinGuardar.set(false);
+    this.contexto.descartarCambios();
     return nuevo;
   }
 
