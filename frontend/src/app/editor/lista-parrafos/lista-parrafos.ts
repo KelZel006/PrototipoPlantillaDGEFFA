@@ -4,6 +4,7 @@ import { identificadorUnico } from '../../compartido/identificador';
 import { CatalogoService } from '../../core/catalogo.service';
 import { describirGrupo, tieneReglas } from '../../core/condiciones';
 import { textoPlano } from '../../core/contenido';
+import { Numerador } from '../../core/numeracion';
 import { Parrafo } from '../../core/modelos';
 
 /** Estado de visualización de un párrafo según su condición (sin evaluar todavía los datos). */
@@ -31,10 +32,10 @@ export class ListaParrafos {
   readonly parrafos = input.required<Parrafo[]>();
   readonly titulo = input.required<string>();
   /**
-   * Etiqueta con la que se numeran los párrafos en el documento (por ejemplo, "CONSIDERANDO"). Se numeran solo los
+   * Cómo se numeran los párrafos en el documento (por ejemplo, "CONSIDERANDO(1):" o "PRIMERO:"). Se numeran solo los
    * activos; al generar, los que no cumplan su condición tampoco consumen número.
    */
-  readonly etiquetaNumerada = input<string | null>(null);
+  readonly numerar = input<Numerador | null>(null);
   readonly editandoId = input<string | null>(null);
   /** Mientras se guarda algo, las acciones se deshabilitan. */
   readonly ocupado = input(false);
@@ -55,9 +56,9 @@ export class ListaParrafos {
 
   protected readonly elementos = computed(() => {
     let numero = 0;
-    const etiqueta = this.etiquetaNumerada();
+    const numerar = this.numerar();
     return this.parrafos().map((parrafo) => ({
-      numeracion: etiqueta && parrafo.activo ? `${etiqueta}(${++numero}):` : null,
+      numeracion: numerar && parrafo.activo ? numerar(++numero) : null,
       parrafo,
       resumen: textoPlano(parrafo.contenido, this.catalogo.etiqueta),
       estado: estadoCondicion(parrafo),

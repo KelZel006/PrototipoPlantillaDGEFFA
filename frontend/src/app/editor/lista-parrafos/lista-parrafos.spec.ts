@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CAMPOS, OPERADORES, parrafo } from '../../pruebas/datos-prueba';
+import { numerarConsiderando, numerarResuelve } from '../../core/numeracion';
 import { ListaParrafos } from './lista-parrafos';
 
 describe('ListaParrafos', () => {
@@ -75,12 +76,16 @@ describe('ListaParrafos', () => {
   });
 
   it('numera los párrafos activos con la etiqueta de la sección', () => {
-    fixture.componentRef.setInput('etiquetaNumerada', 'CONSIDERANDO');
+    fixture.componentRef.setInput('numerar', numerarConsiderando);
     fixture.detectChanges();
 
     // P3 está inactivo: no lleva número.
     const numeros = tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null);
     expect(numeros).toEqual(['CONSIDERANDO(1):', 'CONSIDERANDO(2):', null]);
+
+    fixture.componentRef.setInput('numerar', numerarResuelve);
+    fixture.detectChanges();
+    expect(tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null)).toEqual(['PRIMERO:', 'SEGUNDO:', null]);
   });
 
   it('no permite subir el primero ni bajar el último', () => {

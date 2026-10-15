@@ -177,3 +177,26 @@ Pedido del usuario: la tabla con campos de lista no mostraba datos; numerar cada
   y el encabezado tapaba el título. Ahora el encabezado usa interlineado sencillo y un margen superior mayor;
   comprobado con interlineado doble.
 - **Pruebas:** 104 del backend y 82 del frontend, todas correctas.
+
+## Pestaña Resuelve (15/10/2026)
+
+Pedido del usuario: desarrollar el Resuelve igual que el Considerando, pero numerando cada bloque como PRIMERO,
+SEGUNDO, TERCERO…
+
+- **Pestaña Resuelve habilitada** con el mismo editor: condiciones, texto con formato, tablas (incluidas las filas de
+  lista), campos y el «Listado de Resolución», ordenable por arrastre. Ya no hay pestañas «Próximamente».
+- **Numeración en palabras.** En el PDF, cada punto resolutivo empieza con **PRIMERO:**, **SEGUNDO:**,
+  **TERCERO:**… en negrita, según el orden en que aparece.
+  - Los inactivos y los que no cumplen su condición no consumen número.
+  - Del 11 en adelante: DÉCIMO PRIMERO, VIGÉSIMO… hasta NONAGÉSIMO NOVENO; desde el 100, «100°».
+  - El listado muestra la numeración prevista.
+  - El título «POR TANTO, RESUELVE:» se mantiene antes del primer punto.
+- **Misma regla en los dos lados.** El servidor (`Documento/Numeracion.cs`) y la pantalla (`core/numeracion.ts`) usan la
+  misma regla, y hay pruebas idénticas en ambos.
+- **Datos.**
+  - Se quitaron los prefijos «PRIMERO:» y «SEGUNDO:» escritos a mano en los párrafos de prueba del Resuelve; si no,
+    habrían quedado repetidos.
+  - Se agregó un segundo punto resolutivo de prueba (`PAR-007`, «Notificar la presente resolución a {Beneficiario}…»)
+    a los datos iniciales y a los datos en uso.
+- **Pruebas:** 115 del backend y 84 del frontend, todas correctas. Captura en
+  [diseno/fase3d-resuelve.png](diseno/fase3d-resuelve.png).

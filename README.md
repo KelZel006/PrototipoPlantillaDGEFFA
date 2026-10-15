@@ -6,7 +6,7 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 3c (tablas con campos de lista, logo, pie de página e interlineado).** Detalle en
+**Estado actual: Fase 3d (las tres secciones: Cabecera, Considerando numerado y Resuelve con PRIMERO, SEGUNDO…).** Detalle en
 [docs/FASE3C.md](docs/FASE3C.md), [docs/FASE3B.md](docs/FASE3B.md),
 [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).

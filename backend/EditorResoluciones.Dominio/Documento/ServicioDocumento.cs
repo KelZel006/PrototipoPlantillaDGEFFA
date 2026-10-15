@@ -56,9 +56,6 @@ public sealed class ServicioDocumento(
 
     public const string TextoSinRegistros = "No hay registros para esta solicitud.";
 
-    /// <summary>Etiqueta con la que empieza cada considerando, numerada según el orden en que aparece en el documento.</summary>
-    public const string FormatoConsiderando = "CONSIDERANDO({0}): ";
-
     public async Task<DocumentoResuelto> GenerarAsync(
         string plantillaId,
         string? solicitudId,
@@ -123,9 +120,9 @@ public sealed class ServicioDocumento(
                 }
 
                 var contenido = contexto.Sustituir(parrafo.Contenido, null, ubicacion);
-                // Los considerandos se numeran por su orden en el documento: los omitidos no consumen número.
-                if (seccion == Seccion.Considerando)
-                    contenido = Numerar(contenido, incluidos.Count + 1);
+                // Considerando y Resuelve se numeran por su orden en el documento: los omitidos no consumen número.
+                if (Numeracion.Etiqueta(seccion, incluidos.Count + 1) is { } etiqueta)
+                    contenido = Numerar(contenido, etiqueta);
                 incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, contenido));
             }
 
@@ -145,15 +142,15 @@ public sealed class ServicioDocumento(
     }
 
     /// <summary>
-    /// Antepone "CONSIDERANDO(n): " en negrita al primer párrafo. Si el considerando empieza con una lista o una tabla,
-    /// la etiqueta va en un párrafo propio antes de ella.
+    /// Antepone la etiqueta (por ejemplo, "CONSIDERANDO(1): " o "PRIMERO: ") en negrita al primer párrafo. Si el bloque
+    /// empieza con una lista o una tabla, la etiqueta va en un párrafo propio antes de ella.
     /// </summary>
-    private static NodoContenido Numerar(NodoContenido documento, int numero)
+    private static NodoContenido Numerar(NodoContenido documento, string texto)
     {
         var etiqueta = new NodoContenido
         {
             Tipo = "text",
-            Texto = string.Format(CultureInfo.InvariantCulture, FormatoConsiderando, numero),
+            Texto = texto,
             Marcas = [new MarcaContenido { Tipo = "bold" }],
         };
         var bloques = documento.Contenido?.ToList() ?? [];

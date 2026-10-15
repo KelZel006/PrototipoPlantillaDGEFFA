@@ -280,15 +280,6 @@
           "content": [
             {
               "type": "text",
-              "text": "PRIMERO: ",
-              "marks": [
-                {
-                  "type": "bold"
-                }
-              ]
-            },
-            {
-              "type": "text",
               "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
             },
             {
@@ -346,15 +337,6 @@
         {
           "type": "paragraph",
           "content": [
-            {
-              "type": "text",
-              "text": "SEGUNDO: ",
-              "marks": [
-                {
-                  "type": "bold"
-                }
-              ]
-            },
             {
               "type": "text",
               "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
@@ -426,5 +408,42 @@
       "numero_solicitud"
     ],
     "fechaModificacion": "2026-10-14T07:40:53.9498123+00:00"
+  },
+  {
+    "id": "PAR-007",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Resuelve",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Notificar la presente resolución a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " para los efectos legales correspondientes (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]

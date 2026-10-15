@@ -214,15 +214,6 @@
           "content": [
             {
               "type": "text",
-              "marks": [
-                {
-                  "type": "bold"
-                }
-              ],
-              "text": "PRIMERO: "
-            },
-            {
-              "type": "text",
               "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
             },
             {
@@ -280,15 +271,6 @@
         {
           "type": "paragraph",
           "content": [
-            {
-              "type": "text",
-              "marks": [
-                {
-                  "type": "bold"
-                }
-              ],
-              "text": "SEGUNDO: "
-            },
             {
               "type": "text",
               "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."

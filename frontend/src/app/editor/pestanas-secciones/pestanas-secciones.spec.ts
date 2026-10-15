@@ -32,24 +32,30 @@ describe('PestanasSecciones', () => {
     fixture.detectChanges();
   });
 
-  it('habilita Cabecera y Considerando, y deja Resuelve para después', () => {
-    expect(pestana('Cabecera').getAttribute('aria-disabled')).toBe('false');
+  it('habilita las tres secciones en el orden del documento', () => {
+    expect(Array.from(elemento.querySelectorAll('[role="tab"]')).map((t) => t.textContent?.trim())).toEqual([
+      'Cabecera',
+      'Considerando',
+      'Resuelve',
+    ]);
+    for (const seccion of ['Cabecera', 'Considerando', 'Resuelve']) {
+      expect(pestana(seccion).getAttribute('aria-disabled')).toBe('false');
+    }
     expect(pestana('Considerando').getAttribute('aria-selected')).toBe('true');
-    expect(pestana('Resuelve').getAttribute('aria-disabled')).toBe('true');
-    expect(pestana('Resuelve').textContent).toContain('Próximamente');
+    expect(elemento.textContent).not.toContain('Próximamente');
   });
 
   it('mantiene montadas las secciones para conservar sus borradores', () => {
     expect(panel('Cabecera')?.hidden).toBe(true);
     expect(panel('Considerando')?.hidden).toBe(false);
-    expect(panel('Resuelve')).toBeNull();
+    expect(panel('Resuelve')?.hidden).toBe(true);
 
-    pestana('Cabecera').click();
+    pestana('Resuelve').click();
     fixture.detectChanges();
 
-    expect(panel('Cabecera')?.hidden).toBe(false);
+    expect(panel('Resuelve')?.hidden).toBe(false);
     expect(panel('Considerando')?.hidden).toBe(true);
-    expect(elemento.querySelectorAll('app-editor-seccion').length).toBe(2);
+    expect(elemento.querySelectorAll('app-editor-seccion').length).toBe(3);
   });
 
   it('marca las pestañas con cambios sin guardar', () => {

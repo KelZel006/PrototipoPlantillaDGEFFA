@@ -1,5 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { ContextoService } from '../../core/contexto.service';
+import { numerarConsiderando, numerarResuelve } from '../../core/numeracion';
 import { Plantilla, Seccion } from '../../core/modelos';
 import { EditorSeccion, NombreSeccion } from '../editor-seccion/editor-seccion';
 
@@ -37,14 +38,19 @@ export class PestanasSecciones {
         texto: 'Texto del Considerando',
         listado: 'Listado de Considerandos',
         elemento: 'Considerando',
-        etiquetaNumerada: 'CONSIDERANDO',
+        numerar: numerarConsiderando,
       },
       disponible: true,
     },
     {
       seccion: 'Resuelve',
-      nombre: { texto: 'Texto del Resuelve', listado: 'Listado de Resuelve', elemento: 'Resuelve' },
-      disponible: false,
+      nombre: {
+        texto: 'Texto del Resuelve',
+        listado: 'Listado de Resolución',
+        elemento: 'Punto resolutivo',
+        numerar: numerarResuelve,
+      },
+      disponible: true,
     },
   ];
 

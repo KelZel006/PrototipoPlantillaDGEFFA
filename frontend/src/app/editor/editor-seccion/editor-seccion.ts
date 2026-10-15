@@ -30,6 +30,7 @@ import {
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
+import { Numerador } from '../../core/numeracion';
 import { PreferenciasService } from '../../core/preferencias.service';
 import { Campo, GrupoCondiciones, NodoContenido, Parrafo, Plantilla, Seccion, esCampoLista } from '../../core/modelos';
 import { ConstructorCondiciones } from '../constructor-condiciones/constructor-condiciones';
@@ -45,8 +46,8 @@ export interface NombreSeccion {
   listado: string;
   /** Nombre de un elemento, por ejemplo "Considerando" o "Párrafo de cabecera". */
   elemento: string;
-  /** Si se indica, cada elemento se numera en el documento, por ejemplo "CONSIDERANDO" → "CONSIDERANDO(1):". */
-  etiquetaNumerada?: string;
+  /** Si se indica, cada elemento se numera en el documento, por ejemplo "CONSIDERANDO(1):" o "PRIMERO:". */
+  numerar?: Numerador;
 }
 
 interface Borrador {

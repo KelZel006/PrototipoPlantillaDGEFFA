@@ -171,8 +171,47 @@ public sealed class DocumentoPruebas : IDisposable
         var unSolo = Seccion(await Generar("SOL-002"), Dominio.Modelos.Seccion.Considerando).Parrafos;
         Assert.StartsWith("CONSIDERANDO(1): Que la solicitud cumple", Texto(Assert.Single(unSolo).Contenido));
 
-        // La cabecera y el resuelve no se numeran.
-        Assert.DoesNotContain("CONSIDERANDO", Texto(Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Resuelve).Parrafos[0].Contenido));
+        // La cabecera no se numera.
+        Assert.StartsWith("RESOLUCIÓN DE PRUEBA", Texto(Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Cabecera).Parrafos[0].Contenido));
+    }
+
+    [Fact]
+    public async Task Numera_el_resuelve_con_ordinales_sin_contar_los_omitidos()
+    {
+        // PAR-005 está activo (orden 1) y PAR-006 inactivo (orden 2). Se agrega un tercero activo.
+        var nuevo = new JsonObject
+        {
+            ["plantillaId"] = "PLA-001",
+            ["seccion"] = "Resuelve",
+            ["contenido"] = new JsonObject
+            {
+                ["type"] = "doc",
+                ["content"] = new JsonArray(new JsonObject { ["type"] = "paragraph", ["content"] = new JsonArray(TextoNodo("Notificar al interesado.")) }),
+            },
+        };
+        (await _cliente.PostAsync("/api/parrafos", new StringContent(nuevo.ToJsonString(), Encoding.UTF8, "application/json"))).EnsureSuccessStatusCode();
+
+        var resuelve = Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Resuelve).Parrafos;
+
+        Assert.Equal(["PRIMERO: ", "SEGUNDO: "], resuelve.Select(p => p.Contenido.Contenido![0].Contenido![0].Texto));
+        Assert.StartsWith("PRIMERO: Autorizar, en calidad de prueba", Texto(resuelve[0].Contenido));
+        Assert.Equal("SEGUNDO: Notificar al interesado.", Texto(resuelve[1].Contenido));
+    }
+
+    [Theory]
+    [InlineData(1, "PRIMERO")]
+    [InlineData(3, "TERCERO")]
+    [InlineData(7, "SÉPTIMO")]
+    [InlineData(10, "DÉCIMO")]
+    [InlineData(11, "DÉCIMO PRIMERO")]
+    [InlineData(19, "DÉCIMO NOVENO")]
+    [InlineData(20, "VIGÉSIMO")]
+    [InlineData(23, "VIGÉSIMO TERCERO")]
+    [InlineData(99, "NONAGÉSIMO NOVENO")]
+    [InlineData(100, "100°")]
+    public void Escribe_los_ordinales_en_palabras(int numero, string esperado)
+    {
+        Assert.Equal(esperado, Numeracion.Ordinal(numero));
     }
 
     [Fact]

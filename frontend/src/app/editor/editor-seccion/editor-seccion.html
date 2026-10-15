@@ -97,7 +97,7 @@
         <app-lista-parrafos
           [parrafos]="parrafos()"
           [titulo]="nombre().listado"
-          [etiquetaNumerada]="nombre().etiquetaNumerada ?? null"
+          [numerar]="nombre().numerar ?? null"
           [editandoId]="editando()?.id ?? null"
           [ocupado]="ocupado() || guardando()"
           (editar)="editar($event)"
