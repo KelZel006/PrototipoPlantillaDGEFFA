@@ -1,0 +1,81 @@
+<details class="diseno" [open]="abierto()" (toggle)="abierto.set($any($event.target).open)">
+  <summary>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h8M8 17h8" /></svg>
+    Diseño del documento: logo y pie de página
+    @if (sucio()) {
+      <span class="pendiente">● Cambios sin guardar</span>
+    }
+  </summary>
+
+  <div class="contenido">
+    <section class="bloque" [attr.aria-labelledby]="uid + '-logo'">
+      <h4 [id]="uid + '-logo'">Logo del encabezado</h4>
+      <div class="vista-logo" [class.vista-izquierda]="alineacion() === 'Izquierda'" [class.vista-derecha]="alineacion() === 'Derecha'">
+        @if (urlLogo(); as url) {
+          <img [src]="url" alt="Logo actual del encabezado" />
+        } @else {
+          <span class="sin-logo">Sin logo</span>
+        }
+      </div>
+      <div class="acciones-logo">
+        <label class="boton boton-secundario boton-compacto" [class.deshabilitado]="cargandoLogo()">
+          {{ cargandoLogo() ? 'Cargando…' : urlLogo() ? 'Reemplazar logo' : 'Cargar logo' }}
+          <input
+            type="file"
+            class="visualmente-oculto"
+            accept="image/png,image/jpeg"
+            [disabled]="cargandoLogo()"
+            (change)="alElegirLogo($event)"
+          />
+        </label>
+        @if (urlLogo()) {
+          <button type="button" class="boton boton-texto boton-compacto texto-peligro" [disabled]="cargandoLogo()" (click)="quitarLogo()">
+            Quitar logo
+          </button>
+        }
+      </div>
+      <p class="ayuda">PNG o JPEG, hasta 1 MB.</p>
+      @if (errorLogo(); as error) {
+        <p class="error" role="alert">{{ error }}</p>
+      }
+
+      <fieldset class="alineacion">
+        <legend>Alineación del logo</legend>
+        @for (opcion of alineaciones; track opcion.valor) {
+          <label>
+            <input
+              type="radio"
+              [name]="uid + '-alineacion'"
+              [value]="opcion.valor"
+              [checked]="alineacion() === opcion.valor"
+              (change)="alineacion.set(opcion.valor)"
+            />
+            {{ opcion.nombre }}
+          </label>
+        }
+      </fieldset>
+    </section>
+
+    <section class="bloque">
+      <label class="etiqueta" [for]="uid + '-pie'">Texto del pie de página</label>
+      <textarea
+        [id]="uid + '-pie'"
+        class="control"
+        rows="4"
+        placeholder="Por ejemplo: dirección, teléfono y correo de la institución (texto de prueba)."
+        [value]="pie()"
+        (input)="pie.set($any($event.target).value)"
+      ></textarea>
+      <p class="contador" [class.contador-excedido]="excedido()">{{ pie().length }}/{{ maximoPie }} · hasta 8 líneas</p>
+
+      <div class="acciones-pie">
+        @if (sucio()) {
+          <button type="button" class="boton boton-texto boton-compacto" (click)="descartar()">Descartar</button>
+        }
+        <button type="button" class="boton boton-primario boton-compacto" [disabled]="!sucio() || excedido() || guardando()" (click)="guardar()">
+          {{ guardando() ? 'Guardando…' : 'Guardar diseño' }}
+        </button>
+      </div>
+    </section>
+  </div>
+</details>

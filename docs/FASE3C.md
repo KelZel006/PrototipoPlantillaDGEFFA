@@ -1,0 +1,150 @@
+# Fase 3c: tablas con campos de lista, logo, pie de página e interlineado
+
+**Pedido del usuario (14/10/2026):**
+
+- En una tabla, el número de columnas lo define el usuario. A partir de la segunda fila, si hay un campo de tipo
+  lista, se generan tantas filas como registros tenga la lista.
+- Crear tres campos de lista: **Código Arancelario**, **Descripción Arancelaria** y **Monto Autorizado**.
+- Agregar un **logo** en el encabezado y un **texto de pie de página**, los dos editables.
+- Poder elegir el **interlineado** al generar el documento.
+
+**Resultado: cumplido.**
+
+Capturas: [diseño del documento](diseno/fase3c-diseno.png) y [tabla con campos de lista](diseno/fase3c-tabla-lista.png).
+Hay un logo ficticio para probar en [diseno/logo-prueba.png](diseno/logo-prueba.png).
+
+## Cómo funciona
+
+### Campos de lista y filas que se repiten
+
+- Un **campo de lista** tiene un valor por cada registro de la solicitud; por ahora, por cada bien de
+  `detallesBienes`. En el editor se ven en **verde**, con un ícono de lista.
+- **Solo se insertan dentro de una tabla.** Fuera de una tabla aparecen deshabilitados en el panel y en el menú
+  «Insertar campo». El servidor también rechaza un campo de lista fuera de una tabla.
+- Uso típico:
+  - **fila 1:** los encabezados (Código, Descripción, Monto);
+  - **fila 2:** los campos de lista.
+- **Al generar el documento:**
+  - **Con una solicitud**, cada fila que tenga un campo de lista se repite **una vez por cada registro**, en orden.
+    Los campos generales de esa fila, como el número de solicitud, se repiten en cada fila.
+  - **Sin registros**, la fila se reemplaza por «No hay registros para esta solicitud.» y se agrega una advertencia
+    en el resumen.
+  - **Sin solicitud**, la fila aparece una vez, con los campos como `{Etiqueta}`.
+  - Las filas sin campos de lista se mantienen tal cual.
+
+**Campos de lista disponibles:**
+
+| Campo | Tipo | Origen |
+|---|---|---|
+| **Código Arancelario** | Texto | `detallesBienes.codigoArancelario` |
+| **Descripción Arancelaria** (nuevo) | Texto | `detallesBienes.descripcionArancelaria` |
+| **Monto Autorizado** (nuevo) | Moneda (L) | `detallesBienes.montoAutorizado` |
+| Descripción del Bien, Unidad de Medida, Cantidad, Valor Estimado | — | Ya existían; ahora también se tratan como lista |
+
+Los cuatro bienes de prueba tienen descripción arancelaria y monto autorizado ficticios. Los datos para probar las
+filas son:
+
+- `SOL-001`: 0 registros.
+- `SOL-002`: 1 registro.
+- `SOL-003`: 3 registros.
+
+### Logo y pie de página (por plantilla)
+
+- En el panel de la plantilla, sección desplegable **Diseño del documento: logo y pie de página**.
+- **Logo:**
+  - se carga, se reemplaza o se quita (quitarlo pide confirmación);
+  - acepta PNG o JPEG de hasta 1 MB, con vista previa y alineación a la izquierda, al centro o a la derecha;
+  - el servidor comprueba el **contenido real** del archivo (la firma PNG o JPEG), no su nombre: rechaza, por
+    ejemplo, un SVG o un texto con extensión `.png`;
+  - el archivo se guarda en `Data/archivos/` con un nombre generado por el servidor, y al reemplazarlo se borra el
+    anterior.
+- **Pie de página:** texto de hasta 500 caracteres y 8 líneas. Se guarda con «Guardar diseño» y aparece centrado en
+  todas las páginas, sobre el número de página.
+- La marca «DOCUMENTO DE PRUEBA · SIN VALIDEZ OFICIAL» sigue en todas las páginas, debajo del logo.
+
+### Interlineado
+
+- Junto a «Generar PDF», lista **Interlineado**: Sencillo, 1.15, 1.5 (predeterminado) o Doble.
+- Se aplica al texto del documento. Las tablas, el pie y el resumen mantienen interlineado sencillo.
+- El servidor solo acepta esos cuatro valores.
+
+## Endpoints nuevos
+
+| Método y ruta | Uso |
+|---|---|
+| `POST /api/plantillas/{id}/logo` | Carga o reemplaza el logo (`multipart/form-data`, campo `archivo`) |
+| `DELETE /api/plantillas/{id}/logo` | Quita el logo |
+| `GET /api/archivos/{id}` | Devuelve la imagen del logo |
+| `GET /api/plantillas/{id}/pdf?solicitudId=&interlineado=` | Nuevo parámetro `interlineado`: `1`, `1.15`, `1.5` o `2` |
+
+La plantilla tiene tres propiedades nuevas: `logoId`, `alineacionLogo` y `piePagina`. Se cambian con el `PUT` de
+siempre, y el servidor valida que el logo exista.
+
+## Problemas encontrados en la verificación y corregidos
+
+1. **Al cargar el logo se cerraba el panel de diseño y se reiniciaban los borradores.** Los componentes dependían de
+   la plantilla completa, no solo de su identificador. Por eso, cualquier versión nueva de la plantilla (como la que
+   se crea al cargar un logo) reiniciaba el formulario del pie y, más grave, **borraba los párrafos que el usuario
+   estaba editando** en Cabecera y Considerando. Ahora solo se reinician al cambiar de plantilla. Hay dos pruebas que
+   cubren el caso.
+2. **Caracteres escapados al editar por línea de comandos.** Los `\n` del código del pie de página se convirtieron en
+   saltos de línea reales; se corrigió antes de compilar.
+
+## Pruebas
+
+| Conjunto | Resultado |
+|---|---|
+| Backend | **102 de 102 correctas** (15 nuevas) |
+| Frontend | **79 de 79 correctas** (9 nuevas) |
+| Compilación de producción | Correcta; carga inicial de 71 kB transferidos |
+
+**Backend:**
+
+- **Filas de lista:**
+  - se repiten por registro, con 3, 1 y 0 registros;
+  - sin solicitud se deja la fila una vez;
+  - los campos generales se repiten en cada fila;
+  - un campo de lista fuera de una tabla se rechaza.
+- **Logo:**
+  - cargar, ver, reemplazar (el archivo anterior se borra) y quitar;
+  - se rechazan texto y SVG, y archivos de más de 1 MB;
+  - se rechaza un logo inexistente en el `PUT`.
+- **Diseño e interlineado:**
+  - el pie, la alineación y el interlineado llegan al documento;
+  - interlineados válidos e inválidos.
+
+**Frontend:**
+
+- **Campos de lista:**
+  - se habilitan solo dentro de una tabla;
+  - se insertan dentro de la tabla con estilo distinto;
+  - el editor avisa cuando el cursor entra en una tabla.
+- **Diseño del documento:**
+  - validación de tipo y tamaño antes de enviar;
+  - carga del logo como formulario;
+  - guardado del pie y la alineación sobre la versión actual;
+  - confirmación al quitar el logo;
+  - el panel no se cierra al cargar el logo.
+- **Interlineado:** se envía el elegido.
+- **Borrador:** se conserva si la plantilla cambia de versión.
+
+## Verificación en el navegador (14/10/2026)
+
+Se respaldaron los datos del usuario antes de probar y se restauraron al terminar.
+
+1. Se cargó el logo ficticio, se escribió un pie de dos líneas y se eligió la alineación a la izquierda. La API guardó
+   todo y en disco quedó un solo archivo, aunque el logo se reemplazó durante la prueba.
+2. Fuera de la tabla, los siete campos de lista estaban deshabilitados; dentro de la tabla, habilitados.
+3. Se creó una tabla de 3 columnas con encabezado y una fila con Código Arancelario, Descripción Arancelaria y Monto
+   Autorizado, y se guardó.
+4. El PDF con `SOL-003` e interlineado 1.15 mostró:
+   - el logo a la izquierda y el pie en todas las páginas;
+   - la tabla con **3 filas** (`9999.20.01`, `9999.20.02` y `9999.30.01`) y los montos en Lempiras.
+
+## Limitaciones
+
+- Los logos cargados quedan en `Data/archivos/`, que no se sube al repositorio. Para incluir uno en los datos
+  iniciales habría que copiarlo a `DatosSemilla/` (pendiente, si se necesita).
+- Por ahora solo hay una lista de origen: el detalle de bienes. Agregar otras listas implica registrar su colección
+  como lista en `OrigenesDatos`.
+- Todavía no hay condiciones por fila; por ejemplo, mostrar solo los bienes con monto mayor a cierto valor.

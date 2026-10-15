@@ -278,3 +278,14 @@ h3 {
   outline: 2px solid var(--primario);
   outline-offset: 1px;
 }
+
+/* Campo de lista: su fila de tabla se repite una vez por registro. */
+.campo-dinamico.campo-lista {
+  border-color: #b7e0c8;
+  background: var(--exito-suave);
+  color: var(--exito);
+}
+
+.campo-dinamico.campo-lista::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E");
+}

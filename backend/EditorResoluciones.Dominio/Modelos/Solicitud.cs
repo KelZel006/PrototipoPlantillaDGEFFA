@@ -62,5 +62,10 @@ public class DetalleBien : IEntidad
     [Range(typeof(decimal), "0", "999999999999", ErrorMessage = "El valor no puede ser negativo.")]
     public decimal? ValorEstimado { get; set; }
 
+    [StringLength(300)] public string? DescripcionArancelaria { get; set; }
+
+    [Range(typeof(decimal), "0", "999999999999", ErrorMessage = "El monto autorizado no puede ser negativo.")]
+    public decimal? MontoAutorizado { get; set; }
+
     public bool EsDatoPrueba { get; set; } = true;
 }

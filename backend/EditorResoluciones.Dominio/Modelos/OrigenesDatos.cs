@@ -28,6 +28,12 @@ public static class OrigenesDatos
                 .ToList()
             : [];
 
+    /// <summary>
+    /// Colecciones con varios registros por solicitud (por ejemplo, el detalle de bienes). Sus campos son de tipo lista:
+    /// solo se usan dentro de una tabla, cuya fila se repite una vez por registro.
+    /// </summary>
+    public static bool EsLista(string coleccion) => coleccion == DetallesBienes;
+
     public static bool PropiedadExiste(string coleccion, string propiedad) =>
         Propiedades(coleccion).Contains(propiedad, StringComparer.Ordinal);
 

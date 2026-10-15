@@ -1,10 +1,37 @@
+using System.Globalization;
 using System.Text.Json;
 using EditorResoluciones.Dominio.Comun;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
 using EditorResoluciones.Dominio.Servicios;
+using EditorResoluciones.Dominio.Validacion;
 
 namespace EditorResoluciones.Dominio.Documento;
+
+/// <summary>Interlineados que se pueden elegir al generar el documento.</summary>
+public static class Interlineados
+{
+    public const double Predeterminado = 1.5;
+
+    public static IReadOnlyList<double> Permitidos { get; } = [1.0, 1.15, 1.5, 2.0];
+
+    /// <summary>Interpreta el valor recibido ("1", "1.15", "1.5" o "2"). Sin valor, usa el predeterminado.</summary>
+    public static double Interpretar(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor))
+            return Predeterminado;
+        if (double.TryParse(valor, NumberStyles.Float, CultureInfo.InvariantCulture, out var numero) &&
+            Permitidos.Any(p => Math.Abs(p - numero) < 0.001))
+        {
+            return numero;
+        }
+
+        var resultado = new ResultadoValidacion();
+        resultado.Agregar("interlineado", "El interlineado debe ser 1, 1.15, 1.5 o 2.");
+        resultado.LanzarSiHayErrores();
+        return Predeterminado;
+    }
+}
 
 /// <summary>
 /// Construye el documento a partir de la plantilla guardada:
@@ -12,6 +39,7 @@ namespace EditorResoluciones.Dominio.Documento;
 /// <item>Recorre las secciones en el orden de las pestañas: Cabecera, Considerando y Resuelve.</item>
 /// <item>Omite los párrafos inactivos y, con una solicitud de prueba, los que no cumplen su condición.</item>
 /// <item>Sustituye cada campo por su valor. Sin solicitud, lo deja como "{Etiqueta}".</item>
+/// <item>En las tablas, repite cada fila con campos de lista una vez por registro de la solicitud.</item>
 /// </list>
 /// Si faltan datos para evaluar una condición, el párrafo no se incluye y se registra una advertencia.
 /// </summary>
@@ -20,11 +48,19 @@ public sealed class ServicioDocumento(
     IRepositorio<Parrafo> parrafos,
     IRepositorio<Campo> campos,
     IRepositorio<Solicitud> solicitudes,
+    IRepositorio<DetalleBien> bienes,
+    IAlmacenArchivos archivos,
     TimeProvider reloj)
 {
     public static readonly Seccion[] OrdenSecciones = [Seccion.Cabecera, Seccion.Considerando, Seccion.Resuelve];
 
-    public async Task<DocumentoResuelto> GenerarAsync(string plantillaId, string? solicitudId, CancellationToken ct = default)
+    public const string TextoSinRegistros = "No hay registros para esta solicitud.";
+
+    public async Task<DocumentoResuelto> GenerarAsync(
+        string plantillaId,
+        string? solicitudId,
+        double interlineado = Interlineados.Predeterminado,
+        CancellationToken ct = default)
     {
         var plantilla = await plantillas.ObtenerAsync(plantillaId, ct)
             ?? throw new EntidadNoEncontradaException(plantillas.Coleccion, plantillaId);
@@ -37,20 +73,15 @@ public sealed class ServicioDocumento(
 
         var catalogo = (await campos.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal);
         var todos = (await parrafos.ListarAsync(ct)).Where(p => p.PlantillaId == plantilla.Id).ToList();
+        var registros = solicitud is null
+            ? []
+            : (await bienes.ListarAsync(ct)).Where(b => b.SolicitudId == solicitud.Id).OrderBy(b => b.Id, StringComparer.Ordinal).ToList();
         var advertencias = new List<string>();
 
         if (solicitud is not null && (solicitud.RubroId != plantilla.RubroId || solicitud.SubRubroId != plantilla.SubRubroId))
             advertencias.Add("La solicitud de prueba pertenece a otro rubro o sub rubro que la plantilla.");
 
-        (Campo? Campo, object? Valor) ObtenerValor(string campoId)
-        {
-            if (!catalogo.TryGetValue(campoId, out var campo))
-                return (null, null);
-            if (solicitud is null || campo.Origen.Coleccion != OrigenesDatos.Solicitudes)
-                return (campo, null);
-            return (campo, OrigenesDatos.Propiedad(campo.Origen.Coleccion, campo.Origen.Propiedad)?.GetValue(solicitud));
-        }
-
+        var contexto = new ContextoSustitucion(catalogo, solicitud, registros, advertencias);
         var secciones = new List<SeccionDocumento>();
         foreach (var seccion in OrdenSecciones)
         {
@@ -76,7 +107,7 @@ public sealed class ServicioDocumento(
                     ReglasCondiciones.Reglas(condicion).Any())
                 {
                     var descripcion = ReglasCondiciones.Describir(condicion, catalogo);
-                    switch (EvaluadorCondiciones.Evaluar(condicion, ObtenerValor))
+                    switch (EvaluadorCondiciones.Evaluar(condicion, id => contexto.Valor(id, null)))
                     {
                         case ResultadoCondicion.Falso:
                             omitidos.Add(new ParrafoOmitido(parrafo.Id, posicion, resumen, $"No se cumple la condición: {descripcion}."));
@@ -88,34 +119,107 @@ public sealed class ServicioDocumento(
                     }
                 }
 
-                var contenido = Sustituir(parrafo.Contenido, catalogo, ObtenerValor, solicitud is not null, ubicacion, advertencias);
+                var contenido = contexto.Sustituir(parrafo.Contenido, null, ubicacion);
                 incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, contenido));
             }
 
             secciones.Add(new SeccionDocumento(seccion, incluidos, omitidos));
         }
 
-        return new DocumentoResuelto(plantilla, solicitud, reloj.GetUtcNow(), secciones, advertencias.Distinct().ToList());
+        byte[]? logo = null;
+        if (!string.IsNullOrEmpty(plantilla.LogoId))
+        {
+            logo = await archivos.LeerAsync(plantilla.LogoId, ct);
+            if (logo is null)
+                advertencias.Add("No se encontró el archivo del logo de la plantilla; el documento se generó sin logo.");
+        }
+        var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado);
+
+        return new DocumentoResuelto(plantilla, solicitud, reloj.GetUtcNow(), secciones, advertencias.Distinct().ToList(), diseno);
     }
 
-    /// <summary>Copia el contenido reemplazando cada campo por un texto con sus mismas marcas de formato.</summary>
-    private static NodoContenido Sustituir(
-        NodoContenido nodo,
+    private static string Resumir(NodoContenido contenido, IReadOnlyDictionary<string, Campo> catalogo)
+    {
+        var texto = ContenidoEditor.TextoPlano(contenido, catalogo);
+        return texto.Length > 90 ? texto[..90] + "…" : texto;
+    }
+
+    /// <summary>Datos y reglas para reemplazar los campos de un párrafo por sus valores.</summary>
+    private sealed class ContextoSustitucion(
         IReadOnlyDictionary<string, Campo> catalogo,
-        Func<string, (Campo? Campo, object? Valor)> obtenerValor,
-        bool conSolicitud,
-        string ubicacion,
+        Solicitud? solicitud,
+        IReadOnlyList<DetalleBien> registros,
         List<string> advertencias)
     {
-        if (nodo.Tipo == ContenidoEditor.NodoCampo)
+        /// <summary>
+        /// Valor de un campo: los campos generales salen de la solicitud; los de lista, del registro de la fila
+        /// que se está generando.
+        /// </summary>
+        public (Campo? Campo, object? Valor) Valor(string campoId, DetalleBien? registro)
+        {
+            if (!catalogo.TryGetValue(campoId, out var campo))
+                return (null, null);
+            object? origen = OrigenesDatos.EsLista(campo.Origen.Coleccion) ? registro : solicitud;
+            return origen is null
+                ? (campo, null)
+                : (campo, OrigenesDatos.Propiedad(campo.Origen.Coleccion, campo.Origen.Propiedad)?.GetValue(origen));
+        }
+
+        public NodoContenido Sustituir(NodoContenido nodo, DetalleBien? registro, string ubicacion)
+        {
+            if (nodo.Tipo == ContenidoEditor.NodoCampo)
+                return SustituirCampo(nodo, registro, ubicacion);
+            if (nodo.Tipo == "table")
+                return SustituirTabla(nodo, ubicacion);
+
+            return new NodoContenido
+            {
+                Tipo = nodo.Tipo,
+                Texto = nodo.Texto,
+                Atributos = nodo.Atributos is null ? null : new Dictionary<string, JsonElement>(nodo.Atributos),
+                Marcas = nodo.Marcas?.ToList(),
+                Contenido = nodo.Contenido?.Select(h => Sustituir(h, registro, ubicacion)).ToList(),
+            };
+        }
+
+        /// <summary>
+        /// Copia la tabla. Una fila con campos de lista se repite una vez por registro; sin registros,
+        /// se reemplaza por una fila que lo indica. Sin solicitud, la fila se deja una vez con los campos como {Etiqueta}.
+        /// </summary>
+        private NodoContenido SustituirTabla(NodoContenido tabla, string ubicacion)
+        {
+            var filas = new List<NodoContenido>();
+            var columnas = (tabla.Contenido ?? []).Select(f => (f.Contenido ?? []).Sum(ContenidoEditor.Expansion)).DefaultIfEmpty(1).Max();
+
+            foreach (var fila in tabla.Contenido ?? [])
+            {
+                if (solicitud is null || !ContenidoEditor.EsFilaDeLista(fila, catalogo))
+                {
+                    filas.Add(Sustituir(fila, null, ubicacion));
+                }
+                else if (registros.Count == 0)
+                {
+                    filas.Add(FilaSinRegistros(columnas));
+                    advertencias.Add($"{ubicacion}: la solicitud no tiene registros para la tabla.");
+                }
+                else
+                {
+                    filas.AddRange(registros.Select(registro => Sustituir(fila, registro, ubicacion)));
+                }
+            }
+
+            return new NodoContenido { Tipo = "table", Contenido = filas };
+        }
+
+        private NodoContenido SustituirCampo(NodoContenido nodo, DetalleBien? registro, string ubicacion)
         {
             var campoId = nodo.Atributos is not null && nodo.Atributos.TryGetValue("campoId", out var id) ? id.GetString() ?? "" : "";
-            var (campo, valor) = obtenerValor(campoId);
+            var (campo, valor) = Valor(campoId, registro);
             var etiqueta = campo?.Etiqueta ?? campoId;
             var marcas = new List<MarcaContenido>(nodo.Marcas ?? []);
 
             string texto;
-            if (!conSolicitud)
+            if (solicitud is null)
             {
                 texto = $"{{{etiqueta}}}";
                 marcas.Add(new MarcaContenido { Tipo = MarcasDocumento.CampoPlantilla });
@@ -129,24 +233,30 @@ public sealed class ServicioDocumento(
             {
                 texto = $"[sin dato: {etiqueta}]";
                 marcas.Add(new MarcaContenido { Tipo = MarcasDocumento.CampoSinDato });
-                advertencias.Add($"{ubicacion}: la solicitud no tiene dato para «{etiqueta}».");
+                advertencias.Add($"{ubicacion}: falta el dato «{etiqueta}».");
             }
             return new NodoContenido { Tipo = "text", Texto = texto, Marcas = marcas };
         }
 
-        return new NodoContenido
+        private static NodoContenido FilaSinRegistros(int columnas) => new()
         {
-            Tipo = nodo.Tipo,
-            Texto = nodo.Texto,
-            Atributos = nodo.Atributos is null ? null : new Dictionary<string, JsonElement>(nodo.Atributos),
-            Marcas = nodo.Marcas?.ToList(),
-            Contenido = nodo.Contenido?.Select(h => Sustituir(h, catalogo, obtenerValor, conSolicitud, ubicacion, advertencias)).ToList(),
+            Tipo = "tableRow",
+            Contenido =
+            [
+                new NodoContenido
+                {
+                    Tipo = "tableCell",
+                    Atributos = new Dictionary<string, JsonElement> { ["colspan"] = JsonSerializer.SerializeToElement(columnas) },
+                    Contenido =
+                    [
+                        new NodoContenido
+                        {
+                            Tipo = "paragraph",
+                            Contenido = [new NodoContenido { Tipo = "text", Texto = TextoSinRegistros, Marcas = [new MarcaContenido { Tipo = "italic" }] }],
+                        },
+                    ],
+                },
+            ],
         };
-    }
-
-    private static string Resumir(NodoContenido contenido, IReadOnlyDictionary<string, Campo> catalogo)
-    {
-        var texto = ContenidoEditor.TextoPlano(contenido, catalogo);
-        return texto.Length > 90 ? texto[..90] + "…" : texto;
     }
 }

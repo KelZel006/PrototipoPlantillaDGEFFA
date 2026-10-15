@@ -31,9 +31,10 @@ Resumen del diagnóstico y del plan aprobados en la Fase 1 (13/10/2026), con los
 | 2 | Estructura base, almacenamiento JSON, API REST y datos de prueba | Angular consulta y escribe datos a través de la API; los datos persisten tras reiniciar ✅ |
 | **3** | **Pestañas, editor, listado de párrafos (crear, editar, duplicar, eliminar y reordenar), panel de campos y constructor de condiciones. Por ahora solo Considerando** | **La sección Considerando se administra y conserva su configuración ✅** ([FASE3.md](FASE3.md)) |
 | **3b** | **Tablas en el editor, orden por arrastre, PDF y pestaña Cabecera** | **Cumplido ✅** ([FASE3B.md](FASE3B.md)) |
-| 3c | Habilitar Resuelve con el mismo componente | Las tres secciones se administran por separado |
+| **3c** | **Tablas con campos de lista (filas por registro), logo y pie de página editables, interlineado al generar** | **Cumplido ✅** ([FASE3C.md](FASE3C.md)) |
+| 3d | Habilitar Resuelve con el mismo componente | Las tres secciones se administran por separado |
 | 4 | Resolución de valores de los campos y evaluación de las condiciones (Y/O, datos faltantes) con una solicitud de prueba. **Adelantado en la 3b para el PDF**; falta la vista previa en pantalla | Los campos se sustituyen y las condiciones muestran u ocultan elementos |
-| 5 | Tablas **dinámicas**: filas generadas desde los bienes de la solicitud, columnas ligadas a campos y condiciones por fila. Las tablas fijas ya existen desde la 3b | Una tabla genera sus filas con 0, 1 o varios registros |
+| 5 | Condiciones por fila y estilos avanzados de tablas (anchos, bordes, colores). Las filas generadas por registro ya existen desde la 3c | Una tabla filtra y presenta sus filas según la configuración |
 | 6 | Vista previa en pantalla y ajustes finales del PDF (el PDF ya existe desde la 3b) | La vista previa coincide con la configuración y el PDF |
 | 7 | Pruebas y estabilización | Funciones principales cubiertas por pruebas |
 | 8 | Documentación y entrega | Manual, endpoints, limitaciones y guía para pasar a base de datos |

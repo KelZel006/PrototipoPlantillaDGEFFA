@@ -1,18 +1,277 @@
 [
-  { "id": "operador", "version": 1, "etiqueta": "Operador", "categoria": "Solicitud", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "operador" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "beneficiario", "version": 1, "etiqueta": "Beneficiario", "categoria": "Solicitud", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "beneficiario" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "tipo_beneficio", "version": 1, "etiqueta": "Tipo de Beneficio", "categoria": "Solicitud", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "tipoBeneficio" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "numero_solicitud", "version": 1, "etiqueta": "Número de Solicitud", "categoria": "Solicitud", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "numeroSolicitud" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "estado_solicitud", "version": 1, "etiqueta": "Estado de Solicitud", "categoria": "Solicitud", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "estado" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "fecha_resolucion", "version": 1, "etiqueta": "Fecha de Resolución", "categoria": "Resolución", "tipoDato": "Fecha", "origen": { "coleccion": "solicitudes", "propiedad": "fechaResolucion" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "anio_gestion", "version": 1, "etiqueta": "Año de Gestión", "categoria": "Resolución", "tipoDato": "Numero", "origen": { "coleccion": "solicitudes", "propiedad": "anioGestion" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "monto_exoneracion", "version": 1, "etiqueta": "Monto Exoneración", "categoria": "Resolución", "tipoDato": "Moneda", "origen": { "coleccion": "solicitudes", "propiedad": "montoExoneracion" }, "contextos": ["considerando", "resuelve"] },
-  { "id": "unidad_ejecutora", "version": 1, "etiqueta": "Unidad Ejecutora", "categoria": "Ubicación", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "unidadEjecutora" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "departamento", "version": 1, "etiqueta": "Departamento", "categoria": "Ubicación", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "departamento" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "municipio", "version": 1, "etiqueta": "Municipio", "categoria": "Ubicación", "tipoDato": "Texto", "origen": { "coleccion": "solicitudes", "propiedad": "municipio" }, "contextos": ["cabecera", "considerando", "resuelve"] },
-  { "id": "codigo_arancelario", "version": 1, "etiqueta": "Código Arancelario", "categoria": "Detalle de bienes", "tipoDato": "Texto", "origen": { "coleccion": "detallesBienes", "propiedad": "codigoArancelario" }, "contextos": ["tabla"] },
-  { "id": "descripcion_bien", "version": 1, "etiqueta": "Descripción del Bien", "categoria": "Detalle de bienes", "tipoDato": "Texto", "origen": { "coleccion": "detallesBienes", "propiedad": "descripcion" }, "contextos": ["tabla"] },
-  { "id": "unidad_medida", "version": 1, "etiqueta": "Unidad de Medida", "categoria": "Detalle de bienes", "tipoDato": "Texto", "origen": { "coleccion": "detallesBienes", "propiedad": "unidadMedida" }, "contextos": ["tabla"] },
-  { "id": "cantidad", "version": 1, "etiqueta": "Cantidad", "categoria": "Detalle de bienes", "tipoDato": "Numero", "origen": { "coleccion": "detallesBienes", "propiedad": "cantidad" }, "contextos": ["tabla"] },
-  { "id": "valor_estimado", "version": 1, "etiqueta": "Valor Estimado", "categoria": "Detalle de bienes", "tipoDato": "Moneda", "origen": { "coleccion": "detallesBienes", "propiedad": "valorEstimado" }, "contextos": ["tabla"] }
+  {
+    "id": "operador",
+    "version": 1,
+    "etiqueta": "Operador",
+    "categoria": "Solicitud",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "operador"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "beneficiario",
+    "version": 1,
+    "etiqueta": "Beneficiario",
+    "categoria": "Solicitud",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "beneficiario"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "tipo_beneficio",
+    "version": 1,
+    "etiqueta": "Tipo de Beneficio",
+    "categoria": "Solicitud",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "tipoBeneficio"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "numero_solicitud",
+    "version": 1,
+    "etiqueta": "Número de Solicitud",
+    "categoria": "Solicitud",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "numeroSolicitud"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "estado_solicitud",
+    "version": 1,
+    "etiqueta": "Estado de Solicitud",
+    "categoria": "Solicitud",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "estado"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "fecha_resolucion",
+    "version": 1,
+    "etiqueta": "Fecha de Resolución",
+    "categoria": "Resolución",
+    "tipoDato": "Fecha",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "fechaResolucion"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "anio_gestion",
+    "version": 1,
+    "etiqueta": "Año de Gestión",
+    "categoria": "Resolución",
+    "tipoDato": "Numero",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "anioGestion"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "monto_exoneracion",
+    "version": 1,
+    "etiqueta": "Monto Exoneración",
+    "categoria": "Resolución",
+    "tipoDato": "Moneda",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "montoExoneracion"
+    },
+    "contextos": [
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "unidad_ejecutora",
+    "version": 1,
+    "etiqueta": "Unidad Ejecutora",
+    "categoria": "Ubicación",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "unidadEjecutora"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "departamento",
+    "version": 1,
+    "etiqueta": "Departamento",
+    "categoria": "Ubicación",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "departamento"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "municipio",
+    "version": 1,
+    "etiqueta": "Municipio",
+    "categoria": "Ubicación",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "solicitudes",
+      "propiedad": "municipio"
+    },
+    "contextos": [
+      "cabecera",
+      "considerando",
+      "resuelve"
+    ]
+  },
+  {
+    "id": "codigo_arancelario",
+    "version": 1,
+    "etiqueta": "Código Arancelario",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "codigoArancelario"
+    },
+    "contextos": [
+      "tabla"
+    ]
+  },
+  {
+    "id": "descripcion_arancelaria",
+    "version": 1,
+    "etiqueta": "Descripción Arancelaria",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "descripcionArancelaria"
+    },
+    "contextos": [
+      "tabla"
+    ],
+    "descripcion": "Campo de tipo lista: en una tabla, su fila se repite por cada bien de la solicitud."
+  },
+  {
+    "id": "monto_autorizado",
+    "version": 1,
+    "etiqueta": "Monto Autorizado",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Moneda",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "montoAutorizado"
+    },
+    "contextos": [
+      "tabla"
+    ],
+    "descripcion": "Campo de tipo lista: en una tabla, su fila se repite por cada bien de la solicitud."
+  },
+  {
+    "id": "descripcion_bien",
+    "version": 1,
+    "etiqueta": "Descripción del Bien",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "descripcion"
+    },
+    "contextos": [
+      "tabla"
+    ]
+  },
+  {
+    "id": "unidad_medida",
+    "version": 1,
+    "etiqueta": "Unidad de Medida",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Texto",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "unidadMedida"
+    },
+    "contextos": [
+      "tabla"
+    ]
+  },
+  {
+    "id": "cantidad",
+    "version": 1,
+    "etiqueta": "Cantidad",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Numero",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "cantidad"
+    },
+    "contextos": [
+      "tabla"
+    ]
+  },
+  {
+    "id": "valor_estimado",
+    "version": 1,
+    "etiqueta": "Valor Estimado",
+    "categoria": "Detalle de bienes (lista)",
+    "tipoDato": "Moneda",
+    "origen": {
+      "coleccion": "detallesBienes",
+      "propiedad": "valorEstimado"
+    },
+    "contextos": [
+      "tabla"
+    ]
+  }
 ]

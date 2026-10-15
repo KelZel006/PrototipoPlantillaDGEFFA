@@ -41,21 +41,42 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         pdf.Info.Title = $"Resolución de prueba – {documento.Plantilla.Nombre}";
         pdf.Info.Subject = AvisoPrueba;
         pdf.Info.Author = "Prototipo de editor de resoluciones";
-        DefinirEstilos(pdf);
+        var diseno = documento.Diseno;
+        DefinirEstilos(pdf, diseno.Interlineado);
+        var lineasPie = LineasPie(diseno.PiePagina);
 
         var seccion = pdf.AddSection();
         var pagina = seccion.PageSetup;
         pagina.PageFormat = PageFormat.Letter;
-        pagina.TopMargin = Unit.FromCentimeter(2.8);
-        pagina.BottomMargin = Unit.FromCentimeter(2.5);
+        // Los márgenes crecen con el logo y con las líneas del pie para que no se encimen con el texto.
+        pagina.TopMargin = Unit.FromCentimeter(diseno.Logo is null ? 2.8 : 4.2);
+        pagina.BottomMargin = Unit.FromCentimeter(2.5 + 0.42 * lineasPie.Count);
         pagina.LeftMargin = Unit.FromCentimeter(2.5);
         pagina.RightMargin = Unit.FromCentimeter(2.5);
         pagina.HeaderDistance = Unit.FromCentimeter(1.2);
         pagina.FooterDistance = Unit.FromCentimeter(1.2);
         var anchoUtil = Unit.FromCentimeter(21.59 - 5.0);
 
+        if (diseno.Logo is not null)
+        {
+            var parrafoLogo = seccion.Headers.Primary.AddParagraph();
+            parrafoLogo.Format.SpaceAfter = Unit.FromPoint(4);
+            parrafoLogo.Format.Alignment = diseno.AlineacionLogo switch
+            {
+                AlineacionLogo.Izquierda => ParagraphAlignment.Left,
+                AlineacionLogo.Derecha => ParagraphAlignment.Right,
+                _ => ParagraphAlignment.Center,
+            };
+            var logo = parrafoLogo.AddImage("base64:" + Convert.ToBase64String(diseno.Logo));
+            logo.Height = Unit.FromCentimeter(1.8);
+            logo.LockAspectRatio = true;
+        }
+
         var encabezado = seccion.Headers.Primary.AddParagraph(AvisoPrueba);
         encabezado.Style = "Aviso";
+
+        foreach (var linea in lineasPie)
+            seccion.Footers.Primary.AddParagraph(linea).Style = "Pie";
 
         var pie = seccion.Footers.Primary.AddParagraph();
         pie.Style = "Aviso";
@@ -95,13 +116,35 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         _ => null,
     };
 
-    private static void DefinirEstilos(Document pdf)
+    /// <summary>Líneas del pie de página; las vacías se conservan para respetar la separación escrita.</summary>
+    private static List<string> LineasPie(string? texto) =>
+        string.IsNullOrWhiteSpace(texto)
+            ? []
+            : texto.Replace("\r\n", "\n").Trim('\n').Split('\n').Select(l => l.TrimEnd()).Take(8).ToList();
+
+    private static void DefinirEstilos(Document pdf, double interlineado)
     {
         var normal = pdf.Styles[StyleNames.Normal]!;
         normal.Font.Name = Fuente;
         normal.Font.Size = 11;
         normal.ParagraphFormat.SpaceAfter = Unit.FromPoint(8);
-        normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.OnePtFive;
+        switch (interlineado)
+        {
+            case <= 1.0:
+                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Single;
+                break;
+            case >= 2.0:
+                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Double;
+                break;
+            case 1.5:
+                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.OnePtFive;
+                break;
+            default:
+                // Con la regla Multiple, el valor se interpreta como factor (por ejemplo, 1.15).
+                normal.ParagraphFormat.LineSpacingRule = LineSpacingRule.Multiple;
+                normal.ParagraphFormat.LineSpacing = interlineado;
+                break;
+        }
         normal.ParagraphFormat.Alignment = ParagraphAlignment.Justify;
 
         var titulo = pdf.Styles.AddStyle("TituloSeccion", StyleNames.Normal);
@@ -116,6 +159,12 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         aviso.ParagraphFormat.Alignment = ParagraphAlignment.Center;
         aviso.ParagraphFormat.SpaceAfter = 0;
         aviso.ParagraphFormat.LineSpacingRule = LineSpacingRule.Single;
+
+        var estiloPie = pdf.Styles.AddStyle("Pie", StyleNames.Normal);
+        estiloPie.Font.Size = 8.5;
+        estiloPie.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+        estiloPie.ParagraphFormat.SpaceAfter = 0;
+        estiloPie.ParagraphFormat.LineSpacingRule = LineSpacingRule.Single;
 
         var celda = pdf.Styles.AddStyle("Celda", StyleNames.Normal);
         celda.Font.Size = 9.5;

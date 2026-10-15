@@ -25,7 +25,8 @@ public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> se
 public sealed class PlantillasController(
     ServicioEntidades<Plantilla> servicio,
     ServicioDocumento documentos,
-    IGeneradorPdf generadorPdf) : ControladorCrud<Plantilla>(servicio)
+    IGeneradorPdf generadorPdf,
+    ServicioLogos logos) : ControladorCrud<Plantilla>(servicio)
 {
     /// <summary>
     /// PDF de prueba con Cabecera, Considerando y Resuelve, en ese orden. Con <c>?solicitudId=</c> se sustituyen
@@ -33,13 +34,38 @@ public sealed class PlantillasController(
     /// </summary>
     [HttpGet("{id}/pdf")]
     [Produces("application/pdf")]
-    public async Task<IActionResult> Pdf(string id, [FromQuery] string? solicitudId, CancellationToken ct)
+    public async Task<IActionResult> Pdf(
+        string id,
+        [FromQuery] string? solicitudId,
+        [FromQuery] string? interlineado,
+        CancellationToken ct)
     {
-        var documento = await documentos.GenerarAsync(id, solicitudId, ct);
+        var documento = await documentos.GenerarAsync(id, solicitudId, Interlineados.Interpretar(interlineado), ct);
         var bytes = generadorPdf.Generar(documento);
         var sufijo = string.IsNullOrEmpty(solicitudId) ? "plantilla" : solicitudId;
         return File(bytes, "application/pdf", $"resolucion-prueba_{id}_{sufijo}.pdf");
     }
+
+    /// <summary>Carga o reemplaza el logo del encabezado (PNG o JPEG, hasta 1 MB).</summary>
+    [HttpPost("{id}/logo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(2 * 1024 * 1024)]
+    public async Task<ActionResult<Plantilla>> CargarLogo(string id, IFormFile archivo, CancellationToken ct)
+    {
+        if (archivo.Length > ServicioLogos.TamanoMaximo)
+            return ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
+            {
+                ["archivo"] = ["El logo no puede superar 1 MB."],
+            }) { Title = "Los datos enviados no son válidos." });
+
+        using var memoria = new MemoryStream();
+        await archivo.CopyToAsync(memoria, ct);
+        return Ok(await logos.AsignarAsync(id, archivo.FileName, memoria.ToArray(), ct));
+    }
+
+    [HttpDelete("{id}/logo")]
+    public async Task<ActionResult<Plantilla>> QuitarLogo(string id, CancellationToken ct) =>
+        Ok(await logos.QuitarAsync(id, ct));
 
     protected override IEnumerable<Plantilla> Filtrar(IEnumerable<Plantilla> registros, IQueryCollection consulta)
     {
@@ -100,6 +126,21 @@ public sealed class DetallesBienesController(ServicioEntidades<DetalleBien> serv
 {
     protected override IEnumerable<DetalleBien> Filtrar(IEnumerable<DetalleBien> registros, IQueryCollection consulta) =>
         PorParametro(registros, consulta, "solicitudId", (b, v) => b.SolicitudId == v);
+}
+
+/// <summary>Contenido de los archivos cargados (por ejemplo, el logo), para mostrarlos en la interfaz.</summary>
+[ApiController]
+[Route("api/archivos")]
+public sealed class ArchivosController(ServicioLogos logos) : ControllerBase
+{
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Obtener(string id, CancellationToken ct)
+    {
+        var (datos, contenido) = await logos.LeerAsync(id, ct);
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers.CacheControl = "private, max-age=3600";
+        return File(contenido, datos.TipoContenido);
+    }
 }
 
 /// <summary>Historial de cambios: solo lectura. Filtros: <c>?coleccion=&amp;entidadId=</c>.</summary>

@@ -6,7 +6,9 @@ import { ApiService } from '../../core/api.service';
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
+import { INTERLINEADOS, Interlineado } from '../../core/modelos';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
+import { DisenoDocumento } from '../diseno-documento/diseno-documento';
 
 /**
  * Plantilla de la combinación seleccionada. Si no existe, permite crearla; si existe, permite generar
@@ -14,7 +16,7 @@ import { PlantillaActualService } from '../../core/plantilla-actual.service';
  */
 @Component({
   selector: 'app-panel-plantilla',
-  imports: [DatePipe],
+  imports: [DatePipe, DisenoDocumento],
   templateUrl: './panel-plantilla.html',
   styleUrl: './panel-plantilla.css',
 })
@@ -47,6 +49,8 @@ export class PanelPlantilla {
     () => this.solicitudes().find((s) => s.mismaCombinacion)?.id ?? '',
   );
   protected readonly generando = signal(false);
+  protected readonly interlineados = INTERLINEADOS;
+  protected readonly interlineado = signal<Interlineado>('1.5');
 
   protected crearPlantilla(): void {
     if (this.creando()) {
@@ -82,7 +86,7 @@ export class PanelPlantilla {
     // La ventana se abre durante el clic para que el navegador no la bloquee; luego se le asigna el PDF.
     const ventana = abrirVentana();
     this.generando.set(true);
-    this.api.generarPdf(plantilla.id, this.solicitudElegida() || null).subscribe({
+    this.api.generarPdf(plantilla.id, this.solicitudElegida() || null, this.interlineado()).subscribe({
       next: (respuesta) => {
         this.generando.set(false);
         this.mostrarPdf(respuesta, ventana);

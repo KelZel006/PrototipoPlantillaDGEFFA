@@ -26,6 +26,8 @@ export interface TipoDocumento extends Entidad {
 
 export type EstadoPlantilla = 'Borrador' | 'Publicada';
 
+export type AlineacionLogo = 'Izquierda' | 'Centro' | 'Derecha';
+
 export interface Plantilla extends Entidad {
   nombre: string;
   rubroId: string;
@@ -33,6 +35,11 @@ export interface Plantilla extends Entidad {
   tipoDocumentoId: string;
   estado: EstadoPlantilla;
   descripcion?: string;
+  /** Logo del encabezado del documento; null si no tiene. */
+  logoId?: string | null;
+  alineacionLogo?: AlineacionLogo;
+  /** Texto del pie de página del documento (varias líneas). */
+  piePagina?: string | null;
   fechaModificacion: string;
 }
 
@@ -114,6 +121,24 @@ export interface Solicitud extends Entidad {
   estado?: string;
   esDatoPrueba: boolean;
 }
+
+/**
+ * Un campo de lista tiene un valor por registro (por ejemplo, por cada bien de la solicitud). Solo se usa dentro
+ * de una tabla: su fila se repite una vez por registro al generar el documento.
+ */
+export function esCampoLista(campo: Pick<Campo, 'origen'>): boolean {
+  return campo.origen.coleccion === 'detallesBienes';
+}
+
+/** Interlineados que se pueden elegir al generar el PDF (los acepta el servidor). */
+export const INTERLINEADOS = [
+  { valor: '1', nombre: 'Sencillo' },
+  { valor: '1.15', nombre: '1.15' },
+  { valor: '1.5', nombre: '1.5' },
+  { valor: '2', nombre: 'Doble' },
+] as const;
+
+export type Interlineado = (typeof INTERLINEADOS)[number]['valor'];
 
 export interface EstadoColeccion {
   nombre: string;

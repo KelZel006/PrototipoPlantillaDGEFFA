@@ -22,6 +22,7 @@ public static class ColeccionesJson
         new("solicitudes", "solicitudes.json", "SOL", typeof(Solicitud)),
         new("detallesBienes", "detallesBienes.json", "BIE", typeof(DetalleBien)),
         new("historial", "historial.json", "HIS", typeof(RegistroHistorial)),
+        new("archivos", "archivos.json", "ARC", typeof(ArchivoRecurso)),
     ];
 
     private static readonly Dictionary<string, DefinicionColeccion> PorNombre =

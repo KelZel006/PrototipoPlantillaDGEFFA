@@ -30,7 +30,7 @@ import {
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
-import { Campo, GrupoCondiciones, NodoContenido, Parrafo, Plantilla, Seccion } from '../../core/modelos';
+import { Campo, GrupoCondiciones, NodoContenido, Parrafo, Plantilla, Seccion, esCampoLista } from '../../core/modelos';
 import { ConstructorCondiciones } from '../constructor-condiciones/constructor-condiciones';
 import { EditorTexto } from '../editor-texto/editor-texto';
 import { ListaParrafos } from '../lista-parrafos/lista-parrafos';
@@ -81,12 +81,17 @@ export class EditorSeccion {
   readonly plantilla = input.required<Plantilla>();
   readonly seccion = input.required<Seccion>();
   readonly nombre = input.required<NombreSeccion>();
+  /**
+   * Solo el identificador: una versión nueva de la misma plantilla (por ejemplo, al cargar el logo) no debe
+   * recargar la lista ni borrar el borrador.
+   */
+  private readonly idPlantilla = computed(() => this.plantilla().id);
 
   protected readonly uid = identificadorUnico('texto');
   private readonly editorTexto = viewChild(EditorTexto);
 
   private readonly parrafosRecurso = rxResource({
-    params: () => ({ plantillaId: this.plantilla().id, seccion: this.seccion() }),
+    params: () => ({ plantillaId: this.idPlantilla(), seccion: this.seccion() }),
     stream: ({ params }) => this.api.parrafos(params.plantillaId, params.seccion),
   });
 
@@ -115,6 +120,8 @@ export class EditorSeccion {
   protected readonly camposSeccion = computed(() => this.catalogo.camposDeContexto(this.contextoCampos()));
   protected readonly camposCondicion = this.catalogo.camposCondicionParrafo;
   protected readonly usados = computed(() => camposUsados(this.contenido()));
+  /** El cursor del editor está dentro de una tabla (habilita los campos de lista). */
+  protected readonly enTabla = signal(false);
   protected readonly posicionEditando = computed(() => {
     const id = this.editando()?.id;
     return id ? this.parrafos().findIndex((p) => p.id === id) + 1 : 0;
@@ -139,7 +146,7 @@ export class EditorSeccion {
   constructor() {
     // Al cambiar de plantilla o de sección se empieza con un borrador vacío.
     effect(() => {
-      this.plantilla().id;
+      this.idPlantilla();
       this.seccion();
       untracked(() => this.cargarBorrador(null));
     });
@@ -155,7 +162,9 @@ export class EditorSeccion {
   }
 
   protected insertarCampo(campo: Campo): void {
-    this.editorTexto()?.insertarCampo(campo.id);
+    if (this.editorTexto()?.insertarCampo(campo.id) === false && esCampoLista(campo)) {
+      this.interaccion.avisar('error', `«${campo.etiqueta}» es un campo de lista: coloque el cursor dentro de una tabla.`);
+    }
   }
 
   protected limpiarTexto(): void {

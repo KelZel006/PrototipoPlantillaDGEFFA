@@ -15,7 +15,7 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { StarterKit } from '@tiptap/starter-kit';
 import { identificadorUnico } from '../../compartido/identificador';
 import { MAXIMO_CARACTERES, ResolverEtiqueta, contarCaracteres, documentoVacio } from '../../core/contenido';
-import { Campo, NodoContenido } from '../../core/modelos';
+import { Campo, NodoContenido, esCampoLista } from '../../core/modelos';
 import { NodoCampo } from './nodo-campo';
 
 type Alineacion = 'left' | 'center' | 'right' | 'justify';
@@ -76,6 +76,8 @@ export class EditorTexto implements OnDestroy {
 
   /** Se emite con cada cambio del contenido. */
   readonly cambio = output<NodoContenido>();
+  /** Se emite cuando el cursor entra o sale de una tabla (los campos de lista solo se insertan dentro). */
+  readonly enTablaCambio = output<boolean>();
 
   private readonly superficie = viewChild.required<ElementRef<HTMLElement>>('superficie');
   private editor: Editor | null = null;
@@ -126,8 +128,22 @@ export class EditorTexto implements OnDestroy {
   }
 
   /** Inserta un campo en la posición actual del cursor. */
-  insertarCampo(campoId: string): void {
-    this.editor?.chain().focus().insertarCampo(campoId).run();
+  /**
+   * Inserta un campo en la posición actual del cursor. Un campo de lista solo se inserta dentro de una tabla;
+   * devuelve false si no se pudo insertar.
+   */
+  insertarCampo(campoId: string): boolean {
+    if (!this.editor || (this.esLista(campoId) && !this.editor.isActive('table'))) {
+      return false;
+    }
+    return this.editor.chain().focus().insertarCampo(campoId).run();
+  }
+
+  /** Ids de los campos de lista del catálogo recibido. */
+  private readonly idsLista = computed(() => new Set(this.campos().filter(esCampoLista).map((c) => c.id)));
+
+  protected esLista(campoId: string): boolean {
+    return this.idsLista().has(campoId);
   }
 
   limpiar(): void {
@@ -286,7 +302,7 @@ export class EditorTexto implements OnDestroy {
         }),
         TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
         TableKit.configure({ table: { resizable: false, HTMLAttributes: { class: 'tabla-editor' } } }),
-        NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id) }),
+        NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id), esLista: (id) => this.esLista(id) }),
       ],
       editorProps: {
         attributes: {
@@ -313,6 +329,7 @@ export class EditorTexto implements OnDestroy {
       return;
     }
     const alineacion = (['center', 'right', 'justify'] as const).find((a) => editor.isActive({ textAlign: a })) ?? 'left';
+    const enTablaAntes = this.estado().enTabla;
     this.estado.set({
       negrita: editor.isActive('bold'),
       cursiva: editor.isActive('italic'),
@@ -324,5 +341,8 @@ export class EditorTexto implements OnDestroy {
       alineacion,
     });
     this.caracteres.set(contarCaracteres(editor.getJSON() as NodoContenido, this.etiqueta()));
+    if (this.estado().enTabla !== enTablaAntes) {
+      this.enTablaCambio.emit(this.estado().enTabla);
+    }
   }
 }

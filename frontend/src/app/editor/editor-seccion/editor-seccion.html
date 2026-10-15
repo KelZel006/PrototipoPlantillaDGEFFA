@@ -43,6 +43,7 @@
           [etiqueta]="catalogo.etiqueta"
           [etiquetaAccesible]="nombre().texto"
           (cambio)="contenido.set($event)"
+          (enTablaCambio)="enTabla.set($event)"
         />
 
         @if (errorGuardado(); as mensaje) {
@@ -108,6 +109,6 @@
       }
     </div>
 
-    <app-panel-campos class="columna-campos" [campos]="camposSeccion()" [usados]="usados()" (insertar)="insertarCampo($event)" />
+    <app-panel-campos class="columna-campos" [campos]="camposSeccion()" [usados]="usados()" [enTabla]="enTabla()" (insertar)="insertarCampo($event)" />
   </div>
 }

@@ -36,6 +36,21 @@ describe('PanelCampos', () => {
     expect(elemento.textContent).toContain('No hay campos que coincidan');
   });
 
+  it('solo habilita los campos de lista con el cursor dentro de una tabla', () => {
+    fixture.componentRef.setInput('campos', CAMPOS);
+    fixture.detectChanges();
+    const botonLista = () =>
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.campo')).find((b) => b.textContent?.includes('Código Arancelario'))!;
+
+    expect(botonLista().disabled).toBe(true);
+    expect(botonLista().querySelector('.tecnico')?.textContent).toBe('codigo_arancelario · Lista · Texto');
+    expect(elemento.textContent).toContain('Se insertan dentro de una tabla');
+
+    fixture.componentRef.setInput('enTabla', true);
+    fixture.detectChanges();
+    expect(botonLista().disabled).toBe(false);
+  });
+
   it('marca los campos usados en el párrafo y emite el campo a insertar', () => {
     const insertados: string[] = [];
     fixture.componentInstance.insertar.subscribe((campo) => insertados.push(campo.id));

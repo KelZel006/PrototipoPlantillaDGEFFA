@@ -38,7 +38,8 @@
   border-top: 1px solid var(--borde);
 }
 
-.solicitud {
+.solicitud,
+.selector-generar {
   display: flex;
   flex-direction: column;
   gap: var(--espacio-1);
@@ -60,4 +61,8 @@
 .nota-pdf {
   flex-basis: 100%;
   font-size: var(--texto-pequeno);
+}
+
+.interlineado {
+  min-width: 130px;
 }

@@ -71,7 +71,9 @@
         @for (grupo of grupos(); track grupo.categoria) {
           <optgroup [label]="grupo.categoria">
             @for (campo of grupo.campos; track campo.id) {
-              <option [value]="campo.id">{{ campo.etiqueta }}</option>
+              <option [value]="campo.id" [disabled]="esLista(campo.id) && !estado().enTabla">
+                {{ campo.etiqueta }}{{ esLista(campo.id) ? ' (lista)' : '' }}
+              </option>
             }
           </optgroup>
         }
@@ -136,6 +138,10 @@
       <button type="button" class="boton boton-texto boton-compacto" (click)="alternarFilaEncabezado()">Fila de encabezado</button>
       <button type="button" class="boton boton-texto boton-compacto" title="Combina las celdas seleccionadas o separa una celda combinada" (click)="combinarCeldas()">Combinar / separar</button>
       <button type="button" class="boton boton-texto boton-compacto texto-peligro" (click)="eliminarTabla()">Eliminar tabla</button>
+      <span class="ayuda">
+        Las filas que tengan campos de lista (por ejemplo, Código Arancelario) se repetirán una vez por cada registro
+        de la solicitud al generar el documento.
+      </span>
     </div>
   }
 

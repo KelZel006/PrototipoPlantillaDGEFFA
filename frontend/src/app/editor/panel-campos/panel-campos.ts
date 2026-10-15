@@ -1,6 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { identificadorUnico } from '../../compartido/identificador';
-import { Campo, TipoDato } from '../../core/modelos';
+import { Campo, TipoDato, esCampoLista } from '../../core/modelos';
 
 const NOMBRES_TIPO: Record<TipoDato, string> = {
   Texto: 'Texto',
@@ -27,6 +27,8 @@ export class PanelCampos {
   readonly campos = input.required<Campo[]>();
   /** Campos presentes en el párrafo en edición. */
   readonly usados = input<string[]>([]);
+  /** El cursor del editor está dentro de una tabla: solo entonces se pueden insertar campos de lista. */
+  readonly enTabla = input(false);
 
   readonly insertar = output<Campo>();
 
@@ -48,6 +50,12 @@ export class PanelCampos {
     }
     return [...porCategoria.entries()].map(([categoria, campos]) => ({ categoria, campos }));
   });
+
+  protected readonly esLista = esCampoLista;
+
+  protected deshabilitado(campo: Campo): boolean {
+    return esCampoLista(campo) && !this.enTabla();
+  }
 
   protected estaUsado(campo: Campo): boolean {
     return this.usados().includes(campo.id);

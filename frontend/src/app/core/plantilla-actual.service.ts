@@ -49,6 +49,11 @@ export class PlantillaActualService {
       .pipe(tap(() => this.recurso.reload()));
   }
 
+  /** Usa la versión que devolvió el servidor tras modificar la plantilla (por ejemplo, al cargar el logo). */
+  reemplazar(plantilla: Plantilla): void {
+    this.recurso.set(plantilla);
+  }
+
   recargar(): void {
     this.recurso.reload();
   }

@@ -3,6 +3,13 @@ using EditorResoluciones.Dominio.Comun;
 
 namespace EditorResoluciones.Dominio.Modelos;
 
+public enum AlineacionLogo
+{
+    Izquierda,
+    Centro,
+    Derecha
+}
+
 public enum EstadoPlantilla
 {
     Borrador,
@@ -34,6 +41,15 @@ public class Plantilla : IEntidad, IConMarcaTiempo
 
     [StringLength(500, ErrorMessage = "La descripción admite hasta 500 caracteres.")]
     public string? Descripcion { get; set; }
+
+    /// <summary>Logo del encabezado del documento (archivo de la colección de archivos); null si no tiene.</summary>
+    public string? LogoId { get; set; }
+
+    public AlineacionLogo AlineacionLogo { get; set; } = AlineacionLogo.Centro;
+
+    /// <summary>Texto del pie de página del documento. Admite varias líneas.</summary>
+    [StringLength(500, ErrorMessage = "El pie de página admite hasta 500 caracteres.")]
+    public string? PiePagina { get; set; }
 
     public DateTimeOffset FechaModificacion { get; set; }
 }

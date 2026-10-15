@@ -7,8 +7,10 @@
     "descripcion": "Equipo de cómputo de prueba",
     "unidadMedida": "Unidad",
     "cantidad": 10,
-    "valorEstimado": 45000.50,
-    "esDatoPrueba": true
+    "valorEstimado": 45000.5,
+    "esDatoPrueba": true,
+    "descripcionArancelaria": "Máquinas automáticas para tratamiento de datos (prueba)",
+    "montoAutorizado": 40500.45
   },
   {
     "id": "BIE-002",
@@ -18,8 +20,10 @@
     "descripcion": "Excavadora ficticia modelo A",
     "unidadMedida": "Unidad",
     "cantidad": 2,
-    "valorEstimado": 800000.00,
-    "esDatoPrueba": true
+    "valorEstimado": 800000,
+    "esDatoPrueba": true,
+    "descripcionArancelaria": "Excavadoras autopropulsadas (prueba)",
+    "montoAutorizado": 720000
   },
   {
     "id": "BIE-003",
@@ -29,8 +33,10 @@
     "descripcion": "Repuestos de prueba para maquinaria",
     "unidadMedida": "Lote",
     "cantidad": 1,
-    "valorEstimado": 250000.00,
-    "esDatoPrueba": true
+    "valorEstimado": 250000,
+    "esDatoPrueba": true,
+    "descripcionArancelaria": "Partes de maquinaria de construcción (prueba)",
+    "montoAutorizado": 225000
   },
   {
     "id": "BIE-004",
@@ -40,7 +46,9 @@
     "descripcion": "Generador eléctrico ficticio",
     "unidadMedida": "Unidad",
     "cantidad": 3,
-    "valorEstimado": 150000.00,
-    "esDatoPrueba": true
+    "valorEstimado": 150000,
+    "esDatoPrueba": true,
+    "descripcionArancelaria": "Grupos electrógenos (prueba)",
+    "montoAutorizado": 135000
   }
 ]

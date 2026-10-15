@@ -55,12 +55,17 @@ public sealed class ValidadorPlantilla(
     IRepositorio<SubRubro> subRubros,
     IRepositorio<TipoDocumento> tiposDocumento,
     IRepositorio<Plantilla> plantillas,
-    IRepositorio<Parrafo> parrafos) : ValidadorEntidad<Plantilla>
+    IRepositorio<Parrafo> parrafos,
+    IRepositorio<ArchivoRecurso> archivos) : ValidadorEntidad<Plantilla>
 {
     public override async Task ValidarGuardadoAsync(Plantilla plantilla, ResultadoValidacion resultado, CancellationToken ct)
     {
         if (!Enum.IsDefined(plantilla.Estado))
             resultado.Agregar("estado", "El estado de la plantilla no es válido.");
+        if (!Enum.IsDefined(plantilla.AlineacionLogo))
+            resultado.Agregar("alineacionLogo", "La alineación del logo no es válida.");
+        if (!string.IsNullOrEmpty(plantilla.LogoId) && await archivos.ObtenerAsync(plantilla.LogoId, ct) is null)
+            resultado.Agregar("logoId", "El logo indicado no existe. Use la opción de cargar logo.");
 
         if (await rubros.ObtenerAsync(plantilla.RubroId, ct) is null)
             resultado.Agregar("rubroId", $"El rubro '{plantilla.RubroId}' no existe.");

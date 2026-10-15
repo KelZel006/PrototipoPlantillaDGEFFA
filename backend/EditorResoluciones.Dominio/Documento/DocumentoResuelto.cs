@@ -22,7 +22,11 @@ public sealed record DocumentoResuelto(
     Solicitud? Solicitud,
     DateTimeOffset Fecha,
     IReadOnlyList<SeccionDocumento> Secciones,
-    IReadOnlyList<string> Advertencias);
+    IReadOnlyList<string> Advertencias,
+    DisenoDocumento Diseno);
+
+/// <summary>Presentación del documento: logo del encabezado, texto del pie de página e interlineado.</summary>
+public sealed record DisenoDocumento(byte[]? Logo, AlineacionLogo AlineacionLogo, string? PiePagina, double Interlineado);
 
 /// <summary>Marcas internas del documento resuelto (no se guardan; solo indican cómo presentar un campo).</summary>
 public static class MarcasDocumento

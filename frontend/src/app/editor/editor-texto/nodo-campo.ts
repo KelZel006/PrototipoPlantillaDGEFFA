@@ -3,6 +3,8 @@ import { ResolverEtiqueta, textoCampo } from '../../core/contenido';
 
 export interface OpcionesNodoCampo {
   etiqueta: ResolverEtiqueta;
+  /** Indica si el campo es de tipo lista (se muestra distinto: su fila de tabla se repite por registro). */
+  esLista: (campoId: string) => boolean;
 }
 
 declare module '@tiptap/core' {
@@ -26,7 +28,7 @@ export const NodoCampo = Node.create<OpcionesNodoCampo>({
   selectable: true,
 
   addOptions() {
-    return { etiqueta: (id: string) => id };
+    return { etiqueta: (id: string) => id, esLista: () => false };
   },
 
   addAttributes() {
@@ -48,7 +50,7 @@ export const NodoCampo = Node.create<OpcionesNodoCampo>({
     return [
       'span',
       mergeAttributes(HTMLAttributes, {
-        class: 'campo-dinamico',
+        class: this.options.esLista(node.attrs['campoId']) ? 'campo-dinamico campo-lista' : 'campo-dinamico',
         contenteditable: 'false',
         title: `Campo dinámico: ${etiqueta} (${node.attrs['campoId']})`,
       }),

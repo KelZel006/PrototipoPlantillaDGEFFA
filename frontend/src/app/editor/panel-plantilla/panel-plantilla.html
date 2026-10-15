@@ -43,6 +43,14 @@
           }
         </select>
       </label>
+      <label class="selector-generar interlineado">
+        <span>Interlineado</span>
+        <select class="control control-compacto" (change)="interlineado.set($any($event.target).value)">
+          @for (opcion of interlineados; track opcion.valor) {
+            <option [value]="opcion.valor" [selected]="opcion.valor === interlineado()">{{ opcion.nombre }}</option>
+          }
+        </select>
+      </label>
       <button type="button" class="boton boton-primario" [disabled]="generando()" (click)="generarPdf()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M12 11v6M9 14l3 3 3-3" /></svg>
         {{ generando() ? 'Generando…' : 'Generar PDF' }}
@@ -52,5 +60,7 @@
         las condiciones.
       </span>
     </div>
+
+    <app-diseno-documento [plantilla]="p" />
   }
 </section>

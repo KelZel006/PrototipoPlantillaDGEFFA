@@ -92,6 +92,17 @@ describe('EditorSeccion', () => {
     expect(elemento.querySelectorAll('.tarjeta-parrafo').length).toBe(2);
   });
 
+  it('conserva el borrador si la plantilla cambia de versión (por ejemplo, al cargar el logo)', async () => {
+    await escribir(DOCUMENTO);
+    expect(elemento.textContent).toContain('Cambios sin guardar');
+
+    fixture.componentRef.setInput('plantilla', { ...PLANTILLA, version: 2, logoId: 'ARC-1' });
+    await refrescar();
+
+    expect(elemento.textContent).toContain('Cambios sin guardar');
+    http.expectNone(parrafosUrl);
+  });
+
   it('no permite agregar un párrafo vacío', () => {
     expect(botonAccion('Agregar a la lista').disabled).toBe(true);
   });

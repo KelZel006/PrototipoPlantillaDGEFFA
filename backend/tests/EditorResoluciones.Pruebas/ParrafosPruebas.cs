@@ -91,7 +91,7 @@ public sealed class ParrafosPruebas : IDisposable
         { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"a","marks":[{"type":"link","attrs":{"href":"javascript:alert(1)"}}]}]}]}""", "http, https o mailto" },
         { """{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":"diagonal"},"content":[{"type":"text","text":"a"}]}]}""", "alineación" },
         { """{"type":"doc","content":[{"type":"paragraph"}]}""", "no puede estar vacío" },
-        { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"campo","attrs":{"campoId":"codigo_arancelario"}}]}]}""", "no se puede usar en considerando" },
+        { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"campo","attrs":{"campoId":"codigo_arancelario"}}]}]}""", "es de tipo lista y solo se puede usar dentro de una tabla" },
     };
 
     [Theory]

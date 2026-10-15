@@ -3,7 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable, catchError, of, shareReplay } from 'rxjs';
 import { ApiService } from './api.service';
 import { mensajeError } from './errores';
-import { Campo } from './modelos';
+import { Campo, esCampoLista } from './modelos';
 
 /** Catálogo de campos dinámicos y operadores por tipo de dato, cargados una vez desde la API. */
 @Injectable({ providedIn: 'root' })
@@ -23,9 +23,14 @@ export class CatalogoService {
     return fallido ? mensajeError(fallido.error()) : null;
   });
 
-  /** Campos que se pueden insertar en un contexto, por ejemplo "considerando". */
+  /**
+   * Campos que se pueden insertar en una sección (por ejemplo, "considerando"). Incluye los campos de lista,
+   * que solo se insertan dentro de una tabla.
+   */
   camposDeContexto(contexto: string): Campo[] {
-    return this.campos().filter((c) => c.contextos.includes(contexto));
+    return this.campos().filter(
+      (c) => c.contextos.includes(contexto) || (esCampoLista(c) && c.contextos.includes('tabla')),
+    );
   }
 
   /** Campos que pueden usarse en la condición de un párrafo: datos generales de la solicitud. */

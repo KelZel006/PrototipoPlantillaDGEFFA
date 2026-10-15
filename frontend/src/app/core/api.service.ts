@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   Campo,
+  Interlineado,
   Nuevo,
   OperadoresPorTipo,
   Parrafo,
@@ -38,6 +39,26 @@ export class ApiService {
 
   plantillas(filtro: { rubroId: string; subRubroId: string; tipoDocumentoId: string }): Observable<Plantilla[]> {
     return this.http.get<Plantilla[]>(`${this.base}/plantillas`, { params: filtro });
+  }
+
+  actualizarPlantilla(plantilla: Plantilla): Observable<Plantilla> {
+    return this.http.put<Plantilla>(`${this.base}/plantillas/${encodeURIComponent(plantilla.id)}`, plantilla);
+  }
+
+  /** Carga o reemplaza el logo del encabezado (PNG o JPEG, hasta 1 MB). */
+  cargarLogo(plantillaId: string, archivo: File): Observable<Plantilla> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<Plantilla>(`${this.base}/plantillas/${encodeURIComponent(plantillaId)}/logo`, formulario);
+  }
+
+  quitarLogo(plantillaId: string): Observable<Plantilla> {
+    return this.http.delete<Plantilla>(`${this.base}/plantillas/${encodeURIComponent(plantillaId)}/logo`);
+  }
+
+  /** Dirección de un archivo cargado (por ejemplo, el logo) para mostrarlo. */
+  urlArchivo(archivoId: string): string {
+    return `${this.base}/archivos/${encodeURIComponent(archivoId)}`;
   }
 
   crearPlantilla(plantilla: Nuevo<Plantilla>): Observable<Plantilla> {
@@ -101,8 +122,12 @@ export class ApiService {
    * PDF de prueba de la plantilla (Cabecera, Considerando y Resuelve). Con una solicitud se sustituyen
    * los campos y se aplican las condiciones.
    */
-  generarPdf(plantillaId: string, solicitudId: string | null): Observable<HttpResponse<Blob>> {
-    const params: Record<string, string> = solicitudId ? { solicitudId } : {};
+  generarPdf(
+    plantillaId: string,
+    solicitudId: string | null,
+    interlineado: Interlineado = '1.5',
+  ): Observable<HttpResponse<Blob>> {
+    const params: Record<string, string> = solicitudId ? { solicitudId, interlineado } : { interlineado };
     return this.http.get(`${this.base}/plantillas/${encodeURIComponent(plantillaId)}/pdf`, {
       params,
       responseType: 'blob',

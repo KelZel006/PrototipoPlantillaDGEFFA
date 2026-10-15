@@ -128,7 +128,7 @@ public static class ContenidoEditor
         }
 
         var nodos = 0;
-        if (!ValidarNodo(raiz, 1, ref nodos, contexto, catalogo, resultado))
+        if (!ValidarNodo(raiz, 1, ref nodos, contexto, catalogo, resultado, dentroDeTabla: false))
         {
             resultado.Agregar(clave, "El contenido es demasiado grande o tiene demasiados niveles.");
             return;
@@ -148,7 +148,8 @@ public static class ContenidoEditor
         ref int nodos,
         string contexto,
         IReadOnlyDictionary<string, Campo> catalogo,
-        ResultadoValidacion resultado)
+        ResultadoValidacion resultado,
+        bool dentroDeTabla)
     {
         const string clave = "contenido";
         if (++nodos > NodosMaximos || profundidad > ProfundidadMaxima)
@@ -171,7 +172,7 @@ public static class ContenidoEditor
                 resultado.Agregar(clave, $"La alineación '{alineacion}' no está permitida.");
                 break;
             case NodoCampo:
-                ValidarCampo(nodo, contexto, catalogo, resultado);
+                ValidarCampo(nodo, contexto, catalogo, resultado, dentroDeTabla);
                 break;
             case "table":
                 ValidarTabla(nodo, resultado);
@@ -202,7 +203,7 @@ public static class ContenidoEditor
 
         foreach (var hijo in nodo.Contenido ?? [])
         {
-            if (!ValidarNodo(hijo, profundidad + 1, ref nodos, contexto, catalogo, resultado))
+            if (!ValidarNodo(hijo, profundidad + 1, ref nodos, contexto, catalogo, resultado, dentroDeTabla || nodo.Tipo == "table"))
                 return false;
         }
         return true;
@@ -212,16 +213,36 @@ public static class ContenidoEditor
         NodoContenido nodo,
         string contexto,
         IReadOnlyDictionary<string, Campo> catalogo,
-        ResultadoValidacion resultado)
+        ResultadoValidacion resultado,
+        bool dentroDeTabla)
     {
         var campoId = CampoId(nodo);
         if (string.IsNullOrEmpty(campoId))
+        {
             resultado.Agregar("contenido", "Hay un campo dinámico sin identificador.");
+        }
         else if (!catalogo.TryGetValue(campoId, out var campo))
+        {
             resultado.Agregar("contenido", $"El campo '{campoId}' no existe en el catálogo.");
+        }
+        else if (OrigenesDatos.EsLista(campo.Origen.Coleccion))
+        {
+            // Un campo de lista tiene varios valores: solo cabe en una fila de tabla, que se repite por registro.
+            if (!dentroDeTabla)
+                resultado.Agregar("contenido", $"El campo '{campo.Etiqueta}' es de tipo lista y solo se puede usar dentro de una tabla.");
+            else if (!campo.Contextos.Contains("tabla"))
+                resultado.Agregar("contenido", $"El campo '{campo.Etiqueta}' no se puede usar en tablas.");
+        }
         else if (!campo.Contextos.Contains(contexto))
+        {
             resultado.Agregar("contenido", $"El campo '{campo.Etiqueta}' no se puede usar en {contexto}.");
+        }
     }
+
+    /// <summary>Verdadero si la fila contiene algún campo de tipo lista: se repetirá una vez por registro.</summary>
+    public static bool EsFilaDeLista(NodoContenido fila, IReadOnlyDictionary<string, Campo> catalogo) =>
+        Recorrer(fila).Any(n => n.Tipo == NodoCampo && CampoId(n) is { } id &&
+                                catalogo.TryGetValue(id, out var campo) && OrigenesDatos.EsLista(campo.Origen.Coleccion));
 
     private static void ValidarTabla(NodoContenido tabla, ResultadoValidacion resultado)
     {

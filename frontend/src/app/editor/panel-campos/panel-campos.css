@@ -95,3 +95,23 @@ ul {
   line-height: 1;
   color: var(--texto-secundario);
 }
+
+.campo:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.campo:disabled:hover {
+  border-color: var(--borde);
+  background: var(--superficie);
+}
+
+.campo-de-lista .icono-campo {
+  stroke: var(--exito);
+}
+
+.nota-lista {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--texto-secundario);
+}

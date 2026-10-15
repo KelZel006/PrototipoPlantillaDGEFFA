@@ -18,6 +18,9 @@
   <div class="lista">
     @for (grupo of grupos(); track grupo.categoria) {
       <h4 class="categoria">{{ grupo.categoria }}</h4>
+      @if (esLista(grupo.campos[0]) && !enTabla()) {
+        <p class="nota-lista">Se insertan dentro de una tabla: la fila se repite por cada registro.</p>
+      }
       <ul>
         @for (campo of grupo.campos; track campo.id) {
           <li>
@@ -25,14 +28,20 @@
               type="button"
               class="campo"
               [class.campo-usado]="estaUsado(campo)"
-              [title]="'Insertar ' + campo.etiqueta + ' en la posición del cursor'"
+              [class.campo-de-lista]="esLista(campo)"
+              [disabled]="deshabilitado(campo)"
+              [title]="
+                deshabilitado(campo)
+                  ? 'Campo de lista: coloque el cursor dentro de una tabla para insertarlo'
+                  : 'Insertar ' + campo.etiqueta + ' en la posición del cursor'
+              "
               (mousedown)="$event.preventDefault()"
               (click)="insertar.emit(campo)"
             >
               <svg class="icono-campo" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /></svg>
               <span class="datos">
                 <span class="etiqueta">{{ campo.etiqueta }}</span>
-                <span class="tecnico">{{ campo.id }} · {{ nombresTipo[campo.tipoDato] }}</span>
+                <span class="tecnico">{{ campo.id }} · {{ esLista(campo) ? 'Lista · ' : '' }}{{ nombresTipo[campo.tipoDato] }}</span>
               </span>
               @if (estaUsado(campo)) {
                 <span class="insignia insignia-uso">En uso</span>

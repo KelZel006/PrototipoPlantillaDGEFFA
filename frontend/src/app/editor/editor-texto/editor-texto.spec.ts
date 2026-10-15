@@ -72,7 +72,7 @@ describe('EditorTexto', () => {
   it('ofrece los campos agrupados en el menú "Insertar campo"', () => {
     const grupos = Array.from(elemento.querySelectorAll('optgroup')).map((g) => g.getAttribute('label'));
     expect(grupos).toEqual(['Solicitud', 'Resolución']);
-    expect(Array.from(elemento.querySelectorAll('optgroup option')).map((o) => o.textContent)).toEqual([
+    expect(Array.from(elemento.querySelectorAll('optgroup option')).map((o) => o.textContent?.trim())).toEqual([
       'Operador',
       'Número de Solicitud',
       'Monto Exoneración',
@@ -136,6 +136,28 @@ describe('EditorTexto: tablas', () => {
     const filas = tabla().content!;
     expect(filas).toHaveLength(1);
     expect(filas[0].content).toHaveLength(12);
+  });
+
+  it('inserta un campo de lista solo dentro de una tabla y lo distingue', () => {
+    expect(fixture.componentInstance.insertarCampo('codigo_arancelario')).toBe(false);
+    expect(elemento.querySelector('.campo-lista')).toBeNull();
+    const opcionLista = () =>
+      Array.from(elemento.querySelectorAll<HTMLOptionElement>('optgroup option')).find((o) => o.value === 'codigo_arancelario')!;
+    expect(opcionLista().disabled).toBe(true);
+
+    fixture.componentInstance.insertarTabla(2, 2, true);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.insertarCampo('codigo_arancelario')).toBe(true);
+    fixture.detectChanges();
+    expect(elemento.querySelector('.campo-dinamico.campo-lista')?.textContent).toBe('{codigo_arancelario}');
+    expect(opcionLista().disabled).toBe(false);
+  });
+
+  it('avisa cuando el cursor entra en una tabla', () => {
+    const estados: boolean[] = [];
+    fixture.componentInstance.enTablaCambio.subscribe((e) => estados.push(e));
+    fixture.componentInstance.insertarTabla(2, 2, false);
+    expect(estados).toEqual([true]);
   });
 
   it('no inserta una tabla dentro de otra', () => {

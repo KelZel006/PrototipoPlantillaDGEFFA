@@ -6,7 +6,8 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 3b (tablas, orden por arrastre, PDF y pestaña Cabecera).** Detalle en [docs/FASE3B.md](docs/FASE3B.md),
+**Estado actual: Fase 3c (tablas con campos de lista, logo, pie de página e interlineado).** Detalle en
+[docs/FASE3C.md](docs/FASE3C.md), [docs/FASE3B.md](docs/FASE3B.md),
 [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
 
@@ -109,8 +110,11 @@ Todas las colecciones de la tabla ofrecen `GET` (listar), `GET /{id}`, `POST`, `
 
 Otras rutas:
 
-- `GET /api/plantillas/{id}/pdf?solicitudId=`: PDF de prueba con Cabecera, Considerando y Resuelve. Con
-  `solicitudId` se sustituyen los campos y se aplican las condiciones; sin él, los campos se muestran como `{Etiqueta}`.
+- `GET /api/plantillas/{id}/pdf?solicitudId=&interlineado=`: PDF de prueba con Cabecera, Considerando y Resuelve.
+  Con `solicitudId` se sustituyen los campos, se aplican las condiciones y las filas con campos de lista se repiten
+  por cada registro. `interlineado` puede ser `1`, `1.15`, `1.5` (predeterminado) o `2`.
+- `POST /api/plantillas/{id}/logo` (multipart, campo `archivo`) y `DELETE /api/plantillas/{id}/logo`: logo del
+  encabezado (PNG o JPEG hasta 1 MB, validado por su contenido). `GET /api/archivos/{id}` devuelve la imagen.
 - `POST /api/parrafos/reordenar`: guarda el orden completo de una sección en una sola operación.
   Cuerpo: `{ plantillaId, seccion, elementos: [{ id, version }] }`.
 - `POST /api/parrafos/{id}/duplicar`: copia el párrafo, con su condición, justo debajo del original.
