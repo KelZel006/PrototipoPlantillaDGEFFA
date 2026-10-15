@@ -52,7 +52,7 @@ public sealed class ServicioDocumento(
     IAlmacenArchivos archivos,
     TimeProvider reloj)
 {
-    public static readonly Seccion[] OrdenSecciones = [Seccion.Cabecera, Seccion.Considerando, Seccion.Resuelve];
+    public static readonly Seccion[] OrdenSecciones = [Seccion.Cabecera, Seccion.Considerando, Seccion.PorTanto, Seccion.Resuelve, Seccion.Firmas];
 
     public const string TextoSinRegistros = "No hay registros para esta solicitud.";
 

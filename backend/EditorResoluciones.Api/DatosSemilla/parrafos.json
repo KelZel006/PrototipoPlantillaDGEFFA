@@ -445,5 +445,77 @@
       "beneficiario"
     ],
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-008",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "PorTanto",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Esta Dirección, en uso de las facultades que le confiere la ley y con fundamento en los considerandos anteriores (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-009",
+    "version": 1,
+    "plantillaId": "PLA-001",
+    "seccion": "Firmas",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "______________________________"
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Nombre del firmante (prueba)",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Cargo del firmante (prueba)"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]

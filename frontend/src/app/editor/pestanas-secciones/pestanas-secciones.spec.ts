@@ -32,13 +32,15 @@ describe('PestanasSecciones', () => {
     fixture.detectChanges();
   });
 
-  it('habilita las tres secciones en el orden del documento', () => {
+  it('habilita las cinco secciones en el orden del documento', () => {
     expect(Array.from(elemento.querySelectorAll('[role="tab"]')).map((t) => t.textContent?.trim())).toEqual([
       'Cabecera',
       'Considerando',
+      'Por Tanto',
       'Resuelve',
+      'Firmas',
     ]);
-    for (const seccion of ['Cabecera', 'Considerando', 'Resuelve']) {
+    for (const seccion of ['Cabecera', 'Considerando', 'PorTanto', 'Resuelve', 'Firmas']) {
       expect(pestana(seccion).getAttribute('aria-disabled')).toBe('false');
     }
     expect(pestana('Considerando').getAttribute('aria-selected')).toBe('true');
@@ -55,7 +57,8 @@ describe('PestanasSecciones', () => {
 
     expect(panel('Resuelve')?.hidden).toBe(false);
     expect(panel('Considerando')?.hidden).toBe(true);
-    expect(elemento.querySelectorAll('app-editor-seccion').length).toBe(3);
+    expect(elemento.querySelectorAll('app-editor-seccion').length).toBe(5);
+    expect(panel('Firmas')?.hidden).toBe(true);
   });
 
   it('marca las pestañas con cambios sin guardar', () => {

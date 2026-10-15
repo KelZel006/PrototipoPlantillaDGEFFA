@@ -43,6 +43,11 @@ export class PestanasSecciones {
       disponible: true,
     },
     {
+      seccion: 'PorTanto',
+      nombre: { texto: 'Texto del Por Tanto', listado: 'Listado del Por Tanto', elemento: 'Párrafo del por tanto' },
+      disponible: true,
+    },
+    {
       seccion: 'Resuelve',
       nombre: {
         texto: 'Texto del Resuelve',
@@ -52,7 +57,21 @@ export class PestanasSecciones {
       },
       disponible: true,
     },
+    {
+      seccion: 'Firmas',
+      nombre: { texto: 'Texto de Firmas', listado: 'Listado de Firmas', elemento: 'Bloque de firma' },
+      disponible: true,
+    },
   ];
+
+  /** Nombre visible de cada sección en su pestaña. */
+  protected readonly titulos: Record<Seccion, string> = {
+    Cabecera: 'Cabecera',
+    Considerando: 'Considerando',
+    PorTanto: 'Por Tanto',
+    Resuelve: 'Resuelve',
+    Firmas: 'Firmas',
+  };
 
   protected readonly activa = signal<Seccion>('Considerando');
 

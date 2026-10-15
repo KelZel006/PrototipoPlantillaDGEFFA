@@ -39,7 +39,7 @@ const ESTADO_INICIAL: EstadoBarra = {
   numerada: false,
   enlace: false,
   enTabla: false,
-  alineacion: 'left',
+  alineacion: 'justify',
 };
 
 /** Límites de una tabla; coinciden con los del servidor. */
@@ -300,7 +300,12 @@ export class EditorTexto implements OnDestroy {
             isAllowedUri: (url) => enlacePermitido(url),
           },
         }),
-        TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
+        TextAlign.configure({
+          types: ['paragraph'],
+          alignments: ['left', 'center', 'right', 'justify'],
+          // El documento va justificado: es la alineación de todo párrafo nuevo.
+          defaultAlignment: 'justify',
+        }),
         TableKit.configure({ table: { resizable: false, HTMLAttributes: { class: 'tabla-editor' } } }),
         NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id), esLista: (id) => this.esLista(id) }),
       ],
@@ -328,7 +333,7 @@ export class EditorTexto implements OnDestroy {
     if (!editor) {
       return;
     }
-    const alineacion = (['center', 'right', 'justify'] as const).find((a) => editor.isActive({ textAlign: a })) ?? 'left';
+    const alineacion = (['center', 'right', 'left'] as const).find((a) => editor.isActive({ textAlign: a })) ?? 'justify';
     const enTablaAntes = this.estado().enTabla;
     this.estado.set({
       negrita: editor.isActive('bold'),

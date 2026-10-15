@@ -200,3 +200,35 @@ SEGUNDO, TERCERO…
     a los datos iniciales y a los datos en uso.
 - **Pruebas:** 115 del backend y 84 del frontend, todas correctas. Captura en
   [diseno/fase3d-resuelve.png](diseno/fase3d-resuelve.png).
+
+## Pestañas Por Tanto y Firmas, y documento final (15/10/2026)
+
+Pedido del usuario:
+- agregar las pestañas «Por Tanto» (que se comporte como Cabecera) y «Firmas»;
+- centrar los títulos POR TANTO y RESUELVE;
+- justificar todo el texto;
+- quitar del PDF el resumen final, el aviso «DOCUMENTO DE PRUEBA · DATOS SIMULADOS · SIN VALIDEZ OFICIAL» y
+  «PLA-001 · generado el …».
+
+- **Cinco pestañas en el orden del documento:** Cabecera, Considerando, Por Tanto, Resuelve y Firmas. Por Tanto y
+  Firmas usan el mismo editor que Cabecera: condiciones, texto, tablas, campos y listado ordenable, sin numeración.
+  Captura en [diseno/fase3e-pestanas.png](diseno/fase3e-pestanas.png).
+- **Títulos centrados y en negrita.** «POR TANTO:» antes de la sección Por Tanto y «RESUELVE:» antes de los puntos
+  resolutivos. Reemplazan al anterior «POR TANTO, RESUELVE:». Cada título aparece solo si su sección tiene contenido.
+- **Firmas** al final del documento, con un espacio previo de 1.2 cm.
+- **Texto justificado.**
+  - En el PDF, los párrafos sin alineación o alineados a la izquierda salen justificados. Los centrados o a la
+    derecha a propósito (título de la cabecera, firmas) se respetan.
+  - En el editor, el texto se muestra justificado y el botón «Justificar» está activo por defecto.
+  - Las celdas de tabla mantienen su alineación.
+- **PDF sin marcas del prototipo.** Se quitaron el aviso del encabezado, el texto de plantilla y fecha del pie y la
+  página «Resumen de la generación». El pie conserva el texto configurado por el usuario y «Página X de Y». Sin el aviso,
+  el margen superior se redujo.
+- **Datos.**
+  - Los campos que sirven en Cabecera ahora también sirven en Por Tanto y Firmas.
+  - Se agregaron párrafos de ejemplo a los datos iniciales y a los datos en uso: `PAR-008` (Por Tanto) y `PAR-009`
+    (firma centrada con línea, nombre y cargo de prueba).
+- **Pruebas:** 116 del backend y 85 del frontend, todas correctas.
+
+Nota: las advertencias de generación (datos faltantes, párrafos omitidos) ya no aparecen en el PDF. Si se necesitan para
+revisar, se pueden mostrar en la pantalla al generar.

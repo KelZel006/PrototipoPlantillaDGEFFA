@@ -135,6 +135,8 @@
 
 :host ::ng-deep .superficie-editor p {
   margin: 0 0 var(--espacio-2);
+  /* Los párrafos sin alineación propia se ven justificados, como en el documento. */
+  text-align: justify;
 }
 
 :host ::ng-deep .superficie-editor ul,

@@ -16,7 +16,6 @@ namespace EditorResoluciones.Infraestructura.Pdf;
 public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
 {
     private const string Fuente = "Arial";
-    private const string AvisoPrueba = "DOCUMENTO DE PRUEBA · DATOS SIMULADOS · SIN VALIDEZ OFICIAL";
     private static readonly Color ColorCampoPlantilla = new(0xFF, 0x22, 0x59, 0xBF);
     private static readonly Color ColorSinDato = new(0xFF, 0xC6, 0x2F, 0x3B);
     private static readonly Color ColorBorde = new(0xFF, 0x80, 0x88, 0x96);
@@ -39,7 +38,6 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
 
         var pdf = new Document();
         pdf.Info.Title = $"Resolución de prueba – {documento.Plantilla.Nombre}";
-        pdf.Info.Subject = AvisoPrueba;
         pdf.Info.Author = "Prototipo de editor de resoluciones";
         var diseno = documento.Diseno;
         DefinirEstilos(pdf, diseno.Interlineado);
@@ -49,8 +47,8 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         var pagina = seccion.PageSetup;
         pagina.PageFormat = PageFormat.Letter;
         // Los márgenes crecen con el logo y con las líneas del pie para que no se encimen con el texto.
-        // Con logo: distancia del encabezado (1.2) + logo (1.8) + aviso de prueba (~0.5) + separación.
-        pagina.TopMargin = Unit.FromCentimeter(diseno.Logo is null ? 2.8 : 4.6);
+        // Con logo: distancia del encabezado (1.2) + logo (1.8) + separación.
+        pagina.TopMargin = Unit.FromCentimeter(diseno.Logo is null ? 2.5 : 4.0);
         pagina.BottomMargin = Unit.FromCentimeter(2.5 + 0.42 * lineasPie.Count);
         pagina.LeftMargin = Unit.FromCentimeter(2.5);
         pagina.RightMargin = Unit.FromCentimeter(2.5);
@@ -75,15 +73,12 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
             logo.LockAspectRatio = true;
         }
 
-        var encabezado = seccion.Headers.Primary.AddParagraph(AvisoPrueba);
-        encabezado.Style = "Aviso";
-
         foreach (var linea in lineasPie)
             seccion.Footers.Primary.AddParagraph(linea).Style = "Pie";
 
         var pie = seccion.Footers.Primary.AddParagraph();
         pie.Style = "Aviso";
-        pie.AddText($"{documento.Plantilla.Id} · generado el {documento.Fecha.ToOffset(TimeSpan.FromHours(-6)):dd/MM/yyyy HH:mm} · Página ");
+        pie.AddText("Página ");
         pie.AddPageField();
         pie.AddText(" de ");
         pie.AddNumPagesField();
@@ -96,14 +91,16 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
             if (titulo is not null)
                 seccion.AddParagraph(titulo).Style = "TituloSeccion";
 
+            // Las firmas van separadas del texto anterior.
+            if (parte.Seccion == Seccion.Firmas)
+                seccion.AddParagraph().Format.SpaceBefore = Unit.FromCentimeter(1.2);
+
             foreach (var parrafo in parte.Parrafos)
                 AgregarBloques(parrafo.Contenido.Contenido ?? [], seccion.AddParagraph, seccion, anchoUtil, 0);
         }
 
         if (!hayContenido)
             seccion.AddParagraph("La plantilla no tiene párrafos para mostrar con la configuración actual.").Style = "Nota";
-
-        AgregarResumen(seccion, documento, anchoUtil);
 
         var renderizador = new PdfDocumentRenderer { Document = pdf };
         renderizador.RenderDocument();
@@ -112,9 +109,11 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         return memoria.ToArray();
     }
 
+    /// <summary>Título centrado que precede a la sección; Cabecera, Considerando y Firmas no llevan título.</summary>
     private static string? TituloSeccion(Seccion seccion) => seccion switch
     {
-        Seccion.Resuelve => "POR TANTO, RESUELVE:",
+        Seccion.PorTanto => "POR TANTO:",
+        Seccion.Resuelve => "RESUELVE:",
         _ => null,
     };
 
@@ -152,7 +151,7 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         var titulo = pdf.Styles.AddStyle("TituloSeccion", StyleNames.Normal);
         titulo.Font.Bold = true;
         titulo.ParagraphFormat.SpaceBefore = Unit.FromPoint(10);
-        titulo.ParagraphFormat.Alignment = ParagraphAlignment.Left;
+        titulo.ParagraphFormat.Alignment = ParagraphAlignment.Center;
         titulo.ParagraphFormat.KeepWithNext = true;
 
         var aviso = pdf.Styles.AddStyle("Aviso", StyleNames.Normal);
@@ -200,7 +199,7 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
                     var parrafo = nuevoParrafo();
                     if (estilo is not null)
                         parrafo.Style = estilo;
-                    Alinear(parrafo, bloque);
+                    Alinear(parrafo, bloque, justificarIzquierda: estilo is null);
                     AgregarEnLinea(parrafo, bloque.Contenido ?? []);
                     break;
 
@@ -359,63 +358,11 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         separacion.Format.SpaceAfter = 0;
     }
 
-    private static void AgregarResumen(Section seccion, DocumentoResuelto documento, Unit anchoUtil)
-    {
-        seccion.AddPageBreak();
-        seccion.AddParagraph("Resumen de la generación (solo para el prototipo)").Style = "TituloSeccion";
-
-        var solicitud = documento.Solicitud is { } s
-            ? $"{s.NumeroSolicitud} – {s.Beneficiario} ({s.Id})"
-            : "Ninguna: los campos se muestran como {Etiqueta} y no se evaluaron las condiciones.";
-        seccion.AddParagraph($"Plantilla: {documento.Plantilla.Nombre} ({documento.Plantilla.Id}, versión {documento.Plantilla.Version}).").Style = "Nota";
-        seccion.AddParagraph($"Solicitud de prueba: {solicitud}").Style = "Nota";
-        seccion.AddParagraph(
-            "Incluidos: " + string.Join(" · ", documento.Secciones.Select(p => $"{p.Seccion} {p.Parrafos.Count}")) + ".").Style = "Nota";
-
-        var omitidos = documento.Secciones.SelectMany(p => p.Omitidos.Select(o => (p.Seccion, o))).ToList();
-        if (omitidos.Count > 0)
-        {
-            seccion.AddParagraph("Párrafos no incluidos:").Style = "TituloSeccion";
-            var tabla = seccion.AddTable();
-            tabla.Borders.Width = 0.5;
-            tabla.Borders.Color = ColorBorde;
-            tabla.LeftPadding = Unit.FromPoint(4);
-            tabla.RightPadding = Unit.FromPoint(4);
-            tabla.AddColumn(anchoUtil * 0.2);
-            tabla.AddColumn(anchoUtil * 0.42);
-            tabla.AddColumn(anchoUtil * 0.38);
-            var titulo = tabla.AddRow();
-            titulo.HeadingFormat = true;
-            titulo.Shading.Color = ColorEncabezadoTabla;
-            string[] cabeceras = ["Sección", "Texto", "Motivo"];
-            for (var i = 0; i < cabeceras.Length; i++)
-            {
-                var parrafo = titulo.Cells[i].AddParagraph(cabeceras[i]);
-                parrafo.Style = "Celda";
-                parrafo.Format.Font.Bold = true;
-            }
-            foreach (var (seccionOmitida, omitido) in omitidos)
-            {
-                var fila = tabla.AddRow();
-                fila.Cells[0].AddParagraph($"{seccionOmitida} {omitido.Posicion}").Style = "Celda";
-                fila.Cells[1].AddParagraph(omitido.Resumen).Style = "Celda";
-                fila.Cells[2].AddParagraph(omitido.Motivo).Style = "Celda";
-            }
-        }
-
-        if (documento.Advertencias.Count > 0)
-        {
-            seccion.AddParagraph("Advertencias:").Style = "TituloSeccion";
-            foreach (var advertencia in documento.Advertencias)
-            {
-                var parrafo = seccion.AddParagraph("• " + advertencia);
-                parrafo.Style = "Nota";
-                parrafo.Format.Font.Color = ColorSinDato;
-            }
-        }
-    }
-
-    private static void Alinear(Paragraph parrafo, NodoContenido bloque)
+    /// <summary>
+    /// Aplica la alineación del editor. En el cuerpo del documento todo el texto va justificado: la alineación a la
+    /// izquierda se justifica; centrado y derecha se respetan (títulos, firmas). En las celdas de tabla no se fuerza.
+    /// </summary>
+    private static void Alinear(Paragraph parrafo, NodoContenido bloque, bool justificarIzquierda)
     {
         var alineacion = bloque.Atributos is not null && bloque.Atributos.TryGetValue("textAlign", out var valor) &&
                          valor.ValueKind == JsonValueKind.String
@@ -425,7 +372,7 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         {
             "center" => ParagraphAlignment.Center,
             "right" => ParagraphAlignment.Right,
-            "left" => ParagraphAlignment.Left,
+            "left" => justificarIzquierda ? ParagraphAlignment.Justify : ParagraphAlignment.Left,
             "justify" => ParagraphAlignment.Justify,
             _ => parrafo.Format.Alignment,
         };

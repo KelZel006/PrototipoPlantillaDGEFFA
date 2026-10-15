@@ -8,7 +8,7 @@
       [attr.aria-selected]="pestana.seccion === activa()"
       [attr.aria-controls]="pestana.disponible ? 'panel-' + pestana.seccion : null"
       [attr.aria-disabled]="!pestana.disponible"
-      [title]="pestana.disponible ? pestana.seccion : pestana.seccion + ': se habilitará en una fase posterior'"
+      [title]="pestana.disponible ? titulos[pestana.seccion] : titulos[pestana.seccion] + ': se habilitará en una fase posterior'"
       (click)="seleccionar(pestana)"
     >
       @switch (pestana.seccion) {
@@ -18,11 +18,17 @@
         @case ('Considerando') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h10M18 4v4M14 6h8" /></svg>
         }
+        @case ('PorTanto') {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        }
+        @case ('Firmas') {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19c3-1 4-6 6-6s1 4 3 4 3-3 4-3 2 2 5 2M15 4l5 5-8 8H7v-5z" /></svg>
+        }
         @case ('Resuelve') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>
         }
       }
-      <span>{{ pestana.seccion }}</span>
+      <span>{{ titulos[pestana.seccion] }}</span>
       @if (contexto.seccionesConCambios().has(pestana.seccion)) {
         <span class="cambios" title="Cambios sin guardar" aria-label="Cambios sin guardar">●</span>
       }

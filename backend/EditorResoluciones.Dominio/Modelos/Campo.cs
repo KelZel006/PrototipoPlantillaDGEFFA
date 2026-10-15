@@ -16,7 +16,7 @@ public enum TipoDato
 public class Campo : IEntidad
 {
     /// <summary>Contextos en los que se puede usar un campo.</summary>
-    public static readonly string[] ContextosValidos = ["cabecera", "considerando", "resuelve", "tabla"];
+    public static readonly string[] ContextosValidos = ["cabecera", "considerando", "portanto", "resuelve", "firmas", "tabla"];
 
     /// <summary>Identificador técnico estable, por ejemplo <c>numero_solicitud</c>.</summary>
     public string Id { get; set; } = "";

@@ -5,11 +5,14 @@ using EditorResoluciones.Dominio.Comun;
 
 namespace EditorResoluciones.Dominio.Modelos;
 
+/// <summary>Secciones del documento, en el orden en que se generan.</summary>
 public enum Seccion
 {
     Cabecera,
     Considerando,
-    Resuelve
+    PorTanto,
+    Resuelve,
+    Firmas
 }
 
 /// <summary>Párrafo de una sección de la plantilla.</summary>

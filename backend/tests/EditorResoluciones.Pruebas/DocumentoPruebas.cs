@@ -114,7 +114,11 @@ public sealed class DocumentoPruebas : IDisposable
     {
         var documento = await Generar(null);
 
-        Assert.Equal([Dominio.Modelos.Seccion.Cabecera, Dominio.Modelos.Seccion.Considerando, Dominio.Modelos.Seccion.Resuelve],
+        Assert.Equal(
+            [
+                Dominio.Modelos.Seccion.Cabecera, Dominio.Modelos.Seccion.Considerando, Dominio.Modelos.Seccion.PorTanto,
+                Dominio.Modelos.Seccion.Resuelve, Dominio.Modelos.Seccion.Firmas,
+            ],
             documento.Secciones.Select(s => s.Seccion));
         Assert.Equal(["PAR-002", "PAR-003", "PAR-004"], Seccion(documento, Dominio.Modelos.Seccion.Considerando).Parrafos.Select(p => p.Id));
 
@@ -196,6 +200,46 @@ public sealed class DocumentoPruebas : IDisposable
         Assert.Equal(["PRIMERO: ", "SEGUNDO: "], resuelve.Select(p => p.Contenido.Contenido![0].Contenido![0].Texto));
         Assert.StartsWith("PRIMERO: Autorizar, en calidad de prueba", Texto(resuelve[0].Contenido));
         Assert.Equal("SEGUNDO: Notificar al interesado.", Texto(resuelve[1].Contenido));
+    }
+
+    [Fact]
+    public async Task Por_tanto_y_firmas_van_en_su_lugar_sin_numeracion_y_admiten_campos()
+    {
+        foreach (var (seccion, texto) in new[] { ("Firmas", "Firma de "), ("PorTanto", "Con base en lo anterior para ") })
+        {
+            var parrafo = new JsonObject
+            {
+                ["plantillaId"] = "PLA-001",
+                ["seccion"] = seccion,
+                ["contenido"] = new JsonObject
+                {
+                    ["type"] = "doc",
+                    ["content"] = new JsonArray(new JsonObject
+                    {
+                        ["type"] = "paragraph",
+                        ["content"] = new JsonArray(TextoNodo(texto), new JsonObject { ["type"] = "campo", ["attrs"] = new JsonObject { ["campoId"] = "beneficiario" } }),
+                    }),
+                },
+            };
+            var respuesta = await _cliente.PostAsync("/api/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
+            Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
+        }
+
+        var documento = await Generar("SOL-001");
+        var orden = documento.Secciones.Where(s => s.Parrafos.Count > 0).Select(s => s.Seccion).ToList();
+
+        Assert.Equal(
+            [
+                Dominio.Modelos.Seccion.Cabecera, Dominio.Modelos.Seccion.Considerando, Dominio.Modelos.Seccion.PorTanto,
+                Dominio.Modelos.Seccion.Resuelve, Dominio.Modelos.Seccion.Firmas,
+            ], orden);
+        Assert.Equal("Con base en lo anterior para Beneficiario Ficticio Uno (prueba)",
+            Texto(Seccion(documento, Dominio.Modelos.Seccion.PorTanto).Parrafos[0].Contenido));
+        Assert.Equal("Firma de Beneficiario Ficticio Uno (prueba)",
+            Texto(Seccion(documento, Dominio.Modelos.Seccion.Firmas).Parrafos[0].Contenido));
+
+        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001");
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
     }
 
     [Theory]

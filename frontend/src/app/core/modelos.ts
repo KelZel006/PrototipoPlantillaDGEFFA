@@ -43,9 +43,10 @@ export interface Plantilla extends Entidad {
   fechaModificacion: string;
 }
 
-export type Seccion = 'Cabecera' | 'Considerando' | 'Resuelve';
+/** Secciones del documento, en el orden en que se generan. */
+export type Seccion = 'Cabecera' | 'Considerando' | 'PorTanto' | 'Resuelve' | 'Firmas';
 
-export const SECCIONES: readonly Seccion[] = ['Cabecera', 'Considerando', 'Resuelve'];
+export const SECCIONES: readonly Seccion[] = ['Cabecera', 'Considerando', 'PorTanto', 'Resuelve', 'Firmas'];
 
 /** Nodo del documento del editor (formato de TipTap/ProseMirror). */
 export interface NodoContenido {

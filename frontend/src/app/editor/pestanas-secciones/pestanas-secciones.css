@@ -1,6 +1,6 @@
 .pestanas {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--espacio-2);
   margin-bottom: var(--espacio-4);
 }
@@ -71,4 +71,10 @@
 
 .pestana[aria-selected='true'] .cambios {
   color: #ffd27a;
+}
+
+@media (max-width: 900px) {
+  .pestanas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

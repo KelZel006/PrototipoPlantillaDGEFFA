@@ -6,7 +6,7 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 3d (las tres secciones: Cabecera, Considerando numerado y Resuelve con PRIMERO, SEGUNDO…).** Detalle en
+**Estado actual: Fase 3e (cinco secciones: Cabecera, Considerando numerado, Por Tanto, Resuelve con PRIMERO, SEGUNDO… y Firmas).** Detalle en
 [docs/FASE3C.md](docs/FASE3C.md), [docs/FASE3B.md](docs/FASE3B.md),
 [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
@@ -139,8 +139,8 @@ Respuestas de error (ProblemDetails, en español):
 - Se genera con **PDFsharp-MigraDoc 6.2.4 (licencia MIT)**. **No actualizar a la 6.5.0 o posterior** sin revisar la
   licencia: desde esa versión es AGPL-3.0.
 - Usa las fuentes de Windows (Arial). Para generar PDF en Linux habrá que incluir un archivo de fuente con el proyecto.
-- Cada página lleva la marca «DOCUMENTO DE PRUEBA · DATOS SIMULADOS · SIN VALIDEZ OFICIAL». La última página resume
-  qué párrafos se incluyeron y cuáles no, con el motivo.
+- Orden: Cabecera, Considerando (CONSIDERANDO(n):), «POR TANTO:», «RESUELVE:» (PRIMERO:, SEGUNDO:…) y Firmas. El texto va
+  justificado; los títulos, centrados. El pie lleva el texto configurado y «Página X de Y».
 
 ## Reglas de los datos
 

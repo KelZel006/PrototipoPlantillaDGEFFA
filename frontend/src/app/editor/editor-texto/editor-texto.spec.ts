@@ -79,6 +79,11 @@ describe('EditorTexto', () => {
     ]);
   });
 
+  it('justifica el texto por defecto', () => {
+    fixture.componentInstance.insertarTabla(1, 1, false);
+    expect(elemento.querySelector('[aria-label="Justificar"]')?.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('tiene botones accesibles para el formato del diseño', () => {
     const etiquetas = Array.from(elemento.querySelectorAll('.barra button')).map((b) => b.getAttribute('aria-label'));
     expect(etiquetas).toEqual([
