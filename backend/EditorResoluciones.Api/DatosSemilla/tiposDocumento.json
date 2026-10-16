@@ -3,24 +3,28 @@
     "id": "TDO-003",
     "version": 1,
     "nombre": "Constancia de Registro",
+    "textoCorrido": false,
     "activo": true
   },
   {
     "id": "TDO-002",
     "version": 1,
     "nombre": "Dictamen",
+    "textoCorrido": false,
     "activo": true
   },
   {
     "id": "TDO-001",
     "version": 1,
     "nombre": "Resolución",
+    "textoCorrido": false,
     "activo": true
   },
   {
     "id": "TDO-004",
     "version": 1,
     "nombre": "Certificación",
+    "textoCorrido": true,
     "activo": true
   }
 ]

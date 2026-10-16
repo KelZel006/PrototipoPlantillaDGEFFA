@@ -42,6 +42,8 @@ public class DatosSemillaPruebas
         Assert.Contains(rubros, r => r.Id == "1000" && r.Nombre == "POR MANDATO CONSTITUCIONAL");
         Assert.All(subRubros, s => Assert.Contains(rubros, r => r.Id == s.RubroId));
         Assert.Equal(["Constancia de Registro", "Dictamen", "Resolución", "Certificación"], tipos.Select(t => t.Nombre));
+        // Solo la Certificación se genera con el texto corrido.
+        Assert.Equal(["Certificación"], tipos.Where(t => t.TextoCorrido).Select(t => t.Nombre));
         Assert.Equal(["Original", "Modificación", "Aclaratoria"], clases.Select(c => c.Nombre));
     }
 

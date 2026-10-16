@@ -21,6 +21,8 @@ export interface SubRubro extends Entidad {
 
 export interface TipoDocumento extends Entidad {
   nombre: string;
+  /** El documento se genera con el texto corrido (por ejemplo, la Certificación). */
+  textoCorrido?: boolean;
   activo: boolean;
 }
 

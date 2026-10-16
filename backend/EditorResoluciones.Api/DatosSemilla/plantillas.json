@@ -34,5 +34,17 @@
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba con contenido en las cinco secciones.",
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PLA-004",
+    "version": 1,
+    "nombre": "Certificación (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+    "rubroId": "1100",
+    "subRubroId": "1107",
+    "tipoDocumentoId": "TDO-004",
+    "claseDocumentoId": "CDO-001",
+    "estado": "Borrador",
+    "descripcion": "Certificación de prueba con el mismo contenido de la resolución PLA-001; se genera con el texto corrido.",
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]

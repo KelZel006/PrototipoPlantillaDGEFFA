@@ -63,6 +63,10 @@
   font-size: var(--texto-pequeno);
 }
 
+.nota-corrido {
+  font-weight: 600;
+}
+
 .interlineado {
   min-width: 130px;
 }

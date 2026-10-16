@@ -51,5 +51,11 @@ public class TipoDocumento : IEntidad
     [Required(ErrorMessage = "El nombre es obligatorio."), StringLength(150, ErrorMessage = "El nombre admite hasta 150 caracteres.")]
     public string Nombre { get; set; } = "";
 
+    /// <summary>
+    /// Si es verdadero, el documento se genera con el texto corrido: todo seguido, sin separar párrafos; solo las
+    /// tablas y las firmas conservan su forma (por ejemplo, la Certificación).
+    /// </summary>
+    public bool TextoCorrido { get; set; }
+
     public bool Activo { get; set; } = true;
 }

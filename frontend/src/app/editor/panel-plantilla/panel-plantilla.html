@@ -60,6 +60,12 @@
         Orden del documento: Cabecera, Considerando, Por Tanto, Resuelve y Firmas. Con una solicitud se reemplazan los campos y se aplican
         las condiciones.
       </span>
+      @if (contexto.tipoDocumento()?.textoCorrido) {
+        <span class="texto-secundario sin-margen nota-pdf nota-corrido">
+          {{ contexto.tipoDocumento()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y
+          las firmas conservan su forma.
+        </span>
+      }
     </div>
 
     <app-diseno-documento [plantilla]="p" />

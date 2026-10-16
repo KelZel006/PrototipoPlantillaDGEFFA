@@ -83,11 +83,18 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         pie.AddText(" de ");
         pie.AddNumPagesField();
 
-        var hayContenido = false;
-        foreach (var parte in documento.Secciones.Where(s => s.Parrafos.Count > 0))
+        var partes = documento.Secciones.Where(s => s.Parrafos.Count > 0).ToList();
+        var hayContenido = partes.Count > 0;
+        if (diseno.TextoCorrido)
         {
-            hayContenido = true;
-            var titulo = TituloSeccion(parte.Seccion);
+            // Texto corrido: el cuerpo va seguido y solo las tablas cortan el texto. Las firmas se presentan aparte.
+            AgregarBloques(TextoCorrido.Unir(partes.Where(p => p.Seccion != Seccion.Firmas)), seccion.AddParagraph, seccion, anchoUtil, 0);
+            partes = partes.Where(p => p.Seccion == Seccion.Firmas).ToList();
+        }
+
+        foreach (var parte in partes)
+        {
+            var titulo = Numeracion.Titulo(parte.Seccion);
             if (titulo is not null)
                 seccion.AddParagraph(titulo).Style = "TituloSeccion";
 
@@ -122,14 +129,6 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         espacio.Format.LineSpacingRule = LineSpacingRule.Exactly;
         espacio.Format.LineSpacing = Unit.FromPoint(1);
     }
-
-    /// <summary>Título centrado que precede a la sección; Cabecera, Considerando y Firmas no llevan título.</summary>
-    private static string? TituloSeccion(Seccion seccion) => seccion switch
-    {
-        Seccion.PorTanto => "POR TANTO:",
-        Seccion.Resuelve => "RESUELVE:",
-        _ => null,
-    };
 
     /// <summary>Líneas del pie de página; las vacías se conservan para respetar la separación escrita.</summary>
     private static List<string> LineasPie(string? texto) =>

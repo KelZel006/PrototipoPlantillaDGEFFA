@@ -1779,5 +1779,524 @@
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-030",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Cabecera",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "RESOLUCIÓN DE PRUEBA No. ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "numero_solicitud"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-031",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Considerando",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", con número de solicitud "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": " y correspondiente al beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "Y",
+      "reglas": [
+        {
+          "campoId": "estado_solicitud",
+          "operador": "IgualA",
+          "valor": "En Curso"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "operador",
+      "numero_solicitud",
+      "beneficiario"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-032",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Considerando",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-033",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Considerando",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que el "
+            },
+            {
+              "type": "text",
+              "text": "monto de exoneración",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " solicitado asciende a"
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              },
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "y requiere revisión adicional (texto de prueba)."
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "fecha_resolucion"
+              },
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "O",
+      "reglas": [
+        {
+          "campoId": "monto_exoneracion",
+          "operador": "MayorQue",
+          "valor": "100000"
+        },
+        {
+          "campoId": "tipo_beneficio",
+          "operador": "Contiene",
+          "valor": "Importación"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "monto_exoneracion",
+      "fecha_resolucion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-034",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Resuelve",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " en el municipio de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "municipio"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", departamento de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "departamento"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario",
+      "municipio",
+      "departamento"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-035",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Resuelve",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": false,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-036",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Considerando",
+    "orden": 4,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "esta es una prueba para el beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " y se requiere hacer el "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": "  ejercicio correspondiente"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "O",
+      "reglas": [
+        {
+          "campoId": "beneficiario",
+          "operador": "IgualA",
+          "valor": "Beneficiario Ficticio Dos (prueba)"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "beneficiario",
+      "numero_solicitud"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-037",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Resuelve",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Notificar la presente resolución a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " para los efectos legales correspondientes (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-038",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "PorTanto",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Esta Dirección, en uso de las facultades que le confiere la ley y con fundamento en los considerandos anteriores (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-039",
+    "version": 1,
+    "plantillaId": "PLA-004",
+    "seccion": "Firmas",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "______________________________"
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Nombre del firmante (prueba)",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Cargo del firmante (prueba)"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]

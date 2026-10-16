@@ -51,6 +51,7 @@ public sealed class ServicioDocumento(
     IRepositorio<Campo> campos,
     IRepositorio<Solicitud> solicitudes,
     IRepositorio<DetalleBien> bienes,
+    IRepositorio<TipoDocumento> tiposDocumento,
     IAlmacenArchivos archivos,
     TimeProvider reloj)
 {
@@ -138,7 +139,9 @@ public sealed class ServicioDocumento(
             if (logo is null)
                 advertencias.Add("No se encontró el archivo del logo de la plantilla; el documento se generó sin logo.");
         }
-        var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado, plantilla.EspacioFirmasCm);
+        // El tipo de documento decide si el cuerpo va corrido (por ejemplo, la Certificación).
+        var textoCorrido = (await tiposDocumento.ObtenerAsync(plantilla.TipoDocumentoId, ct))?.TextoCorrido ?? false;
+        var diseno = new DisenoDocumento(logo, plantilla.AlineacionLogo, plantilla.PiePagina, interlineado, plantilla.EspacioFirmasCm, textoCorrido);
 
         return new DocumentoResuelto(plantilla, solicitud, reloj.GetUtcNow(), secciones, advertencias.Distinct().ToList(), diseno);
     }

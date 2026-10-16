@@ -24,6 +24,14 @@ public static class Numeracion
         _ => null,
     };
 
+    /// <summary>Título que precede a la sección; Cabecera, Considerando y Firmas no llevan título.</summary>
+    public static string? Titulo(Seccion seccion) => seccion switch
+    {
+        Seccion.PorTanto => "POR TANTO:",
+        Seccion.Resuelve => "RESUELVE:",
+        _ => null,
+    };
+
     /// <summary>Ordinal en palabras y mayúsculas: 1 → PRIMERO, 11 → DÉCIMO PRIMERO, 20 → VIGÉSIMO. Desde 100, "100°".</summary>
     public static string Ordinal(int numero)
     {

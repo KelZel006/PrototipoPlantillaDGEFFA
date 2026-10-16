@@ -312,3 +312,23 @@ Pedido del usuario: relacionar el resto de la información con las plantillas ya
   considerandos (uno con la tabla de bienes y otro que solo aparece si el monto supera 100,000), Por Tanto, dos puntos
   del Resuelve y una firma.
 - **Verificación.** PDF generado para cada plantilla con su solicitud. Pruebas del backend: 127, todas correctas.
+
+## Certificación con texto corrido (15/10/2026)
+
+Pedido del usuario: la Certificación lleva en general la misma información que la Resolución, pero todo va pegado, sin
+espacio en el texto; solo los cuadros conservan su forma. El documento ya debe generarse así.
+
+- **Regla en el catálogo.** Cada tipo de documento tiene la marca `textoCorrido`. Solo la Certificación la tiene
+  activa, así que el comportamiento no depende del nombre y se puede activar para otro tipo si hace falta.
+- **Cómo se genera** (`Dominio/Documento/TextoCorrido.cs`):
+  - Cabecera, Considerando, Por Tanto y Resuelve se transcriben seguidos, en un solo párrafo justificado, separados
+    solo por un espacio. Los saltos de línea también se vuelven espacios.
+  - Los títulos «POR TANTO:» y «RESUELVE:» y las etiquetas CONSIDERANDO(n): y PRIMERO:, SEGUNDO:… quedan en negrita
+    dentro del texto.
+  - Las tablas cortan el texto, se presentan como cuadro y el texto continúa después.
+  - Las firmas conservan su presentación (centradas, con su espacio).
+  - Negrita, cursiva y subrayado se conservan.
+- **Pantalla.** Al elegir Certificación, el panel avisa que el texto se genera corrido.
+- **Plantilla de ejemplo.** PLA-004: Certificación (Original) de 1100 / 1107, con una copia del contenido de la
+  Resolución PLA-001. Se genera con PRUEBA-0001-2026.
+- **Pruebas:** 130 del backend y 88 del frontend, todas correctas.

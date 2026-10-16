@@ -77,6 +77,27 @@ describe('PanelPlantilla', () => {
     expect(elemento.querySelector('h2')?.textContent).toContain('Plantilla de prueba');
     expect(elemento.textContent).toContain('PLA-001');
     expect(elemento.textContent).toContain('Borrador');
+    expect(elemento.querySelector('.nota-corrido')).toBeNull();
+  });
+
+  it('avisa que la Certificación se genera con el texto corrido', async () => {
+    seleccionarCombinacion();
+    TestBed.inject(ContextoService).seleccionarTipoDocumento({
+      id: 'TDO-004',
+      version: 1,
+      nombre: 'Certificación',
+      textoCorrido: true,
+      activo: true,
+    });
+    fixture.detectChanges();
+    await estabilizar();
+    http.expectOne((r) => r.url === '/api/plantillas').flush([{ ...plantilla, tipoDocumentoId: 'TDO-004' }]);
+    await estabilizar();
+    http.expectOne('/api/solicitudes').flush([]);
+    http.expectOne('/api/detalles-bienes').flush([]);
+    await estabilizar();
+
+    expect(elemento.querySelector('.nota-corrido')?.textContent).toContain('Certificación: el texto se genera corrido');
   });
 
   describe('generar PDF', () => {

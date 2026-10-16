@@ -27,14 +27,16 @@ public sealed record DocumentoResuelto(
 
 /// <summary>
 /// Presentación del documento: logo del encabezado, texto del pie de página, interlineado y espacio (en cm) que se deja
-/// antes de cada bloque de firma.
+/// antes de cada bloque de firma. Con <paramref name="TextoCorrido"/> el cuerpo se transcribe seguido (ver
+/// <see cref="Documento.TextoCorrido"/>).
 /// </summary>
 public sealed record DisenoDocumento(
     byte[]? Logo,
     AlineacionLogo AlineacionLogo,
     string? PiePagina,
     double Interlineado,
-    double EspacioFirmasCm);
+    double EspacioFirmasCm,
+    bool TextoCorrido = false);
 
 /// <summary>Marcas internas del documento resuelto (no se guardan; solo indican cómo presentar un campo).</summary>
 public static class MarcasDocumento
