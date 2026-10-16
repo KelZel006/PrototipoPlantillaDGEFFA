@@ -332,3 +332,25 @@ espacio en el texto; solo los cuadros conservan su forma. El documento ya debe g
 - **Plantilla de ejemplo.** PLA-004: Certificación (Original) de 1100 / 1107, con una copia del contenido de la
   Resolución PLA-001. Se genera con PRUEBA-0001-2026.
 - **Pruebas:** 130 del backend y 88 del frontend, todas correctas.
+
+## Tamaño del texto y justificado del PDF (16/10/2026)
+
+Pedido del usuario: agregar el tamaño del texto en la barra del editor y corregir el borde derecho del PDF, que se veía
+en escalera y no justificado.
+
+- **Justificado del PDF (corrección).**
+  - Causa: el editor no guarda la alineación cuando es la predeterminada (justificada). Al no encontrarla, el generador
+    asignaba al párrafo su alineación actual, que en MigraDoc vale «izquierda» por defecto. Así anulaba el justificado
+    del estilo y el borde derecho quedaba disparejo.
+  - Ahora, sin alineación guardada, no se asigna nada y el párrafo hereda el justificado. Afecta a todos los documentos,
+    también a la Certificación con texto corrido.
+- **Tamaño del texto.**
+  - Nueva lista en la barra del editor (junto a Negrita, Cursiva y Subrayado): Normal, 8, 9, 10, 11, 12, 13, 14, 16,
+    18, 20 y 24 puntos. Se aplica al texto seleccionado o al que se escriba después.
+  - Se guarda en el párrafo como formato del texto (`textStyle` con `fontSize`, por ejemplo «14pt») y el PDF lo
+    respeta, también dentro de tablas y en el texto corrido.
+  - El servidor solo acepta los tamaños de la lista. Al pegar texto desde Word, el editor conserva los tamaños de la
+    lista y descarta los demás.
+  - Extensión nueva: `@tiptap/extension-text-style` 3.31.4 (MIT).
+- **Captura:** [diseno/fase3h-tamano-texto.png](diseno/fase3h-tamano-texto.png).
+- **Pruebas:** 137 del backend y 90 del frontend, todas correctas.

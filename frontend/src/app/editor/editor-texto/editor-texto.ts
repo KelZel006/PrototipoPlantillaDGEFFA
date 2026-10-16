@@ -12,6 +12,7 @@ import {
 import { Editor, JSONContent } from '@tiptap/core';
 import { TableKit } from '@tiptap/extension-table';
 import { TextAlign } from '@tiptap/extension-text-align';
+import { FontSize, TextStyle } from '@tiptap/extension-text-style';
 import { StarterKit } from '@tiptap/starter-kit';
 import { identificadorUnico } from '../../compartido/identificador';
 import { MAXIMO_CARACTERES, ResolverEtiqueta, contarCaracteres, documentoVacio } from '../../core/contenido';
@@ -29,6 +30,8 @@ interface EstadoBarra {
   enlace: boolean;
   enTabla: boolean;
   alineacion: Alineacion;
+  /** Tamaño del texto en el cursor (por ejemplo, "12pt"); vacío es el tamaño normal. */
+  tamano: string;
 }
 
 const ESTADO_INICIAL: EstadoBarra = {
@@ -40,7 +43,36 @@ const ESTADO_INICIAL: EstadoBarra = {
   enlace: false,
   enTabla: false,
   alineacion: 'justify',
+  tamano: '',
 };
+
+/** Tamaños de texto que se pueden elegir; coinciden con los del servidor (ContenidoEditor.TamanosTexto). */
+export const TAMANOS_TEXTO = ['8pt', '9pt', '10pt', '11pt', '12pt', '13pt', '14pt', '16pt', '18pt', '20pt', '24pt'];
+
+/**
+ * Tamaño del texto. Igual que FontSize de TipTap, pero al pegar contenido (por ejemplo, desde Word) solo conserva los
+ * tamaños de la lista; los demás se descartan para que el servidor no rechace el párrafo.
+ */
+const TamanoTexto = FontSize.extend({
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (elemento: HTMLElement) => {
+              const tamano = elemento.style.fontSize.replace(/\s+/g, '');
+              return TAMANOS_TEXTO.includes(tamano) ? tamano : null;
+            },
+            renderHTML: (atributos: { fontSize?: string | null }) =>
+              atributos.fontSize ? { style: `font-size: ${atributos.fontSize}` } : {},
+          },
+        },
+      },
+    ];
+  },
+});
 
 /** Límites de una tabla; coinciden con los del servidor. */
 export const COLUMNAS_MAXIMAS = 12;
@@ -87,6 +119,8 @@ export class EditorTexto implements OnDestroy {
   protected readonly caracteres = signal(0);
   protected readonly excedido = computed(() => this.caracteres() > MAXIMO_CARACTERES);
   protected readonly maximo = MAXIMO_CARACTERES;
+
+  protected readonly tamanos = TAMANOS_TEXTO;
 
   protected readonly creandoTabla = signal(false);
   protected readonly filasTabla = signal(3);
@@ -176,6 +210,12 @@ export class EditorTexto implements OnDestroy {
 
   protected alinear(alineacion: Alineacion): void {
     this.editor?.chain().focus().setTextAlign(alineacion).run();
+  }
+
+  /** Aplica el tamaño elegido al texto seleccionado (o al que se escriba). Vacío vuelve al tamaño normal. */
+  protected cambiarTamano(tamano: string): void {
+    const cadena = this.editor?.chain().focus();
+    (TAMANOS_TEXTO.includes(tamano) ? cadena?.setFontSize(tamano) : cadena?.unsetFontSize())?.run();
   }
 
   protected limpiarFormato(): void {
@@ -306,6 +346,8 @@ export class EditorTexto implements OnDestroy {
           // El documento va justificado: es la alineación de todo párrafo nuevo.
           defaultAlignment: 'justify',
         }),
+        TextStyle,
+        TamanoTexto,
         TableKit.configure({ table: { resizable: false, HTMLAttributes: { class: 'tabla-editor' } } }),
         NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id), esLista: (id) => this.esLista(id) }),
       ],
@@ -344,6 +386,7 @@ export class EditorTexto implements OnDestroy {
       enlace: editor.isActive('link'),
       enTabla: editor.isActive('table'),
       alineacion,
+      tamano: (editor.getAttributes('textStyle')['fontSize'] as string | null | undefined) ?? '',
     });
     this.caracteres.set(contarCaracteres(editor.getJSON() as NodoContenido, this.etiqueta()));
     if (this.estado().enTabla !== enTablaAntes) {

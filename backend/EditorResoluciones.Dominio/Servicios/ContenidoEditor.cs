@@ -55,7 +55,21 @@ public static class ContenidoEditor
         ["italic"] = [],
         ["underline"] = [],
         ["link"] = ["href", "target", "rel", "class", "title"],
+        // Tamaño del texto: solo los valores de la lista (TamanosTexto).
+        [MarcaEstiloTexto] = ["fontSize"],
     };
+
+    /// <summary>Marca del editor que lleva el tamaño del texto.</summary>
+    public const string MarcaEstiloTexto = "textStyle";
+
+    /// <summary>Tamaños de texto que se pueden elegir en el editor, en puntos. El editor en Angular usa la misma lista.</summary>
+    public static readonly string[] TamanosTexto = ["8pt", "9pt", "10pt", "11pt", "12pt", "13pt", "14pt", "16pt", "18pt", "20pt", "24pt"];
+
+    /// <summary>Tamaño en puntos de una marca de estilo de texto, o null si no lo indica.</summary>
+    public static double? TamanoPuntos(MarcaContenido marca) =>
+        marca.Tipo == MarcaEstiloTexto && Texto(marca.Atributos, "fontSize") is { } tamano && TamanosTexto.Contains(tamano)
+            ? double.Parse(tamano[..^2], System.Globalization.CultureInfo.InvariantCulture)
+            : null;
 
     /// <summary>Identificadores de los campos insertados, en orden de aparición y sin repetir.</summary>
     public static List<string> CamposUsados(NodoContenido raiz) =>
@@ -199,6 +213,12 @@ public static class ContenidoEditor
             ValidarAtributos(marca.Tipo, marca.Atributos, atributosMarca, resultado);
             if (marca.Tipo == "link" && !EnlaceSeguro(Texto(marca.Atributos, "href")))
                 resultado.Agregar(clave, "Los enlaces solo pueden usar http, https o mailto.");
+            if (marca.Tipo == MarcaEstiloTexto && marca.Atributos is not null && marca.Atributos.TryGetValue("fontSize", out var tamano) &&
+                tamano.ValueKind != JsonValueKind.Null &&
+                (tamano.ValueKind != JsonValueKind.String || !TamanosTexto.Contains(tamano.GetString())))
+            {
+                resultado.Agregar(clave, $"El tamaño de texto '{tamano}' no está permitido.");
+            }
         }
 
         foreach (var hijo in nodo.Contenido ?? [])

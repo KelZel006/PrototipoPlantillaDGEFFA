@@ -101,6 +101,38 @@ describe('EditorTexto', () => {
       'Insertar tabla',
     ]);
   });
+
+  it('cambia el tamaño del texto seleccionado con la lista de tamaños', () => {
+    const editor = (fixture.componentInstance as unknown as { editor: import('@tiptap/core').Editor }).editor;
+    editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hola' }] }] });
+    editor.commands.selectAll();
+
+    const lista = elemento.querySelector<HTMLSelectElement>('select[aria-label="Tamaño del texto"]')!;
+    expect(Array.from(lista.options).map((o) => o.textContent?.trim())).toEqual([
+      'Normal', '8', '9', '10', '11', '12', '13', '14', '16', '18', '20', '24',
+    ]);
+    lista.value = '14pt';
+    lista.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    const texto = cambios.at(-1)!.content![0].content![0];
+    expect(texto.marks).toEqual([{ type: 'textStyle', attrs: { fontSize: '14pt' } }]);
+    expect(elemento.querySelector<HTMLElement>('.superficie-editor span')?.style.fontSize).toBe('14pt');
+    expect(lista.value).toBe('14pt');
+
+    lista.value = '';
+    lista.dispatchEvent(new Event('change'));
+    expect(JSON.stringify(cambios.at(-1))).not.toContain('14pt');
+  });
+
+  it('al pegar contenido solo conserva los tamaños permitidos', () => {
+    const editor = (fixture.componentInstance as unknown as { editor: import('@tiptap/core').Editor }).editor;
+    editor.commands.setContent('<p><span style="font-size: 14.5px">Word</span> <span style="font-size: 12pt">permitido</span></p>');
+
+    const json = JSON.stringify(editor.getJSON());
+    expect(json).not.toContain('14.5px');
+    expect(json).toContain('"fontSize":"12pt"');
+  });
 });
 
 describe('EditorTexto: tablas', () => {

@@ -15,6 +15,18 @@
       </button>
     </div>
 
+    <label class="tamano" title="Tamaño del texto">
+      <span class="visualmente-oculto">Tamaño del texto</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h11v2M8.5 5v14M6.5 19h4M14 12v-1.5h7V12M17.5 10.5V19M16 19h3" /></svg>
+      <select class="control control-compacto" aria-label="Tamaño del texto" [value]="estado().tamano"
+        (change)="cambiarTamano($any($event.target).value)" (mousedown)="$event.stopPropagation()">
+        <option value="" [selected]="estado().tamano === ''">Normal</option>
+        @for (tamano of tamanos; track tamano) {
+          <option [value]="tamano" [selected]="estado().tamano === tamano">{{ tamano.replace('pt', '') }}</option>
+        }
+      </select>
+    </label>
+
     <div class="grupo">
       <button type="button" class="herramienta" title="Lista con viñetas" aria-label="Lista con viñetas"
         [attr.aria-pressed]="estado().vinetas" (click)="alternarVinetas()">

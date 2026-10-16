@@ -87,7 +87,8 @@ public sealed class ParrafosPruebas : IDisposable
     {
         { """{"type":"doc","content":[{"type":"image","attrs":{"src":"x.png"}}]}""", "'image' no está permitido" },
         { """{"type":"doc","content":[{"type":"paragraph","attrs":{"style":"color:red"},"content":[{"type":"text","text":"a"}]}]}""", "'style' no está permitido" },
-        { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"a","marks":[{"type":"textStyle"}]}]}]}""", "'textStyle' no está permitido" },
+        { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"a","marks":[{"type":"textStyle","attrs":{"color":"red"}}]}]}]}""", "'color' no está permitido" },
+        { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"a","marks":[{"type":"textStyle","attrs":{"fontSize":"72px"}}]}]}]}""", "tamaño de texto" },
         { """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"a","marks":[{"type":"link","attrs":{"href":"javascript:alert(1)"}}]}]}]}""", "http, https o mailto" },
         { """{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":"diagonal"},"content":[{"type":"text","text":"a"}]}]}""", "alineación" },
         { """{"type":"doc","content":[{"type":"paragraph"}]}""", "no puede estar vacío" },

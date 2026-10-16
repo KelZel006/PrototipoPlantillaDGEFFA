@@ -36,6 +36,16 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException("La generación de PDF del prototipo usa las fuentes de Windows.");
 
+        var renderizador = new PdfDocumentRenderer { Document = Construir(documento) };
+        renderizador.RenderDocument();
+        using var memoria = new MemoryStream();
+        renderizador.PdfDocument.Save(memoria, false);
+        return memoria.ToArray();
+    }
+
+    /// <summary>Arma el documento de MigraDoc (sin dibujarlo); separado de <see cref="Generar"/> para poder probarlo.</summary>
+    public static Document Construir(DocumentoResuelto documento)
+    {
         var pdf = new Document();
         pdf.Info.Title = $"Resolución de prueba – {documento.Plantilla.Nombre}";
         pdf.Info.Author = "Prototipo de editor de resoluciones";
@@ -111,11 +121,7 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         if (!hayContenido)
             seccion.AddParagraph("La plantilla no tiene párrafos para mostrar con la configuración actual.").Style = "Nota";
 
-        var renderizador = new PdfDocumentRenderer { Document = pdf };
-        renderizador.RenderDocument();
-        using var memoria = new MemoryStream();
-        renderizador.PdfDocument.Save(memoria, false);
-        return memoria.ToArray();
+        return pdf;
     }
 
     /// <summary>Espacio vertical exacto: un párrafo vacío de altura mínima con el espacio antes indicado.</summary>
@@ -295,6 +301,8 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
                 texto.Underline = Underline.Single;
             if (marcas.Contains(MarcasDocumento.CampoPlantilla))
                 texto.Color = ColorCampoPlantilla;
+            if ((nodo.Marcas ?? []).Select(Dominio.Servicios.ContenidoEditor.TamanoPuntos).FirstOrDefault(t => t is not null) is { } puntos)
+                texto.Size = Unit.FromPoint(puntos);
             if (marcas.Contains(MarcasDocumento.CampoSinDato))
             {
                 texto.Color = ColorSinDato;
@@ -365,6 +373,8 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
     /// <summary>
     /// Aplica la alineación del editor. En el cuerpo del documento todo el texto va justificado: la alineación a la
     /// izquierda se justifica; centrado y derecha se respetan (títulos, firmas). En las celdas de tabla no se fuerza.
+    /// Sin alineación guardada (el editor no la guarda cuando es la predeterminada, justificada) no se asigna nada: el
+    /// párrafo hereda la de su estilo. Asignar aquí el valor actual fijaría "izquierda" y anularía el justificado.
     /// </summary>
     private static void Alinear(Paragraph parrafo, NodoContenido bloque, bool justificarIzquierda)
     {
@@ -372,14 +382,16 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
                          valor.ValueKind == JsonValueKind.String
             ? valor.GetString()
             : null;
-        parrafo.Format.Alignment = alineacion switch
+        ParagraphAlignment? destino = alineacion switch
         {
             "center" => ParagraphAlignment.Center,
             "right" => ParagraphAlignment.Right,
             "left" => justificarIzquierda ? ParagraphAlignment.Justify : ParagraphAlignment.Left,
             "justify" => ParagraphAlignment.Justify,
-            _ => parrafo.Format.Alignment,
+            _ => null,
         };
+        if (destino is { } valorAlineacion)
+            parrafo.Format.Alignment = valorAlineacion;
     }
 
     private static int? EnteroAtributo(NodoContenido nodo, string nombre) =>
