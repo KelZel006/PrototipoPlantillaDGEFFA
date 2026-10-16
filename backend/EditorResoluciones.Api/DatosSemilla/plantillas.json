@@ -22,5 +22,17 @@
     "descripcion": "Plantilla de prueba sin párrafos todavía.",
     "fechaModificacion": "2026-10-14T00:00:00+00:00",
     "claseDocumentoId": "CDO-001"
+  },
+  {
+    "id": "PLA-003",
+    "version": 1,
+    "nombre": "Resolución (Original) – DEPÓSITOS",
+    "rubroId": "1600",
+    "subRubroId": "1601",
+    "tipoDocumentoId": "TDO-001",
+    "claseDocumentoId": "CDO-001",
+    "estado": "Borrador",
+    "descripcion": "Plantilla de prueba con contenido en las cinco secciones.",
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]

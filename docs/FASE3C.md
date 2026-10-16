@@ -290,3 +290,25 @@ llenar Tipo Documento y agregar la lista Documento.
 - **Verificación.** Se revisaron en el navegador las cuatro listas y el regreso a Cabecera al cambiar de plantilla.
   Los datos del usuario no cambiaron. Captura en [diseno/fase3g-listas.png](diseno/fase3g-listas.png).
 - **Pruebas:** 127 del backend y 87 del frontend, todas correctas.
+
+## Solicitudes de prueba relacionadas con cada plantilla (15/10/2026)
+
+Pedido del usuario: relacionar el resto de la información con las plantillas ya generadas.
+
+- **Solicitudes nuevas** (todas con bienes, para que la tabla de Código Arancelario, Descripción Arancelaria y Monto
+  Autorizado salga llena):
+
+  | Solicitud | Rubro / Sub Rubro | Bienes |
+  |---|---|---|
+  | PRUEBA-0005-2026 | 1100 / 1102 ORGANISMOS | 2 |
+  | PRUEBA-0006-2026 | 1100 / 1101 MISIONES | 1 |
+  | PRUEBA-0007-2026 | 1000 / 1001 MAESTROS | 3 |
+  | PRUEBA-0008-2026 | 1000 / 1002 UNAH | 2 |
+  | PRUEBA-0009-2026 | 1800 / 1801 ONGS | 2 |
+
+  PRUEBA-0004-2026 sigue sin bienes y con datos faltantes, para probar esos casos.
+- **Plantillas con contenido.** PLA-002 (Dictamen, 1800 / 1801) y la nueva PLA-003 (Resolución, 1600 / 1601 DEPÓSITOS,
+  para PRUEBA-0003-2025) tienen ahora párrafos en las cinco secciones: Cabecera con título y VISTO, cuatro
+  considerandos (uno con la tabla de bienes y otro que solo aparece si el monto supera 100,000), Por Tanto, dos puntos
+  del Resuelve y una firma.
+- **Verificación.** PDF generado para cada plantilla con su solicitud. Pruebas del backend: 127, todas correctas.

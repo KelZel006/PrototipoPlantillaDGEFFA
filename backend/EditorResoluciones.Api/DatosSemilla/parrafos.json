@@ -517,5 +517,1267 @@
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-010",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Cabecera",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "DICTAMEN TÉCNICO No. ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Documento de prueba generado con datos simulados."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "numero_solicitud"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-011",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Cabecera",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "VISTO: ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Para resolver la solicitud presentada por "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", a favor de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", por medio de la "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "unidad_ejecutora"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", relativa a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "tipo_beneficio"
+              }
+            },
+            {
+              "type": "text",
+              "text": " (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "operador",
+      "beneficiario",
+      "unidad_ejecutora",
+      "tipo_beneficio"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-012",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Considerando",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que el beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " se clasifica en el rubro «ASOCIACIONES SIN FINES DE LUCRO» y sub rubro «ONGS», de acuerdo con el catálogo vigente (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-013",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Considerando",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que la solicitud "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": " cumple con los requisitos establecidos en la normativa aplicable para el año de gestión "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "anio_gestion"
+              }
+            },
+            {
+              "type": "text",
+              "text": " (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "numero_solicitud",
+      "anio_gestion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-014",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Considerando",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que los bienes objeto de la solicitud y los montos autorizados son los siguientes:"
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "content": [
+            {
+              "type": "tableRow",
+              "content": [
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "CÓDIGO ARANCELARIO"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "DESCRIPCIÓN ARANCELARIA"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "MONTO AUTORIZADO"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableRow",
+              "content": [
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "codigo_arancelario"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "justify"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "descripcion_arancelaria"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "right"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "monto_autorizado"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "codigo_arancelario",
+      "descripcion_arancelaria",
+      "monto_autorizado"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-015",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Considerando",
+    "orden": 4,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que el monto de exoneración solicitado asciende a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", por lo que supera el límite ordinario y requiere revisión adicional (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "Y",
+      "reglas": [
+        {
+          "campoId": "monto_exoneracion",
+          "operador": "MayorQue",
+          "valor": "100000"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "monto_exoneracion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-016",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "PorTanto",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Esta unidad técnica, después de revisar el expediente y con fundamento en los considerandos anteriores, emite el siguiente dictamen (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-017",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Resuelve",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Dictaminar favorablemente a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " el beneficio de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "tipo_beneficio"
+              }
+            },
+            {
+              "type": "text",
+              "text": " por un monto de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario",
+      "tipo_beneficio",
+      "monto_exoneracion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-018",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Resuelve",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Notificar el presente documento a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", con domicilio en "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "municipio"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", departamento de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "departamento"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", para los efectos legales correspondientes (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "operador",
+      "municipio",
+      "departamento"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-019",
+    "version": 1,
+    "plantillaId": "PLA-002",
+    "seccion": "Firmas",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "______________________________________"
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Nombre del firmante (prueba)",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Jefe(a) de la Unidad Técnica (prueba)"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-020",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Cabecera",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "RESOLUCIÓN No. ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Documento de prueba generado con datos simulados."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "numero_solicitud"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-021",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Cabecera",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "VISTO: ",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Para resolver la solicitud presentada por "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", a favor de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", por medio de la "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "unidad_ejecutora"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", relativa a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "tipo_beneficio"
+              }
+            },
+            {
+              "type": "text",
+              "text": " (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "operador",
+      "beneficiario",
+      "unidad_ejecutora",
+      "tipo_beneficio"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-022",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Considerando",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que el beneficiario "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " se clasifica en el rubro «LEY DE ADUANAS Y SU REFORMA (SUSPENSIVOS)» y sub rubro «DEPÓSITOS», de acuerdo con el catálogo vigente (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-023",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Considerando",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que la solicitud "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "numero_solicitud"
+              }
+            },
+            {
+              "type": "text",
+              "text": " cumple con los requisitos establecidos en la normativa aplicable para el año de gestión "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "anio_gestion"
+              }
+            },
+            {
+              "type": "text",
+              "text": " (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "numero_solicitud",
+      "anio_gestion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-024",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Considerando",
+    "orden": 3,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que los bienes objeto de la solicitud y los montos autorizados son los siguientes:"
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "content": [
+            {
+              "type": "tableRow",
+              "content": [
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "CÓDIGO ARANCELARIO"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "DESCRIPCIÓN ARANCELARIA"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableHeader",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "MONTO AUTORIZADO"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableRow",
+              "content": [
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "center"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "codigo_arancelario"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "justify"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "descripcion_arancelaria"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tableCell",
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "attrs": {
+                        "textAlign": "right"
+                      },
+                      "content": [
+                        {
+                          "type": "campo",
+                          "attrs": {
+                            "campoId": "monto_autorizado"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "codigo_arancelario",
+      "descripcion_arancelaria",
+      "monto_autorizado"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-025",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Considerando",
+    "orden": 4,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Que el monto de exoneración solicitado asciende a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", por lo que supera el límite ordinario y requiere revisión adicional (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": true,
+    "condicion": {
+      "operadorLogico": "Y",
+      "reglas": [
+        {
+          "campoId": "monto_exoneracion",
+          "operador": "MayorQue",
+          "valor": "100000"
+        }
+      ],
+      "grupos": []
+    },
+    "camposUsados": [
+      "monto_exoneracion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-026",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "PorTanto",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Esta Dirección, en uso de las facultades que le confiere la ley y con fundamento en los considerandos anteriores (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-027",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Resuelve",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Autorizar a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "beneficiario"
+              }
+            },
+            {
+              "type": "text",
+              "text": " el beneficio de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "tipo_beneficio"
+              }
+            },
+            {
+              "type": "text",
+              "text": " por un monto de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "monto_exoneracion"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "beneficiario",
+      "tipo_beneficio",
+      "monto_exoneracion"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-028",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Resuelve",
+    "orden": 2,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Notificar el presente documento a "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "operador"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", con domicilio en "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "municipio"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", departamento de "
+            },
+            {
+              "type": "campo",
+              "attrs": {
+                "campoId": "departamento"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", para los efectos legales correspondientes (texto de prueba)."
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [
+      "operador",
+      "municipio",
+      "departamento"
+    ],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PAR-029",
+    "version": 1,
+    "plantillaId": "PLA-003",
+    "seccion": "Firmas",
+    "orden": 1,
+    "contenido": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "______________________________________"
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Nombre del firmante (prueba)",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Director(a) General (prueba)"
+            }
+          ]
+        }
+      ]
+    },
+    "activo": true,
+    "mostrarSoloSiCumple": false,
+    "camposUsados": [],
+    "fechaModificacion": "2026-10-15T00:00:00+00:00"
   }
 ]
