@@ -14,17 +14,14 @@
 <main class="contenedor">
   <app-selector-contexto />
   <app-panel-plantilla />
-  <!-- La Certificación se copia de la Resolución: sus pestañas no se editan aquí. -->
   @if (plantillaActual.plantilla(); as plantilla) {
-    @if (!contexto.esCopia()) {
-      <!-- El editor (TipTap, tablas y arrastre) se descarga aparte, solo cuando hay una plantilla. -->
-      @defer {
-        <app-pestanas-secciones [plantilla]="plantilla" />
-      } @loading (minimum 200ms) {
-        <p class="texto-secundario" aria-live="polite">Cargando el editor…</p>
-      } @error {
-        <div class="aviso aviso-error" role="alert">No se pudo cargar el editor. Recargue la página.</div>
-      }
+    <!-- El editor (TipTap, tablas y arrastre) se descarga aparte, solo cuando hay una plantilla. -->
+    @defer {
+      <app-pestanas-secciones [plantilla]="plantilla" />
+    } @loading (minimum 200ms) {
+      <p class="texto-secundario" aria-live="polite">Cargando el editor…</p>
+    } @error {
+      <div class="aviso aviso-error" role="alert">No se pudo cargar el editor. Recargue la página.</div>
     }
   }
   <details class="diagnostico">

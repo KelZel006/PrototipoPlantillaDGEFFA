@@ -16,7 +16,6 @@ public partial class ServicioEntidades<T>(
     IRepositorio<T> repositorio,
     IEnumerable<IValidadorEntidad<T>> validadores,
     IEnumerable<INormalizadorEntidad<T>> normalizadores,
-    IEnumerable<IReglaModificacion<T>> reglasModificacion,
     IEnumerable<IObservadorEntidad<T>> observadores,
     IServicioHistorial historial,
     TimeProvider reloj) where T : class, IEntidad
@@ -73,8 +72,6 @@ public partial class ServicioEntidades<T>(
             throw new ConflictoException(MensajeVersion(actual.Version, version.Value));
 
         var resultado = new ResultadoValidacion();
-        foreach (var regla in reglasModificacion)
-            await regla.ValidarModificacionAsync(actual, resultado, ct);
         foreach (var validador in validadores)
             await validador.ValidarEliminacionAsync(actual, resultado, ct);
         resultado.LanzarSiHayErrores();
@@ -101,11 +98,6 @@ public partial class ServicioEntidades<T>(
 
     private async Task ValidarGuardadoAsync(T entidad, ResultadoValidacion resultado, CancellationToken ct)
     {
-        foreach (var regla in reglasModificacion)
-            await regla.ValidarModificacionAsync(entidad, resultado, ct);
-        if (!resultado.EsValido)
-            return;
-
         var errores = new List<ValidationResult>();
         Validator.TryValidateObject(entidad, new ValidationContext(entidad), errores, validateAllProperties: true);
         foreach (var error in errores)

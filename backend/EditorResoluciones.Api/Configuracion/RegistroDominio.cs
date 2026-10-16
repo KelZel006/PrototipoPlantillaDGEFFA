@@ -24,7 +24,7 @@ public static class RegistroDominio
         servicios.AddScoped<ServicioLogos>();
 
         // Registra todos los validadores y normalizadores del dominio (ValidadorRubro, NormalizadorParrafo, …).
-        Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>), typeof(IReglaModificacion<>)];
+        Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>)];
         var implementaciones = typeof(ValidadorEntidad<>).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false })
             .SelectMany(t => t.GetInterfaces()

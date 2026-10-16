@@ -401,3 +401,30 @@ mayúsculas y en minúsculas.
   - Antes de esta corrección se había perdido el logo de PLA-001 en los datos en uso (se compartía con PLA-004 y se
     borró al reemplazar el de PLA-004). Se reparó asignándole el logo vigente de la Certificación.
 - **Pruebas:** 155 del backend y 91 del frontend, todas correctas.
+
+## La Certificación también se edita (16/10/2026)
+
+Pedido del usuario: al elegir una Certificación, que se pueda editar si se desea, pero que siempre se actualice con todo
+lo que se haga en la Resolución.
+
+- **Se edita como cualquier plantilla.** Se quitó `ReglaCopiasNoEditables`: en la Certificación se pueden crear,
+  modificar, eliminar, duplicar y reordenar párrafos, y cambiar el diseño (logo, alineación, pie de página y espacio
+  entre firmas). En la pantalla aparecen las pestañas y el diseño. El aviso explica la regla y conserva el botón «Ir a
+  la Resolución».
+- **La Resolución sigue mandando, dato por dato** (`SincronizadorCopias`). Después de cada guardado en la Resolución
+  solo pasa a la Certificación **lo que cambió en ese guardado**:
+  - Párrafo modificado: se copian solo los datos que cambiaron (texto, activo, «mostrar solo si cumple», condición,
+    sección u orden). Si ese mismo dato se había editado en la Certificación, lo reemplaza el de la Resolución; lo
+    demás que se editó en la Certificación se conserva.
+  - Párrafo nuevo: se agrega en la Certificación después de la copia del párrafo que lo precede en la Resolución.
+  - Párrafo eliminado en la Resolución: se elimina su copia, aunque se haya editado en la Certificación.
+  - Diseño: solo los datos que cambiaron. Si la Certificación tenía un logo propio y la Resolución cambia el suyo, la
+    Certificación pasa al de la Resolución y el archivo propio, si ya nadie lo usa, se borra.
+  - Si se eliminó en la Certificación un párrafo copiado y luego cambia ese párrafo en la Resolución (incluso de
+    posición), vuelve a aparecer. Para ocultarlo en la Certificación sin perderlo, conviene desactivarlo.
+- **Lo propio de la Certificación no se toca.** Los párrafos agregados o duplicados en la Certificación no tienen
+  `origenParrafoId` y la sincronización no los modifica ni los elimina. Las secciones afectadas se renumeran 1, 2, 3…
+- **Los cambios de la Certificación no pasan a la Resolución.**
+- **`origenParrafoId` lo controla el servidor.** Al guardar un párrafo se conserva el valor guardado, aunque el
+  cliente envíe otro.
+- **Pruebas:** 156 del backend y 91 del frontend, todas correctas.

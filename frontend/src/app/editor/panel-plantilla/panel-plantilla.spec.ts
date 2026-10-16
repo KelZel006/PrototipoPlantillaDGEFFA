@@ -103,7 +103,7 @@ describe('PanelPlantilla', () => {
     expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
   });
 
-  it('la Certificación copiada de la Resolución no se edita y lleva a la Resolución', async () => {
+  it('la Certificación se edita, avisa que se actualiza con la Resolución y lleva a ella', async () => {
     seleccionarCombinacion();
     const contexto = TestBed.inject(ContextoService);
     contexto.seleccionarTipoDocumento({
@@ -124,8 +124,10 @@ describe('PanelPlantilla', () => {
 
     expect(contexto.esCopia()).toBe(true);
     const aviso = elemento.querySelector('.aviso-copia');
-    expect(aviso?.textContent).toContain('se copia automáticamente de la Resolución');
-    expect(elemento.querySelector('app-diseno-documento')).toBeNull();
+    expect(aviso?.textContent).toContain('se actualiza automáticamente con la Resolución');
+    expect(aviso?.textContent).toContain('también puede editarla aquí');
+    // El diseño de la Certificación también se edita.
+    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
 
     aviso!.querySelector('button')!.click();
     http.expectOne('/api/tipos-documento').flush([

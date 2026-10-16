@@ -64,7 +64,7 @@ public sealed class ServicioLogos(
         }
         catch
         {
-            // Si la plantilla no acepta el cambio (por ejemplo, una Certificación copiada), el archivo nuevo sobra.
+            // Si la plantilla no acepta el cambio, el archivo nuevo sobra.
             await EliminarArchivoAsync(recurso.Id, ct);
             throw;
         }

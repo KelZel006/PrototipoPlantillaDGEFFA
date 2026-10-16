@@ -115,7 +115,6 @@ public sealed class ValidadorParrafo(
 {
     public override async Task ValidarGuardadoAsync(Parrafo parrafo, ResultadoValidacion resultado, CancellationToken ct)
     {
-
         if (!Enum.IsDefined(parrafo.Seccion))
         {
             resultado.Agregar("seccion", "La sección no es válida.");
@@ -144,6 +143,10 @@ public sealed class NormalizadorParrafo(IRepositorio<Parrafo> parrafos) : INorma
     {
         // No se confía en la lista enviada por el cliente: se obtiene del contenido.
         parrafo.CamposUsados = ContenidoEditor.CamposUsados(parrafo.Contenido);
+
+        // El vínculo con el párrafo de la Resolución lo pone el servidor al copiar; el cliente no lo cambia.
+        var guardado = string.IsNullOrEmpty(parrafo.Id) ? null : await parrafos.ObtenerAsync(parrafo.Id, ct);
+        parrafo.OrigenParrafoId = guardado?.OrigenParrafoId;
 
         // Una condición sin reglas equivale a no tener condición.
         if (parrafo.Condicion is { Reglas.Count: 0, Grupos.Count: 0 })
