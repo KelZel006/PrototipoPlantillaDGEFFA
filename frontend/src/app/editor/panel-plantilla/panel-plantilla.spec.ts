@@ -17,6 +17,7 @@ const plantilla = {
   rubroId: 'RUB-001',
   subRubroId: 'SUB-001',
   tipoDocumentoId: 'TDO-001',
+  claseDocumentoId: 'CDO-001',
   estado: 'Borrador',
   fechaModificacion: '2026-10-14T00:00:00+00:00',
 };
@@ -51,12 +52,13 @@ describe('PanelPlantilla', () => {
     contexto.seleccionarRubro({ id: 'RUB-001', version: 1, nombre: 'Rubro', activo: true });
     contexto.seleccionarSubRubro({ id: 'SUB-001', version: 1, rubroId: 'RUB-001', nombre: 'Sub', activo: true });
     contexto.seleccionarTipoDocumento({ id: 'TDO-001', version: 1, nombre: 'Tipo', activo: true });
+    contexto.seleccionarClaseDocumento({ id: 'CDO-001', version: 1, nombre: 'Original', activo: true });
   };
 
   it('pide completar las tres listas antes de consultar', async () => {
     fixture.detectChanges();
     await estabilizar();
-    expect(elemento.textContent).toContain('Seleccione Rubro, Sub Rubro y Tipo Documento');
+    expect(elemento.textContent).toContain('Seleccione Rubro, Sub Rubro, Tipo Documento y Documento');
   });
 
   it('muestra la plantilla de la combinación elegida', async () => {
@@ -65,6 +67,7 @@ describe('PanelPlantilla', () => {
     await estabilizar();
     const peticion = http.expectOne((r) => r.url === '/api/plantillas');
     expect(peticion.request.params.get('tipoDocumentoId')).toBe('TDO-001');
+    expect(peticion.request.params.get('claseDocumentoId')).toBe('CDO-001');
     peticion.flush([plantilla]);
     await estabilizar();
     http.expectOne('/api/solicitudes').flush([]);
@@ -172,7 +175,13 @@ describe('PanelPlantilla', () => {
     boton.click();
 
     const creacion = http.expectOne((r) => r.method === 'POST' && r.url === '/api/plantillas');
-    expect(creacion.request.body).toMatchObject({ rubroId: 'RUB-001', subRubroId: 'SUB-001', tipoDocumentoId: 'TDO-001' });
+    expect(creacion.request.body).toMatchObject({
+      rubroId: 'RUB-001',
+      subRubroId: 'SUB-001',
+      tipoDocumentoId: 'TDO-001',
+      claseDocumentoId: 'CDO-001',
+      nombre: 'Tipo (Original) – Sub',
+    });
     creacion.flush(plantilla);
     await estabilizar();
 

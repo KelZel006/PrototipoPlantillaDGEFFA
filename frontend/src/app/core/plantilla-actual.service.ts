@@ -16,8 +16,9 @@ export class PlantillaActualService {
       const rubro = this.contexto.rubro();
       const subRubro = this.contexto.subRubro();
       const tipo = this.contexto.tipoDocumento();
-      return this.contexto.completo() && rubro && subRubro && tipo
-        ? { rubroId: rubro.id, subRubroId: subRubro.id, tipoDocumentoId: tipo.id }
+      const clase = this.contexto.claseDocumento();
+      return this.contexto.completo() && rubro && subRubro && tipo && clase
+        ? { rubroId: rubro.id, subRubroId: subRubro.id, tipoDocumentoId: tipo.id, claseDocumentoId: clase.id }
         : undefined;
     },
     stream: ({ params }) => this.api.plantillas(params).pipe(map((lista) => lista[0] ?? null)),
@@ -35,15 +36,17 @@ export class PlantillaActualService {
     const rubro = this.contexto.rubro();
     const subRubro = this.contexto.subRubro();
     const tipo = this.contexto.tipoDocumento();
-    if (!rubro || !subRubro || !tipo) {
+    const clase = this.contexto.claseDocumento();
+    if (!rubro || !subRubro || !tipo || !clase) {
       throw new Error('La combinación de listas no está completa.');
     }
     return this.api
       .crearPlantilla({
-        nombre: `${tipo.nombre} – ${subRubro.nombre}`.slice(0, 200),
+        nombre: `${tipo.nombre} (${clase.nombre}) – ${subRubro.nombre}`.slice(0, 200),
         rubroId: rubro.id,
         subRubroId: subRubro.id,
         tipoDocumentoId: tipo.id,
+        claseDocumentoId: clase.id,
         estado: 'Borrador',
       })
       .pipe(tap(() => this.recurso.reload()));

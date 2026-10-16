@@ -1,6 +1,6 @@
 .selector {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr);
   gap: var(--espacio-4);
 }
 
@@ -36,5 +36,11 @@
 @media (max-width: 760px) {
   .selector {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  .selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

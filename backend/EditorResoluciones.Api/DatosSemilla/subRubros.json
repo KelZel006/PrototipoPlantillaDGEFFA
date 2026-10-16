@@ -1,7 +1,1171 @@
 [
-  { "id": "SUB-001", "version": 1, "rubroId": "RUB-001", "nombre": "Proyectos de cooperación bilateral (prueba)", "activo": true },
-  { "id": "SUB-002", "version": 1, "rubroId": "RUB-001", "nombre": "Organismos multilaterales (prueba)", "activo": true },
-  { "id": "SUB-003", "version": 1, "rubroId": "RUB-002", "nombre": "Asociaciones civiles (prueba)", "activo": true },
-  { "id": "SUB-004", "version": 1, "rubroId": "RUB-002", "nombre": "Fundaciones (prueba)", "activo": true },
-  { "id": "SUB-005", "version": 1, "rubroId": "RUB-003", "nombre": "Maquinaria y equipo (prueba)", "activo": true }
+  {
+    "id": "1001",
+    "version": 1,
+    "rubroId": "1000",
+    "nombre": "MAESTROS",
+    "activo": true
+  },
+  {
+    "id": "1002",
+    "version": 1,
+    "rubroId": "1000",
+    "nombre": "UNAH",
+    "activo": true
+  },
+  {
+    "id": "1101",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "MISIONES",
+    "activo": true
+  },
+  {
+    "id": "1102",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "ORGANISMOS",
+    "activo": true
+  },
+  {
+    "id": "1103",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "FUNCIONARIOS",
+    "activo": true
+  },
+  {
+    "id": "1104",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "CUERPO DIPLOMATICO",
+    "activo": true
+  },
+  {
+    "id": "1106",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "CONVENIO BILATERAL AYUDA MILITAR U.SA",
+    "activo": true
+  },
+  {
+    "id": "1107",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+    "activo": true
+  },
+  {
+    "id": "1108",
+    "version": 1,
+    "rubroId": "1100",
+    "nombre": "ORGANISMO INTERNACIONAL REGIONAL DE SANIDAD AGROPECUARIA (OIRSA)",
+    "activo": true
+  },
+  {
+    "id": "1105",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "TRANSPORTE AEREO",
+    "activo": true
+  },
+  {
+    "id": "1201",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DECRETO 185-86 Y SUS REFORMAS. HONDUREÑO AUSENTE",
+    "activo": true
+  },
+  {
+    "id": "1202",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL-2690E ART. 10 LEY ESPECIAL DE CARTA DE NATURALIZACIÓN",
+    "activo": true
+  },
+  {
+    "id": "1203",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL-37-95 EXCLUSIVO DE LAS DELEGACIONES DEPORTIVAS",
+    "activo": true
+  },
+  {
+    "id": "1204",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL- 70-2001 FONDO CAFETERO NACIONAL (SÓLO PARA MAQUINARIA E IMPLEMENTOS DE CONSTRUCCIÓN)",
+    "activo": true
+  },
+  {
+    "id": "1205",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "213-200 ART. 47 IHCAFE (ÚNICAMENTE PARA IMPORTACIÓN DE FERTILIZANTES) Y DL 93-2018 ART. 1 PÁRRAFO SEGUNDO",
+    "activo": true
+  },
+  {
+    "id": "1206",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "160-2005 ART 36,54,55 Y 56 LEY DE EQUIDAD Y DESARROLLO INTEGRAL PARA LAS PERSONAS CON DISCAPACIDAD",
+    "activo": true
+  },
+  {
+    "id": "1207",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "199-2006 ART 33 Y 36 LEY PROTECCIÓN AL ADULTO MAYOR Y JUBILADOS",
+    "activo": true
+  },
+  {
+    "id": "1208",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "51-2011 ART 39 LEY DE PROMOCIÓN Y PROTECCIÓN A INVERSIONES",
+    "activo": true
+  },
+  {
+    "id": "1209",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "105-2011 LEY DE SEGURIDAD POBLACIONAL Y SU REFORMAS, RELACIONADOS CON DL 199-11 LEY DEL FIDEICOMISO PARA LA ADMINISTRACIÓN DEL FONDO DE PROTECCIÓN Y SEGURIDAD POBLACIONAL. ART. 7",
+    "activo": true
+  },
+  {
+    "id": "1210",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "6-58 LEY EMISIÓN DEL PENSAMIENTO Y SUS REFORMAS",
+    "activo": true
+  },
+  {
+    "id": "1211",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "COPECO DL 151-2009 ART. Q",
+    "activo": true
+  },
+  {
+    "id": "1212",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ZIP",
+    "activo": true
+  },
+  {
+    "id": "1213",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "IHSS",
+    "activo": true
+  },
+  {
+    "id": "1214",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "CRUZ ROJA HONDUREÑA",
+    "activo": true
+  },
+  {
+    "id": "1215",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "RIT",
+    "activo": true
+  },
+  {
+    "id": "1216",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "BIOCOMBUSTIBLES",
+    "activo": true
+  },
+  {
+    "id": "1217",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ADQUISICIONES PARA EQUIPAMIENTO Y CONSTRUCCIÓN DE LAS CÁRCELES DEL SISTEMA PENITENCIARIO NACIONAL DEL DL 52-2013",
+    "activo": true
+  },
+  {
+    "id": "1218",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ZADE",
+    "activo": true
+  },
+  {
+    "id": "1219",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL-90-2012 (CALL CENTER)",
+    "activo": true
+  },
+  {
+    "id": "1220",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ART. 6 Y 12 DEL IMPUESTO DE VENTAS",
+    "activo": true
+  },
+  {
+    "id": "1221",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "FUNDEVI",
+    "activo": true
+  },
+  {
+    "id": "1222",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "FONDO DE PENSIONES",
+    "activo": true
+  },
+  {
+    "id": "1223",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "RIT Y DL-119",
+    "activo": true
+  },
+  {
+    "id": "1224",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL 92-2018 ART. 1 REFORMA ART. 34 LEY DEL SISTEMA DE FONDOS DE GARANTIAS RECIPROCAS PARA LAS MIPYMES, VIVIENDA SOCIAL Y EDUCACIÓN TECNICA-PROFESIONAL",
+    "activo": true
+  },
+  {
+    "id": "1225",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL 131-2018 LEY DE CONTRIBUCIÓN SOCIAL DEL SECTOR SOCIAL DE LA ECNOMIA",
+    "activo": true
+  },
+  {
+    "id": "1226",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "RIT, DL-119-2016, ART. 6 Y 12 ISV",
+    "activo": true
+  },
+  {
+    "id": "1227",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "RIT- ART. 6 Y 12 ISV",
+    "activo": true
+  },
+  {
+    "id": "1228",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "REGISTRO NACIONAL DE LAS PERSONAS ( RNP)",
+    "activo": true
+  },
+  {
+    "id": "1229",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "HEROICO Y BENEMÉRITO CUERPO BOMBEROS DE HONDURAS",
+    "activo": true
+  },
+  {
+    "id": "1230",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL 100-2020 DE FECHA 21/02/2020",
+    "activo": true
+  },
+  {
+    "id": "1231",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL. 159-2010 CONTENTIVO DEL CONTRATO NO. 083-2010,DL. 3-2025 CONTRATO 071-2018 Y EL DL. 100-2020",
+    "activo": true
+  },
+  {
+    "id": "1232",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "TRIBUNAL DE JUSTICIA ELECTORAL DL 41-2021",
+    "activo": true
+  },
+  {
+    "id": "1233",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "SISTEMA NACIONAL DE EMERGENCIAS NUEVE, UNO, UNO (911)",
+    "activo": true
+  },
+  {
+    "id": "1234",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ART. 2 Y 3 DEL DECRETO 58-2021",
+    "activo": true
+  },
+  {
+    "id": "1235",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "COMERCIANTE INDIVIDUAL DE RIT",
+    "activo": true
+  },
+  {
+    "id": "1236",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "IPM ART. 71 DL167-2006 INTERPRETADO SEGUN DL 173-2018",
+    "activo": true
+  },
+  {
+    "id": "1237",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DECRETO 54-2019, REFORMA EL ART. 253-B DE LA LEY DE MERCADO DE VALORES",
+    "activo": true
+  },
+  {
+    "id": "1238",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "BANCO CENTRAL DE HONDURAS (BCH)",
+    "activo": true
+  },
+  {
+    "id": "1239",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "COMERCIANTE INDIVIDUAL LEY DE EMISION DE PENSAMIENTO",
+    "activo": true
+  },
+  {
+    "id": "1240",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "LEY ELECTORAL DE HONDURAS",
+    "activo": true
+  },
+  {
+    "id": "1241",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "ZADE-119-2016",
+    "activo": true
+  },
+  {
+    "id": "1242",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DECRETO 10-2024 PROGRAMA DE APOYO A LA RED HOSPITALARIA DE LA REPUBLICA DE HONDURAS (PARH)",
+    "activo": true
+  },
+  {
+    "id": "1243",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "EJECUTOR DE PROYECTOS",
+    "activo": true
+  },
+  {
+    "id": "1244",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "FIDEICOMISO SECRETARIA DE SALUD",
+    "activo": true
+  },
+  {
+    "id": "1245",
+    "version": 1,
+    "rubroId": "1200",
+    "nombre": "DL-196-2026",
+    "activo": true
+  },
+  {
+    "id": "1301",
+    "version": 1,
+    "rubroId": "1300",
+    "nombre": "RETENCISTAS",
+    "activo": true
+  },
+  {
+    "id": "1302",
+    "version": 1,
+    "rubroId": "1300",
+    "nombre": "PENSIONADOS",
+    "activo": true
+  },
+  {
+    "id": "1401",
+    "version": 1,
+    "rubroId": "1400",
+    "nombre": "TRIBUNAL SUPREMO ELECTORAL",
+    "activo": true
+  },
+  {
+    "id": "1402",
+    "version": 1,
+    "rubroId": "1400",
+    "nombre": "PARTIDOS POLÍTICOS",
+    "activo": true
+  },
+  {
+    "id": "1501",
+    "version": 1,
+    "rubroId": "1500",
+    "nombre": "POSADAS DE TURISMO RURAL",
+    "activo": true
+  },
+  {
+    "id": "1502",
+    "version": 1,
+    "rubroId": "1500",
+    "nombre": "AGENCIA DE TURISMO RURAL SOSTENIBLE",
+    "activo": true
+  },
+  {
+    "id": "1503",
+    "version": 1,
+    "rubroId": "1500",
+    "nombre": "ACTIVIDADES TEMÁTICAS DE TURISMO RURAL SOSTENIBLE",
+    "activo": true
+  },
+  {
+    "id": "1504",
+    "version": 1,
+    "rubroId": "1500",
+    "nombre": "SERVICIOS DE ALIMENTACIÓN Y BEBIDAS",
+    "activo": true
+  },
+  {
+    "id": "1601",
+    "version": 1,
+    "rubroId": "1600",
+    "nombre": "DEPÓSITOS",
+    "activo": true
+  },
+  {
+    "id": "1602",
+    "version": 1,
+    "rubroId": "1600",
+    "nombre": "RÉGIMEN DEL VIAJERO DESCRITO EN CAUCA Y SU REGLAMENTO",
+    "activo": true
+  },
+  {
+    "id": "1603",
+    "version": 1,
+    "rubroId": "1600",
+    "nombre": "TIENDAS LIBRES",
+    "activo": true
+  },
+  {
+    "id": "1701",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "PROYECTOS",
+    "activo": true
+  },
+  {
+    "id": "1702",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "ESTADO",
+    "activo": true
+  },
+  {
+    "id": "1703",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "ESTADO Y DL-119",
+    "activo": true
+  },
+  {
+    "id": "1704",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "ESTADO Y LEY DE EMISIÓN DE PENSAMIENTO",
+    "activo": true
+  },
+  {
+    "id": "1705",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "BANASUPRO",
+    "activo": true
+  },
+  {
+    "id": "1706",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "ENEE",
+    "activo": true
+  },
+  {
+    "id": "1707",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "SECRETARIA DE SALUD",
+    "activo": true
+  },
+  {
+    "id": "1708",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "EMPRESA DE CORREOS DE HONDURAS (HONDUCOR)",
+    "activo": true
+  },
+  {
+    "id": "1709",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "DIRECCION NACIONAL DE INVESTIGACION E INTELIGENCIA (DNII)",
+    "activo": true
+  },
+  {
+    "id": "1710",
+    "version": 1,
+    "rubroId": "1700",
+    "nombre": "SECRETARIA DE ESTADO EN EL DESPACHO DE SEGURIDAD",
+    "activo": true
+  },
+  {
+    "id": "1801",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ONGS",
+    "activo": true
+  },
+  {
+    "id": "1802",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "OPDF",
+    "activo": true
+  },
+  {
+    "id": "1803",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "SINDICATOS",
+    "activo": true
+  },
+  {
+    "id": "1804",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ASOCIACIONES GREMIALES",
+    "activo": true
+  },
+  {
+    "id": "1805",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "PATRONATOS",
+    "activo": true
+  },
+  {
+    "id": "1806",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ONGS Y DL-119",
+    "activo": true
+  },
+  {
+    "id": "1807",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "COLEGIOS PROFESIONALES",
+    "activo": true
+  },
+  {
+    "id": "1808",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ASOCIACIÓN RELIGIOSA",
+    "activo": true
+  },
+  {
+    "id": "1809",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ASOCIACIÓN EDUCATIVA",
+    "activo": true
+  },
+  {
+    "id": "1810",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ONG - LEY DE EMISIÓN DE PENSAMIENTO",
+    "activo": true
+  },
+  {
+    "id": "1811",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "ONG - FONDOS INTERNACIONALES",
+    "activo": true
+  },
+  {
+    "id": "3008",
+    "version": 1,
+    "rubroId": "1800",
+    "nombre": "JUNTAS ADMINISTRADORAS DE AGUA",
+    "activo": true
+  },
+  {
+    "id": "1901",
+    "version": 1,
+    "rubroId": "1900",
+    "nombre": "PALMEROLA",
+    "activo": true
+  },
+  {
+    "id": "1902",
+    "version": 1,
+    "rubroId": "1900",
+    "nombre": "CENTRO CÍVICO GUBERNAMENTAL",
+    "activo": true
+  },
+  {
+    "id": "1903",
+    "version": 1,
+    "rubroId": "1900",
+    "nombre": "OTRAS APPS",
+    "activo": true
+  },
+  {
+    "id": "1904",
+    "version": 1,
+    "rubroId": "1900",
+    "nombre": "OPERADORA PORTUARIA CENTROAMERICANA (OPC)",
+    "activo": true
+  },
+  {
+    "id": "2001",
+    "version": 1,
+    "rubroId": "2000",
+    "nombre": "ZEDE CENTROAMERICANA",
+    "activo": true
+  },
+  {
+    "id": "2101",
+    "version": 1,
+    "rubroId": "2100",
+    "nombre": "CONSUCOOP",
+    "activo": true
+  },
+  {
+    "id": "2102",
+    "version": 1,
+    "rubroId": "2100",
+    "nombre": "COOPERATIVAS",
+    "activo": true
+  },
+  {
+    "id": "2103",
+    "version": 1,
+    "rubroId": "2100",
+    "nombre": "COOPERATIVA Y DL-119",
+    "activo": true
+  },
+  {
+    "id": "2201",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "HOTELES U OPERACIONES HOTELERAS",
+    "activo": true
+  },
+  {
+    "id": "2202",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "TRANSPORTE AÉREO DE PERSONAS",
+    "activo": true
+  },
+  {
+    "id": "2203",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "TRANSPORTE ACUÁTICO DE PERSONAS",
+    "activo": true
+  },
+  {
+    "id": "2204",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "TALLERES DE ARTESANOS Y TIENDAS DE ARTESANÍAS",
+    "activo": true
+  },
+  {
+    "id": "2205",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "AGENCIAS DE TURISMO RECEPTIVO",
+    "activo": true
+  },
+  {
+    "id": "2206",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "CENTRO DE CONVENCIONES",
+    "activo": true
+  },
+  {
+    "id": "2207",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "ARRENDADORAS",
+    "activo": true
+  },
+  {
+    "id": "2208",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "PARQUES ACUÁTICOS, PARQUES ACUÁTICOS, AREAS DE DESCANSO Y CENTROS MULTIDEPORTIVOS",
+    "activo": true
+  },
+  {
+    "id": "2209",
+    "version": 1,
+    "rubroId": "2200",
+    "nombre": "COMERCIANTE INDIVIDUAL LIT",
+    "activo": true
+  },
+  {
+    "id": "2301",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN TURÍSTICAS",
+    "activo": true
+  },
+  {
+    "id": "2302",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN INDUSTRIAL",
+    "activo": true
+  },
+  {
+    "id": "2303",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN FABRIL",
+    "activo": true
+  },
+  {
+    "id": "2304",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN COMERCIAL",
+    "activo": true
+  },
+  {
+    "id": "2305",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN INMOBILIARIA",
+    "activo": true
+  },
+  {
+    "id": "2306",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN CONSTRUCCIÓN",
+    "activo": true
+  },
+  {
+    "id": "2307",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN ARTESANAL",
+    "activo": true
+  },
+  {
+    "id": "2308",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN LOGÍSTICA",
+    "activo": true
+  },
+  {
+    "id": "2309",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "ACTIVIDAD E INVERSIÓN SERVICIO",
+    "activo": true
+  },
+  {
+    "id": "2310",
+    "version": 1,
+    "rubroId": "2300",
+    "nombre": "COMERCIANTES INDIVIDUALES",
+    "activo": true
+  },
+  {
+    "id": "2401",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "USUARIA",
+    "activo": true
+  },
+  {
+    "id": "2402",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "OPERADOR USUARIA",
+    "activo": true
+  },
+  {
+    "id": "2403",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "OPERADORAS",
+    "activo": true
+  },
+  {
+    "id": "2404",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "COMERCIANTE INDIVIDUAL OPERADOR",
+    "activo": true
+  },
+  {
+    "id": "2405",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "COMERCIANTE INDIVIDUAL OPERADOR-USUARIA",
+    "activo": true
+  },
+  {
+    "id": "2406",
+    "version": 1,
+    "rubroId": "2400",
+    "nombre": "COMERCIANTE INDIVIDUAL USUARIA",
+    "activo": true
+  },
+  {
+    "id": "2501",
+    "version": 1,
+    "rubroId": "2500",
+    "nombre": "PASEO LIQUIDAMBAR",
+    "activo": true
+  },
+  {
+    "id": "1905",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "SOCIA DE DESARROLLADOR",
+    "activo": true
+  },
+  {
+    "id": "2601",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "DESARROLLADORES",
+    "activo": true
+  },
+  {
+    "id": "2602",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "CONTRATISTAS",
+    "activo": true
+  },
+  {
+    "id": "2603",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "SUPLIDORES",
+    "activo": true
+  },
+  {
+    "id": "2604",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "AUTOCONSUMO",
+    "activo": true
+  },
+  {
+    "id": "2605",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "SUPLIDOR Y DL-119",
+    "activo": true
+  },
+  {
+    "id": "2606",
+    "version": 1,
+    "rubroId": "2600",
+    "nombre": "DESARROLLADOR-ISV-119-ISV-6 Y 12",
+    "activo": true
+  },
+  {
+    "id": "2701",
+    "version": 1,
+    "rubroId": "2700",
+    "nombre": "DL- 167-97 CATÓLICA",
+    "activo": true
+  },
+  {
+    "id": "2702",
+    "version": 1,
+    "rubroId": "2700",
+    "nombre": "MISIÓN ADVENTISTA DE HONDURAS CONTINENTAL",
+    "activo": true
+  },
+  {
+    "id": "2703",
+    "version": 1,
+    "rubroId": "2700",
+    "nombre": "DL- 29-99 CONFRATERNIDAD",
+    "activo": true
+  },
+  {
+    "id": "2704",
+    "version": 1,
+    "rubroId": "2700",
+    "nombre": "IGLESIAS CON PERSONERÍA JURÍDICA",
+    "activo": true
+  },
+  {
+    "id": "2808",
+    "version": 1,
+    "rubroId": "2800",
+    "nombre": "MAQUINARIA Y EQUIPO PARA GENERACIÓN DE ENERGÍA CONTRATADA(TERMICAS)_DL100-2020",
+    "activo": true
+  },
+  {
+    "id": "2901",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "DISTRIBUIDOR/COMERCIALIZADOR PRODUCTOS",
+    "activo": true
+  },
+  {
+    "id": "2902",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "ACUICULTURA",
+    "activo": true
+  },
+  {
+    "id": "2903",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "AVICULTURA",
+    "activo": true
+  },
+  {
+    "id": "2904",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "PORCINO",
+    "activo": true
+  },
+  {
+    "id": "2905",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "BOVINO",
+    "activo": true
+  },
+  {
+    "id": "2906",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "LÁCTEOS",
+    "activo": true
+  },
+  {
+    "id": "2907",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "GRANOS BÁSICOS",
+    "activo": true
+  },
+  {
+    "id": "2908",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "CAFÉ",
+    "activo": true
+  },
+  {
+    "id": "2909",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "EMBUTIDOS",
+    "activo": true
+  },
+  {
+    "id": "2910",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "ALIMENTOS BALANCEADOS",
+    "activo": true
+  },
+  {
+    "id": "2911",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "PALMA",
+    "activo": true
+  },
+  {
+    "id": "2912",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "AZÚCAR",
+    "activo": true
+  },
+  {
+    "id": "2913",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "FERTILIZANTE",
+    "activo": true
+  },
+  {
+    "id": "2914",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "PRODUCTO FARMACÉUTICO PARA USO VETERINARIO",
+    "activo": true
+  },
+  {
+    "id": "2915",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "ANIMALES VIVOS",
+    "activo": true
+  },
+  {
+    "id": "2916",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "MEDIOS DE REPRODUCCIÓN ANIMAL",
+    "activo": true
+  },
+  {
+    "id": "2917",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "SEMILLA Y MATERIAL VEGETATIVO PARA LA SIEMBRA Y PROCREACIÓN SEXUAL Y ASEXUAL",
+    "activo": true
+  },
+  {
+    "id": "2918",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "AGRICULTURA ARTÍCULO # 2",
+    "activo": true
+  },
+  {
+    "id": "2919",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "HERRAMIENTAS AGRÍCOLAS",
+    "activo": true
+  },
+  {
+    "id": "2920",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "MAQUINARIA, EQUIPO, REPUESTOS, ACCESORIOS AGRÍCOLA AGROINDUSTRIAL; MATERIAL DE EMPAQUE, MATERIAL DE LIMPIEZA Y MAQUINARIA Y EQUIPO DE RIEGO",
+    "activo": true
+  },
+  {
+    "id": "2923",
+    "version": 1,
+    "rubroId": "2900",
+    "nombre": "DL-119-2016 E ISV-6 Y 12",
+    "activo": true
+  },
+  {
+    "id": "3001",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "SERVICIOS DE LA INDUSTRIA TURISTICA",
+    "activo": true
+  },
+  {
+    "id": "3002",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "HABILITADORA DE TURISMO",
+    "activo": true
+  },
+  {
+    "id": "3003",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "INVERSIONES PUNTUALES EN TURISMO",
+    "activo": true
+  },
+  {
+    "id": "3004",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "ACTIVIDADES TURISTICAS CONEXAS",
+    "activo": true
+  },
+  {
+    "id": "3005",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "SERVICIOS DE OFERTA TURISTICA",
+    "activo": true
+  },
+  {
+    "id": "3006",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "SERVICIOS TURISTICOS DE TRANSPORTE",
+    "activo": true
+  },
+  {
+    "id": "3007",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "INFRAESTRUCTURA CONEXA",
+    "activo": true
+  },
+  {
+    "id": "3009",
+    "version": 1,
+    "rubroId": "3000",
+    "nombre": "COMERCIANTE INDIVIDUAL",
+    "activo": true
+  },
+  {
+    "id": "4001",
+    "version": 1,
+    "rubroId": "4000",
+    "nombre": "CONSORCIOS",
+    "activo": true
+  },
+  {
+    "id": "4002",
+    "version": 1,
+    "rubroId": "4000",
+    "nombre": "INTERURBANO COMERCIANTE INDIVIDUAL",
+    "activo": true
+  },
+  {
+    "id": "4003",
+    "version": 1,
+    "rubroId": "4000",
+    "nombre": "INTERURBANO SOCIEDAD MERCANTIL",
+    "activo": true
+  },
+  {
+    "id": "5001",
+    "version": 1,
+    "rubroId": "5000",
+    "nombre": "ARTÍCULO 7 LITERAL E)",
+    "activo": true
+  }
 ]

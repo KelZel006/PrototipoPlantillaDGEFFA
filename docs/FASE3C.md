@@ -253,3 +253,40 @@ Pedido del usuario: poder manejar el espacio entre firmas, e interlineado de 0.8
   antes y se restauraron después. Captura en
   [diseno/fase3f-firmas-interlineado.png](diseno/fase3f-firmas-interlineado.png).
 - **Pruebas:** 125 del backend y 86 del frontend, todas correctas.
+
+## Rubros y sub rubros reales, lista Documento y pestaña inicial (15/10/2026)
+
+Pedido del usuario: cargar los rubros y sub rubros de la información adjunta, abrir siempre en la pestaña Cabecera,
+llenar Tipo Documento y agregar la lista Documento.
+
+- **Rubros y sub rubros.**
+  - La imagen adjunta venía recortada, así que los datos se tomaron de la planilla `Libro1 (1).xlsx` (hoja «Hoja1»).
+  - Son 23 rubros y 167 sub rubros. El id de cada uno es su código (por ejemplo `1000` «POR MANDATO
+    CONSTITUCIONAL»), y cada sub rubro apunta a su rubro con el código de la columna PARAMETRO.
+  - El límite del nombre subió a 300 caracteres, porque hay descripciones de 152 y 178.
+  - Las plantillas y solicitudes de prueba que usaban los rubros ficticios se pasaron a rubros reales equivalentes:
+
+    | Antes | Ahora |
+    |---|---|
+    | RUB-001 | 1100 |
+    | RUB-002 | 1800 |
+    | RUB-003 | 1600 |
+    | SUB-001 | 1107 |
+    | SUB-002 | 1102 |
+    | SUB-003 y SUB-004 | 1801 |
+    | SUB-005 | 1601 |
+
+  - Los nombres guardados de esas plantillas no cambian. Se pueden renombrar si hace falta.
+- **Tipo Documento.** Constancia de Registro, Dictamen, Resolución y Certificación, en ese orden.
+- **Lista Documento (nueva).**
+  - Es la cuarta lista, con Original, Modificación y Aclaratoria.
+  - Forma parte de la combinación que identifica la plantilla: la misma combinación de Rubro, Sub Rubro y Tipo
+    Documento puede tener una plantilla Original, otra de Modificación y otra Aclaratoria.
+  - Catálogo nuevo `clasesDocumento.json` (`GET /api/clases-documento`). Las plantillas existentes quedaron como
+    «Original».
+  - Una plantilla nueva se llama «Tipo (Documento) – Sub Rubro».
+- **Pestañas.** Al abrir una plantilla, el editor se posiciona siempre en Cabecera. Guardar o crear una versión
+  nueva de la misma plantilla no cambia la pestaña.
+- **Verificación.** Se revisaron en el navegador las cuatro listas y el regreso a Cabecera al cambiar de plantilla.
+  Los datos del usuario no cambiaron. Captura en [diseno/fase3g-listas.png](diseno/fase3g-listas.png).
+- **Pruebas:** 127 del backend y 87 del frontend, todas correctas.

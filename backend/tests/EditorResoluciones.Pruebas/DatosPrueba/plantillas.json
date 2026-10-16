@@ -8,7 +8,8 @@
     "tipoDocumentoId": "TDO-001",
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba con párrafos en las tres secciones.",
-    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    "fechaModificacion": "2026-10-14T00:00:00+00:00",
+    "claseDocumentoId": "CDO-001"
   },
   {
     "id": "PLA-002",
@@ -19,6 +20,7 @@
     "tipoDocumentoId": "TDO-002",
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba sin párrafos todavía.",
-    "fechaModificacion": "2026-10-14T00:00:00+00:00"
+    "fechaModificacion": "2026-10-14T00:00:00+00:00",
+    "claseDocumentoId": "CDO-001"
   }
 ]

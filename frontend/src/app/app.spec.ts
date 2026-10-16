@@ -22,7 +22,7 @@ describe('App', () => {
     // Al iniciar, consulta los catálogos y el diagnóstico solo a través de la API.
     TestBed.tick();
     const http = TestBed.inject(HttpTestingController);
-    for (const url of ['/api/rubros', '/api/tipos-documento', '/api/salud']) {
+    for (const url of ['/api/rubros', '/api/tipos-documento', '/api/clases-documento', '/api/salud']) {
       http.expectOne(url).flush([]);
     }
     http.verify();

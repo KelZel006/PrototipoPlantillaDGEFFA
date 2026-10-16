@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { ContextoService } from './contexto.service';
-import { Rubro, SubRubro, TipoDocumento } from './modelos';
+import { ClaseDocumento, Rubro, SubRubro, TipoDocumento } from './modelos';
 
 const rubroA: Rubro = { id: 'RUB-001', version: 1, nombre: 'Rubro A', activo: true };
 const rubroB: Rubro = { id: 'RUB-002', version: 1, nombre: 'Rubro B', activo: true };
 const subDeA: SubRubro = { id: 'SUB-001', version: 1, rubroId: 'RUB-001', nombre: 'Sub A', activo: true };
 const subDeB: SubRubro = { id: 'SUB-003', version: 1, rubroId: 'RUB-002', nombre: 'Sub B', activo: true };
 const tipo: TipoDocumento = { id: 'TDO-001', version: 1, nombre: 'Tipo', activo: true };
+const original: ClaseDocumento = { id: 'CDO-001', version: 1, nombre: 'Original', activo: true };
 
 describe('ContextoService', () => {
   let contexto: ContextoService;
@@ -15,12 +16,13 @@ describe('ContextoService', () => {
     contexto = TestBed.inject(ContextoService);
   });
 
-  it('está completo solo con las tres listas seleccionadas', () => {
+  it('está completo solo con las cuatro listas seleccionadas', () => {
     contexto.seleccionarRubro(rubroA);
     contexto.seleccionarSubRubro(subDeA);
+    contexto.seleccionarTipoDocumento(tipo);
     expect(contexto.completo()).toBe(false);
 
-    contexto.seleccionarTipoDocumento(tipo);
+    contexto.seleccionarClaseDocumento(original);
     expect(contexto.completo()).toBe(true);
   });
 

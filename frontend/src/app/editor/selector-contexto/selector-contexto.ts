@@ -5,7 +5,7 @@ import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 
-/** Las tres listas superiores: Rubro, Sub Rubro (depende del rubro) y Tipo Documento. */
+/** Las cuatro listas superiores: Rubro, Sub Rubro (depende del rubro), Tipo Documento y Documento. */
 @Component({
   selector: 'app-selector-contexto',
   templateUrl: './selector-contexto.html',
@@ -18,6 +18,7 @@ export class SelectorContexto {
 
   private readonly rubrosRecurso = rxResource({ stream: () => this.api.rubros() });
   private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });
+  private readonly clasesRecurso = rxResource({ stream: () => this.api.clasesDocumento() });
   private readonly subRubrosRecurso = rxResource({
     params: () => this.contexto.rubro()?.id,
     stream: ({ params: rubroId }) => this.api.subRubros(rubroId),
@@ -29,6 +30,9 @@ export class SelectorContexto {
   protected readonly tiposDocumento = computed(() =>
     this.tiposRecurso.hasValue() ? this.tiposRecurso.value().filter((t) => t.activo) : [],
   );
+  protected readonly clasesDocumento = computed(() =>
+    this.clasesRecurso.hasValue() ? this.clasesRecurso.value().filter((c) => c.activo) : [],
+  );
   protected readonly subRubros = computed(() =>
     this.subRubrosRecurso.hasValue() ? this.subRubrosRecurso.value().filter((s) => s.activo) : [],
   );
@@ -36,7 +40,9 @@ export class SelectorContexto {
   protected readonly cargandoSubRubros = this.subRubrosRecurso.isLoading;
 
   protected readonly error = computed(() => {
-    const fallido = [this.rubrosRecurso, this.tiposRecurso, this.subRubrosRecurso].find((r) => r.error());
+    const fallido = [this.rubrosRecurso, this.tiposRecurso, this.clasesRecurso, this.subRubrosRecurso].find((r) =>
+      r.error(),
+    );
     return fallido ? mensajeError(fallido.error()) : null;
   });
 
@@ -58,6 +64,13 @@ export class SelectorContexto {
     const id = await this.confirmarCambio(evento, this.contexto.tipoDocumento()?.id);
     if (id !== null) {
       this.contexto.seleccionarTipoDocumento(this.tiposDocumento().find((t) => t.id === id) ?? null);
+    }
+  }
+
+  protected async alCambiarClaseDocumento(evento: Event): Promise<void> {
+    const id = await this.confirmarCambio(evento, this.contexto.claseDocumento()?.id);
+    if (id !== null) {
+      this.contexto.seleccionarClaseDocumento(this.clasesDocumento().find((c) => c.id === id) ?? null);
     }
   }
 
@@ -88,6 +101,7 @@ export class SelectorContexto {
   protected recargar(): void {
     this.rubrosRecurso.reload();
     this.tiposRecurso.reload();
+    this.clasesRecurso.reload();
     this.subRubrosRecurso.reload();
   }
 }

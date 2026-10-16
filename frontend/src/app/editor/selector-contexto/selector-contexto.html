@@ -68,6 +68,26 @@
     </select>
   </div>
 
+  <div class="lista">
+    <label class="etiqueta" for="lista-documento">
+      <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 3h8l4 4v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM15 3v5h5M4 7v12a4 4 0 0 0 4 4" />
+      </svg>
+      Documento
+    </label>
+    <select
+      id="lista-documento"
+      class="control"
+      [value]="contexto.claseDocumento()?.id ?? ''"
+      (change)="alCambiarClaseDocumento($event)"
+    >
+      <option value="">Seleccione el documento</option>
+      @for (clase of clasesDocumento(); track clase.id) {
+        <option [value]="clase.id" [selected]="clase.id === contexto.claseDocumento()?.id">{{ clase.nombre }}</option>
+      }
+    </select>
+  </div>
+
   @if (error(); as mensaje) {
     <div class="aviso aviso-error" role="alert">
       <span>{{ mensaje }}</span>

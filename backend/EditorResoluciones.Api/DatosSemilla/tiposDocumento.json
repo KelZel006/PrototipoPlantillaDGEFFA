@@ -1,5 +1,26 @@
 [
-  { "id": "TDO-001", "version": 1, "nombre": "Resolución de aprobación (prueba)", "activo": true },
-  { "id": "TDO-002", "version": 1, "nombre": "Resolución de denegación (prueba)", "activo": true },
-  { "id": "TDO-003", "version": 1, "nombre": "Resolución de ampliación (prueba)", "activo": true }
+  {
+    "id": "TDO-003",
+    "version": 1,
+    "nombre": "Constancia de Registro",
+    "activo": true
+  },
+  {
+    "id": "TDO-002",
+    "version": 1,
+    "nombre": "Dictamen",
+    "activo": true
+  },
+  {
+    "id": "TDO-001",
+    "version": 1,
+    "nombre": "Resolución",
+    "activo": true
+  },
+  {
+    "id": "TDO-004",
+    "version": 1,
+    "nombre": "Certificación",
+    "activo": true
+  }
 ]

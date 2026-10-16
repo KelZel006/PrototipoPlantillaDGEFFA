@@ -43,13 +43,14 @@ describe('PestanasSecciones', () => {
     for (const seccion of ['Cabecera', 'Considerando', 'PorTanto', 'Resuelve', 'Firmas']) {
       expect(pestana(seccion).getAttribute('aria-disabled')).toBe('false');
     }
-    expect(pestana('Considerando').getAttribute('aria-selected')).toBe('true');
+    // Siempre se abre en la primera pestaña.
+    expect(pestana('Cabecera').getAttribute('aria-selected')).toBe('true');
     expect(elemento.textContent).not.toContain('Próximamente');
   });
 
   it('mantiene montadas las secciones para conservar sus borradores', () => {
-    expect(panel('Cabecera')?.hidden).toBe(true);
-    expect(panel('Considerando')?.hidden).toBe(false);
+    expect(panel('Cabecera')?.hidden).toBe(false);
+    expect(panel('Considerando')?.hidden).toBe(true);
     expect(panel('Resuelve')?.hidden).toBe(true);
 
     pestana('Resuelve').click();
@@ -59,6 +60,25 @@ describe('PestanasSecciones', () => {
     expect(panel('Considerando')?.hidden).toBe(true);
     expect(elemento.querySelectorAll('app-editor-seccion').length).toBe(5);
     expect(panel('Firmas')?.hidden).toBe(true);
+  });
+
+  it('vuelve a la Cabecera al abrir otra plantilla', () => {
+    pestana('Resuelve').click();
+    fixture.detectChanges();
+    expect(pestana('Resuelve').getAttribute('aria-selected')).toBe('true');
+
+    // Una versión nueva de la misma plantilla no cambia la pestaña.
+    fixture.componentRef.setInput('plantilla', { ...PLANTILLA, version: 2 });
+    fixture.detectChanges();
+    TestBed.tick();
+    fixture.detectChanges();
+    expect(pestana('Resuelve').getAttribute('aria-selected')).toBe('true');
+
+    fixture.componentRef.setInput('plantilla', { ...PLANTILLA, id: 'PLA-OTRA' });
+    fixture.detectChanges();
+    TestBed.tick();
+    fixture.detectChanges();
+    expect(pestana('Cabecera').getAttribute('aria-selected')).toBe('true');
   });
 
   it('marca las pestañas con cambios sin guardar', () => {

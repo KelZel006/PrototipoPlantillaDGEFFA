@@ -1,8 +1,8 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { Rubro, Seccion, SubRubro, TipoDocumento } from './modelos';
+import { ClaseDocumento, Rubro, Seccion, SubRubro, TipoDocumento } from './modelos';
 
 /**
- * Selección de las tres listas (Rubro, Sub Rubro y Tipo Documento).
+ * Selección de las cuatro listas (Rubro, Sub Rubro, Tipo Documento y Documento).
  * Vive en un servicio para conservarse mientras el usuario navega entre secciones.
  */
 @Injectable({ providedIn: 'root' })
@@ -10,6 +10,8 @@ export class ContextoService {
   readonly rubro = signal<Rubro | null>(null);
   readonly subRubro = signal<SubRubro | null>(null);
   readonly tipoDocumento = signal<TipoDocumento | null>(null);
+  /** Lista "Documento": Original, Modificación o Aclaratoria. */
+  readonly claseDocumento = signal<ClaseDocumento | null>(null);
 
   /** Secciones con cambios sin guardar; las marca cada editor de sección. */
   readonly seccionesConCambios = signal<ReadonlySet<Seccion>>(new Set());
@@ -41,7 +43,9 @@ export class ContextoService {
   readonly completo = computed(() => {
     const rubro = this.rubro();
     const subRubro = this.subRubro();
-    return !!rubro && !!subRubro && !!this.tipoDocumento() && subRubro.rubroId === rubro.id;
+    return (
+      !!rubro && !!subRubro && !!this.tipoDocumento() && !!this.claseDocumento() && subRubro.rubroId === rubro.id
+    );
   });
 
   seleccionarRubro(rubro: Rubro | null): void {
@@ -62,5 +66,9 @@ export class ContextoService {
 
   seleccionarTipoDocumento(tipo: TipoDocumento | null): void {
     this.tipoDocumento.set(tipo);
+  }
+
+  seleccionarClaseDocumento(clase: ClaseDocumento | null): void {
+    this.claseDocumento.set(clase);
   }
 }

@@ -40,14 +40,25 @@ describe('SelectorContexto', () => {
       { id: 'RUB-009', version: 1, nombre: 'Rubro inactivo', activo: false },
     ]);
     http.expectOne('/api/tipos-documento').flush([{ id: 'TDO-001', version: 1, nombre: 'Aprobación', activo: true }]);
+    http.expectOne('/api/clases-documento').flush([
+      { id: 'CDO-001', version: 1, nombre: 'Original', activo: true },
+      { id: 'CDO-002', version: 1, nombre: 'Modificación', activo: true },
+      { id: 'CDO-003', version: 1, nombre: 'Aclaratoria', activo: true },
+    ]);
     await estabilizar();
   });
 
   afterEach(() => http.verify());
 
-  it('muestra las tres listas con sus etiquetas', () => {
+  it('muestra las cuatro listas con sus etiquetas', () => {
     const etiquetas = Array.from(elemento.querySelectorAll('label')).map((l) => l.textContent?.trim());
-    expect(etiquetas).toEqual(['Rubro', 'Sub Rubro', 'Tipo Documento']);
+    expect(etiquetas).toEqual(['Rubro', 'Sub Rubro', 'Tipo Documento', 'Documento']);
+    expect(Array.from(lista('lista-documento').options).map((o) => o.textContent?.trim())).toEqual([
+      'Seleccione el documento',
+      'Original',
+      'Modificación',
+      'Aclaratoria',
+    ]);
   });
 
   it('solo ofrece registros activos', () => {
@@ -69,7 +80,11 @@ describe('SelectorContexto', () => {
     elegir('lista-subrubro', 'SUB-001');
     elegir('lista-tipo', 'TDO-001');
     await estabilizar();
+    expect(TestBed.inject(ContextoService).completo()).toBe(false);
 
+    elegir('lista-documento', 'CDO-002');
+    await estabilizar();
+    expect(TestBed.inject(ContextoService).claseDocumento()?.nombre).toBe('Modificación');
     expect(TestBed.inject(ContextoService).completo()).toBe(true);
   });
 

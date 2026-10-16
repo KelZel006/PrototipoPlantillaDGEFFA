@@ -1,0 +1,20 @@
+[
+  {
+    "id": "CDO-001",
+    "version": 1,
+    "nombre": "Original",
+    "activo": true
+  },
+  {
+    "id": "CDO-002",
+    "version": 1,
+    "nombre": "Modificación",
+    "activo": true
+  },
+  {
+    "id": "CDO-003",
+    "version": 1,
+    "nombre": "Aclaratoria",
+    "activo": true
+  }
+]

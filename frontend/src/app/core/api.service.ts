@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   Campo,
+  ClaseDocumento,
   DetalleBien,
   Interlineado,
   Nuevo,
@@ -38,7 +39,16 @@ export class ApiService {
     return this.http.get<TipoDocumento[]>(`${this.base}/tipos-documento`);
   }
 
-  plantillas(filtro: { rubroId: string; subRubroId: string; tipoDocumentoId: string }): Observable<Plantilla[]> {
+  clasesDocumento(): Observable<ClaseDocumento[]> {
+    return this.http.get<ClaseDocumento[]>(`${this.base}/clases-documento`);
+  }
+
+  plantillas(filtro: {
+    rubroId: string;
+    subRubroId: string;
+    tipoDocumentoId: string;
+    claseDocumentoId: string;
+  }): Observable<Plantilla[]> {
     return this.http.get<Plantilla[]>(`${this.base}/plantillas`, { params: filtro });
   }
 

@@ -50,10 +50,20 @@ public sealed class ValidadorTipoDocumento(IRepositorio<Plantilla> plantillas) :
     }
 }
 
+public sealed class ValidadorClaseDocumento(IRepositorio<Plantilla> plantillas) : ValidadorEntidad<ClaseDocumento>
+{
+    public override async Task ValidarEliminacionAsync(ClaseDocumento clase, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        if ((await plantillas.ListarAsync(ct)).Any(p => p.ClaseDocumentoId == clase.Id))
+            resultado.Agregar("id", "No se puede eliminar el documento porque lo usan plantillas.");
+    }
+}
+
 public sealed class ValidadorPlantilla(
     IRepositorio<Rubro> rubros,
     IRepositorio<SubRubro> subRubros,
     IRepositorio<TipoDocumento> tiposDocumento,
+    IRepositorio<ClaseDocumento> clasesDocumento,
     IRepositorio<Plantilla> plantillas,
     IRepositorio<Parrafo> parrafos,
     IRepositorio<ArchivoRecurso> archivos) : ValidadorEntidad<Plantilla>
@@ -79,13 +89,17 @@ public sealed class ValidadorPlantilla(
         if (await tiposDocumento.ObtenerAsync(plantilla.TipoDocumentoId, ct) is null)
             resultado.Agregar("tipoDocumentoId", $"El tipo de documento '{plantilla.TipoDocumentoId}' no existe.");
 
+        if (await clasesDocumento.ObtenerAsync(plantilla.ClaseDocumentoId, ct) is null)
+            resultado.Agregar("claseDocumentoId", $"El documento '{plantilla.ClaseDocumentoId}' no existe.");
+
         var repetida = (await plantillas.ListarAsync(ct)).Any(p =>
             p.Id != plantilla.Id &&
             p.RubroId == plantilla.RubroId &&
             p.SubRubroId == plantilla.SubRubroId &&
-            p.TipoDocumentoId == plantilla.TipoDocumentoId);
+            p.TipoDocumentoId == plantilla.TipoDocumentoId &&
+            p.ClaseDocumentoId == plantilla.ClaseDocumentoId);
         if (repetida)
-            resultado.Agregar("tipoDocumentoId", "Ya existe una plantilla para esta combinación de Rubro, Sub Rubro y Tipo Documento.");
+            resultado.Agregar("claseDocumentoId", "Ya existe una plantilla para esta combinación de Rubro, Sub Rubro, Tipo Documento y Documento.");
     }
 
     public override async Task ValidarEliminacionAsync(Plantilla plantilla, ResultadoValidacion resultado, CancellationToken ct)

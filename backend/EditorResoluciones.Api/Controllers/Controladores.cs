@@ -17,10 +17,14 @@ public sealed class SubRubrosController(ServicioEntidades<SubRubro> servicio) : 
         PorParametro(registros, consulta, "rubroId", (s, v) => s.RubroId == v);
 }
 
+/// <summary>Lista "Documento": Original, Modificación o Aclaratoria.</summary>
+[Route("api/clases-documento")]
+public sealed class ClasesDocumentoController(ServicioEntidades<ClaseDocumento> servicio) : ControladorCrud<ClaseDocumento>(servicio);
+
 [Route("api/tipos-documento")]
 public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> servicio) : ControladorCrud<TipoDocumento>(servicio);
 
-/// <summary>Filtros: <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=</c>.</summary>
+/// <summary>Filtros: <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=&amp;claseDocumentoId=</c>.</summary>
 [Route("api/plantillas")]
 public sealed class PlantillasController(
     ServicioEntidades<Plantilla> servicio,
@@ -71,7 +75,8 @@ public sealed class PlantillasController(
     {
         registros = PorParametro(registros, consulta, "rubroId", (p, v) => p.RubroId == v);
         registros = PorParametro(registros, consulta, "subRubroId", (p, v) => p.SubRubroId == v);
-        return PorParametro(registros, consulta, "tipoDocumentoId", (p, v) => p.TipoDocumentoId == v);
+        registros = PorParametro(registros, consulta, "tipoDocumentoId", (p, v) => p.TipoDocumentoId == v);
+        return PorParametro(registros, consulta, "claseDocumentoId", (p, v) => p.ClaseDocumentoId == v);
     }
 }
 

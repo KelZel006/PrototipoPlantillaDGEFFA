@@ -28,6 +28,24 @@ public class DatosSemillaPruebas
     }
 
     [Fact]
+    public async Task Los_datos_iniciales_tienen_los_catalogos_reales()
+    {
+        using var datos = new DirectorioTemporal();
+        var almacen = Almacen(datos);
+        var rubros = await almacen.LeerAsync<Rubro>("rubros");
+        var subRubros = await almacen.LeerAsync<SubRubro>("subRubros");
+        var tipos = await almacen.LeerAsync<TipoDocumento>("tiposDocumento");
+        var clases = await almacen.LeerAsync<ClaseDocumento>("clasesDocumento");
+
+        Assert.Equal(23, rubros.Count);
+        Assert.Equal(167, subRubros.Count);
+        Assert.Contains(rubros, r => r.Id == "1000" && r.Nombre == "POR MANDATO CONSTITUCIONAL");
+        Assert.All(subRubros, s => Assert.Contains(rubros, r => r.Id == s.RubroId));
+        Assert.Equal(["Constancia de Registro", "Dictamen", "Resolución", "Certificación"], tipos.Select(t => t.Nombre));
+        Assert.Equal(["Original", "Modificación", "Aclaratoria"], clases.Select(c => c.Nombre));
+    }
+
+    [Fact]
     public async Task Hay_solicitudes_con_cero_uno_y_varios_bienes()
     {
         using var datos = new DirectorioTemporal();
@@ -79,6 +97,7 @@ public class DatosSemillaPruebas
         await ValidarColeccion<Rubro>(alcance.ServiceProvider);
         await ValidarColeccion<SubRubro>(alcance.ServiceProvider);
         await ValidarColeccion<TipoDocumento>(alcance.ServiceProvider);
+        await ValidarColeccion<ClaseDocumento>(alcance.ServiceProvider);
         await ValidarColeccion<Plantilla>(alcance.ServiceProvider);
         await ValidarColeccion<Campo>(alcance.ServiceProvider);
         await ValidarColeccion<Parrafo>(alcance.ServiceProvider);

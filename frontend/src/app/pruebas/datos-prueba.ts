@@ -56,6 +56,7 @@ export const PLANTILLA: Plantilla = {
   rubroId: 'RUB-001',
   subRubroId: 'SUB-001',
   tipoDocumentoId: 'TDO-001',
+  claseDocumentoId: 'CDO-001',
   estado: 'Borrador',
   fechaModificacion: '2026-10-14T00:00:00+00:00',
 };

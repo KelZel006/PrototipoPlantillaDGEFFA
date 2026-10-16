@@ -38,6 +38,7 @@ public sealed class ApiPruebas : IDisposable
         RubroId = rubroId,
         SubRubroId = subRubroId,
         TipoDocumentoId = "TDO-003",
+        ClaseDocumentoId = "CDO-001",
     };
 
     [Fact]
@@ -84,12 +85,34 @@ public sealed class ApiPruebas : IDisposable
     public async Task Rechaza_plantilla_repetida_para_la_misma_combinacion()
     {
         var repetida = NuevaPlantilla("SUB-001");
-        repetida.TipoDocumentoId = "TDO-001"; // Ya existe PLA-001 para RUB-001 / SUB-001 / TDO-001.
+        repetida.TipoDocumentoId = "TDO-001"; // Ya existe PLA-001 para RUB-001 / SUB-001 / TDO-001 / Original.
 
         var respuesta = await _cliente.PostAsJsonAsync("/api/plantillas", repetida, Json);
 
         Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
-        Assert.Contains("tipoDocumentoId", await respuesta.Content.ReadAsStringAsync());
+        Assert.Contains("Ya existe una plantilla para esta combinación", await respuesta.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task La_lista_Documento_forma_parte_de_la_combinacion_de_la_plantilla()
+    {
+        var clases = await Leer<List<ClaseDocumento>>("/api/clases-documento");
+        Assert.Equal(["Original", "Modificación", "Aclaratoria"], clases.Select(c => c.Nombre));
+
+        // PLA-001 es RUB-001 / SUB-001 / TDO-001 / Original: la misma combinación como Modificación sí se permite.
+        var modificacion = NuevaPlantilla("SUB-001");
+        modificacion.TipoDocumentoId = "TDO-001";
+        modificacion.ClaseDocumentoId = "CDO-002";
+        Assert.Equal(HttpStatusCode.Created, (await _cliente.PostAsJsonAsync("/api/plantillas", modificacion, Json)).StatusCode);
+
+        var filtradas = await Leer<List<Plantilla>>("/api/plantillas?rubroId=RUB-001&subRubroId=SUB-001&tipoDocumentoId=TDO-001&claseDocumentoId=CDO-002");
+        Assert.Equal("CDO-002", Assert.Single(filtradas).ClaseDocumentoId);
+
+        var sinClase = NuevaPlantilla();
+        sinClase.ClaseDocumentoId = "CDO-NOEXISTE";
+        var respuesta = await _cliente.PostAsJsonAsync("/api/plantillas", sinClase, Json);
+        Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
+        Assert.Contains("claseDocumentoId", await respuesta.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -221,7 +244,7 @@ public sealed class ApiPruebas : IDisposable
         using var salud = JsonDocument.Parse(await _cliente.GetStringAsync("/api/salud"));
 
         Assert.Equal("correcto", salud.RootElement.GetProperty("estado").GetString());
-        Assert.Equal(10, salud.RootElement.GetProperty("colecciones").GetArrayLength());
+        Assert.Equal(11, salud.RootElement.GetProperty("colecciones").GetArrayLength());
     }
 
     [Theory]

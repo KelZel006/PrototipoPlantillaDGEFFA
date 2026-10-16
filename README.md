@@ -6,7 +6,7 @@ condiciones de visualización y tablas configurables.
 > **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
 > de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
 
-**Estado actual: Fase 3e (cinco secciones: Cabecera, Considerando numerado, Por Tanto, Resuelve con PRIMERO, SEGUNDO… y Firmas).** Detalle en
+**Estado actual: Fase 3g (cuatro listas: Rubro, Sub Rubro, Tipo Documento y Documento; cinco secciones: Cabecera, Considerando numerado, Por Tanto, Resuelve con PRIMERO, SEGUNDO… y Firmas).** Detalle en
 [docs/FASE3C.md](docs/FASE3C.md), [docs/FASE3B.md](docs/FASE3B.md),
 [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
@@ -102,6 +102,7 @@ Todas las colecciones de la tabla ofrecen `GET` (listar), `GET /{id}`, `POST`, `
 | `/api/rubros` | — |
 | `/api/subrubros` | `rubroId` |
 | `/api/tipos-documento` | — |
+| `/api/clases-documento` | — |
 | `/api/plantillas` | `rubroId`, `subRubroId`, `tipoDocumentoId` |
 | `/api/parrafos` | `plantillaId`, `seccion` (ordenados por sección y orden) |
 | `/api/campos` | — |
@@ -155,4 +156,4 @@ Respuestas de error (ProblemDetails, en español):
   campos, negrita, cursiva, subrayado y enlaces http/https/mailto. Calcula por su cuenta los campos usados.
 - **Condiciones.** Cada operador debe corresponder al tipo de dato del campo, y el valor debe tener el formato del
   tipo (números con punto, fechas AAAA-MM-DD).
-- **Contexto.** Rubro + Sub Rubro + Tipo Documento identifican una única plantilla.
+- **Contexto.** Rubro + Sub Rubro + Tipo Documento + Documento identifican una única plantilla.

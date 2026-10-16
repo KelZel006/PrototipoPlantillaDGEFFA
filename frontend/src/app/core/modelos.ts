@@ -24,6 +24,12 @@ export interface TipoDocumento extends Entidad {
   activo: boolean;
 }
 
+/** Lista "Documento": Original, Modificación o Aclaratoria. */
+export interface ClaseDocumento extends Entidad {
+  nombre: string;
+  activo: boolean;
+}
+
 export type EstadoPlantilla = 'Borrador' | 'Publicada';
 
 export type AlineacionLogo = 'Izquierda' | 'Centro' | 'Derecha';
@@ -33,6 +39,7 @@ export interface Plantilla extends Entidad {
   rubroId: string;
   subRubroId: string;
   tipoDocumentoId: string;
+  claseDocumentoId: string;
   estado: EstadoPlantilla;
   descripcion?: string;
   /** Logo del encabezado del documento; null si no tiene. */

@@ -17,7 +17,7 @@ public enum EstadoPlantilla
 }
 
 /// <summary>
-/// Configuración de una resolución para una combinación de Rubro, Sub Rubro y Tipo Documento.
+/// Configuración de un documento para una combinación de Rubro, Sub Rubro, Tipo Documento y Documento.
 /// Sus párrafos se guardan aparte, en la colección de párrafos.
 /// </summary>
 public class Plantilla : IEntidad, IConMarcaTiempo
@@ -36,6 +36,10 @@ public class Plantilla : IEntidad, IConMarcaTiempo
 
     [Required(ErrorMessage = "El tipo de documento es obligatorio.")]
     public string TipoDocumentoId { get; set; } = "";
+
+    /// <summary>Lista "Documento": Original, Modificación o Aclaratoria.</summary>
+    [Required(ErrorMessage = "El documento (Original, Modificación o Aclaratoria) es obligatorio.")]
+    public string ClaseDocumentoId { get; set; } = "";
 
     public EstadoPlantilla Estado { get; set; } = EstadoPlantilla.Borrador;
 

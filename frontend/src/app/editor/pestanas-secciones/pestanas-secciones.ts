@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { ContextoService } from '../../core/contexto.service';
 import { numerarConsiderando, numerarResuelve } from '../../core/numeracion';
 import { Plantilla, Seccion } from '../../core/modelos';
@@ -73,7 +73,17 @@ export class PestanasSecciones {
     Firmas: 'Firmas',
   };
 
-  protected readonly activa = signal<Seccion>('Considerando');
+  /** Siempre se empieza por la primera pestaña, Cabecera. */
+  protected readonly activa = signal<Seccion>('Cabecera');
+  private readonly idPlantilla = computed(() => this.plantilla().id);
+
+  constructor() {
+    // Al cambiar de plantilla se vuelve a la primera pestaña.
+    effect(() => {
+      this.idPlantilla();
+      untracked(() => this.activa.set('Cabecera'));
+    });
+  }
 
   protected seleccionar(pestana: Pestana): void {
     if (pestana.disponible) {

@@ -23,15 +23,26 @@ describe('ApiService', () => {
   });
 
   it('busca la plantilla por la combinación de las tres listas', () => {
-    api.plantillas({ rubroId: 'RUB-001', subRubroId: 'SUB-001', tipoDocumentoId: 'TDO-001' }).subscribe();
+    api
+      .plantillas({ rubroId: 'RUB-001', subRubroId: 'SUB-001', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002' })
+      .subscribe();
     const peticion = http.expectOne((r) => r.url === '/api/plantillas');
-    expect(peticion.request.params.toString()).toBe('rubroId=RUB-001&subRubroId=SUB-001&tipoDocumentoId=TDO-001');
+    expect(peticion.request.params.toString()).toBe(
+      'rubroId=RUB-001&subRubroId=SUB-001&tipoDocumentoId=TDO-001&claseDocumentoId=CDO-002',
+    );
     peticion.flush([]);
   });
 
   it('crea plantillas con POST a la API (nunca escribe archivos)', () => {
     api
-      .crearPlantilla({ nombre: 'N', rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'T', estado: 'Borrador' })
+      .crearPlantilla({
+        nombre: 'N',
+        rubroId: 'R',
+        subRubroId: 'S',
+        tipoDocumentoId: 'T',
+        claseDocumentoId: 'C',
+        estado: 'Borrador',
+      })
       .subscribe();
     const peticion = http.expectOne('/api/plantillas');
     expect(peticion.request.method).toBe('POST');
