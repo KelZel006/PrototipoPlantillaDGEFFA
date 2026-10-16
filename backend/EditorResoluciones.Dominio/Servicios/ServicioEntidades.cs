@@ -16,6 +16,8 @@ public partial class ServicioEntidades<T>(
     IRepositorio<T> repositorio,
     IEnumerable<IValidadorEntidad<T>> validadores,
     IEnumerable<INormalizadorEntidad<T>> normalizadores,
+    IEnumerable<IReglaModificacion<T>> reglasModificacion,
+    IEnumerable<IObservadorEntidad<T>> observadores,
     IServicioHistorial historial,
     TimeProvider reloj) where T : class, IEntidad
 {
@@ -41,6 +43,7 @@ public partial class ServicioEntidades<T>(
         MarcarTiempo(entidad);
         var creada = await repositorio.CrearAsync(entidad, ct);
         await historial.RegistrarAsync(Coleccion, creada.Id, AccionHistorial.Creacion, creada.Version, null, creada, ct);
+        await NotificarAsync(null, creada, ct);
         return creada;
     }
 
@@ -59,6 +62,7 @@ public partial class ServicioEntidades<T>(
         MarcarTiempo(entidad);
         var actualizada = await repositorio.ActualizarAsync(entidad, ct);
         await historial.RegistrarAsync(Coleccion, id, AccionHistorial.Actualizacion, actualizada.Version, anterior, actualizada, ct);
+        await NotificarAsync(anterior, actualizada, ct);
         return actualizada;
     }
 
@@ -69,12 +73,21 @@ public partial class ServicioEntidades<T>(
             throw new ConflictoException(MensajeVersion(actual.Version, version.Value));
 
         var resultado = new ResultadoValidacion();
+        foreach (var regla in reglasModificacion)
+            await regla.ValidarModificacionAsync(actual, resultado, ct);
         foreach (var validador in validadores)
             await validador.ValidarEliminacionAsync(actual, resultado, ct);
         resultado.LanzarSiHayErrores();
 
         await repositorio.EliminarAsync(id, version, ct);
         await historial.RegistrarAsync(Coleccion, id, AccionHistorial.Eliminacion, actual.Version, actual, null, ct);
+        await NotificarAsync(actual, null, ct);
+    }
+
+    private async Task NotificarAsync(T? anterior, T? actual, CancellationToken ct)
+    {
+        foreach (var observador in observadores)
+            await observador.DespuesDeGuardarAsync(anterior, actual, ct);
     }
 
     public static string MensajeVersion(int guardada, int recibida) =>
@@ -88,6 +101,11 @@ public partial class ServicioEntidades<T>(
 
     private async Task ValidarGuardadoAsync(T entidad, ResultadoValidacion resultado, CancellationToken ct)
     {
+        foreach (var regla in reglasModificacion)
+            await regla.ValidarModificacionAsync(entidad, resultado, ct);
+        if (!resultado.EsValido)
+            return;
+
         var errores = new List<ValidationResult>();
         Validator.TryValidateObject(entidad, new ValidationContext(entidad), errores, validateAllProperties: true);
         foreach (var error in errores)

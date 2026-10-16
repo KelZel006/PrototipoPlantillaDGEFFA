@@ -354,3 +354,26 @@ en escalera y no justificado.
   - Extensión nueva: `@tiptap/extension-text-style` 3.31.4 (MIT).
 - **Captura:** [diseno/fase3h-tamano-texto.png](diseno/fase3h-tamano-texto.png).
 - **Pruebas:** 137 del backend y 90 del frontend, todas correctas.
+
+## La Certificación se copia de la Resolución (16/10/2026)
+
+Pedido del usuario: cada vez que se guarda o actualiza la Resolución, la misma información debe quedar en la
+Certificación.
+
+- **Regla en el catálogo.** Los tipos de documento tienen `copiaDeTipoDocumentoId`. La Certificación (TDO-004) es
+  copia de la Resolución (TDO-001). La copia se hace entre plantillas con el mismo Rubro, Sub Rubro y Documento.
+- **Cuándo se copia** (`Dominio/Servicios/SincronizadorCopias.cs`): después de cada cambio guardado en la Resolución,
+  es decir, al crear, actualizar, eliminar, duplicar o reordenar un párrafo, y al cambiar el diseño (logo, pie de
+  página o espacio entre firmas).
+  - Si la Certificación no existe, se crea: «Certificación (Documento) – Sub Rubro».
+  - Sus párrafos quedan iguales a los de la Resolución: contenido con su formato, sección, orden, activo y condición.
+    Cada copia guarda su párrafo de origen (`origenParrafoId`). Lo que ya no está en la Resolución se elimina.
+  - Solo se reescribe lo que cambió, y todo queda en el historial.
+  - Una Resolución que todavía no se ha guardado desde este cambio tendrá su Certificación al primer guardado.
+- **La Certificación no se edita directamente** (`ReglaCopiasNoEditables`). El servidor rechaza crear, modificar,
+  eliminar, duplicar o reordenar sus párrafos y cambiar su diseño. En la pantalla, al elegir Certificación, se ocultan
+  las pestañas y el diseño, y aparece un aviso con el botón «Ir a la Resolución». Se puede generar su PDF, con el
+  texto corrido.
+- **Datos.** PLA-004 quedó enlazada con PLA-001.
+- **Captura:** [diseno/fase3i-certificacion-copia.png](diseno/fase3i-certificacion-copia.png).
+- **Pruebas:** 142 del backend y 91 del frontend, todas correctas.

@@ -23,6 +23,8 @@ export interface TipoDocumento extends Entidad {
   nombre: string;
   /** El documento se genera con el texto corrido (por ejemplo, la Certificación). */
   textoCorrido?: boolean;
+  /** Si se indica, las plantillas de este tipo se copian solas de las de ese tipo (la Certificación, de la Resolución). */
+  copiaDeTipoDocumentoId?: string | null;
   activo: boolean;
 }
 

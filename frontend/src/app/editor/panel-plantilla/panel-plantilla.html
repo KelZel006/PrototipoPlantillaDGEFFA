@@ -68,6 +68,17 @@
       }
     </div>
 
-    <app-diseno-documento [plantilla]="p" />
+    @if (contexto.esCopia()) {
+      <div class="aviso aviso-copia" role="status">
+        <span>
+          Esta {{ contexto.tipoDocumento()?.nombre }} se copia automáticamente de la Resolución con el mismo Rubro, Sub Rubro y
+          Documento: cada vez que se guarda la Resolución, aquí queda la misma información (párrafos, logo, pie de página y
+          espacio entre firmas). Para cambiar el texto, edite la Resolución.
+        </span>
+        <button type="button" class="boton boton-secundario boton-compacto" (click)="irAOrigen()">Ir a la Resolución</button>
+      </div>
+    } @else {
+      <app-diseno-documento [plantilla]="p" />
+    }
   }
 </section>

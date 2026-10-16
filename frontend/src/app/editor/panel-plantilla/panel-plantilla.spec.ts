@@ -98,6 +98,50 @@ describe('PanelPlantilla', () => {
     await estabilizar();
 
     expect(elemento.querySelector('.nota-corrido')?.textContent).toContain('Certificación: el texto se genera corrido');
+    // Sin copiaDeTipoDocumentoId se edita normalmente.
+    expect(elemento.querySelector('.aviso-copia')).toBeNull();
+    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
+  });
+
+  it('la Certificación copiada de la Resolución no se edita y lleva a la Resolución', async () => {
+    seleccionarCombinacion();
+    const contexto = TestBed.inject(ContextoService);
+    contexto.seleccionarTipoDocumento({
+      id: 'TDO-004',
+      version: 1,
+      nombre: 'Certificación',
+      textoCorrido: true,
+      copiaDeTipoDocumentoId: 'TDO-001',
+      activo: true,
+    });
+    fixture.detectChanges();
+    await estabilizar();
+    http.expectOne((r) => r.url === '/api/plantillas').flush([{ ...plantilla, tipoDocumentoId: 'TDO-004' }]);
+    await estabilizar();
+    http.expectOne('/api/solicitudes').flush([]);
+    http.expectOne('/api/detalles-bienes').flush([]);
+    await estabilizar();
+
+    expect(contexto.esCopia()).toBe(true);
+    const aviso = elemento.querySelector('.aviso-copia');
+    expect(aviso?.textContent).toContain('se copia automáticamente de la Resolución');
+    expect(elemento.querySelector('app-diseno-documento')).toBeNull();
+
+    aviso!.querySelector('button')!.click();
+    http.expectOne('/api/tipos-documento').flush([
+      { id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true },
+      { id: 'TDO-004', version: 1, nombre: 'Certificación', copiaDeTipoDocumentoId: 'TDO-001', activo: true },
+    ]);
+    expect(contexto.tipoDocumento()?.nombre).toBe('Resolución');
+    expect(contexto.esCopia()).toBe(false);
+    await estabilizar();
+    http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
+    await estabilizar();
+    http.expectOne('/api/solicitudes').flush([]);
+    http.expectOne('/api/detalles-bienes').flush([]);
+    await estabilizar();
+    expect(elemento.querySelector('.aviso-copia')).toBeNull();
+    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
   });
 
   describe('generar PDF', () => {

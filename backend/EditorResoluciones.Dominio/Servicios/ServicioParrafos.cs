@@ -13,6 +13,9 @@ public sealed record SolicitudReorden(string PlantillaId, Seccion Seccion, List<
 /// <summary>Operaciones sobre varios párrafos a la vez. Cada una se guarda de forma atómica.</summary>
 public sealed class ServicioParrafos(
     IRepositorio<Parrafo> repositorio,
+    IRepositorio<Plantilla> plantillas,
+    IRepositorio<TipoDocumento> tipos,
+    SincronizadorCopias copias,
     IServicioHistorial historial,
     TimeProvider reloj)
 {
@@ -22,6 +25,7 @@ public sealed class ServicioParrafos(
     /// </summary>
     public async Task<IReadOnlyList<Parrafo>> ReordenarAsync(SolicitudReorden solicitud, CancellationToken ct = default)
     {
+        await RechazarCopiaAsync(solicitud.PlantillaId, ct);
         var actuales = await DeSeccionAsync(solicitud.PlantillaId, solicitud.Seccion, ct);
         var idsEnviados = solicitud.Elementos.Select(e => e.Id).ToList();
         if (idsEnviados.Distinct().Count() != idsEnviados.Count ||
@@ -52,6 +56,7 @@ public sealed class ServicioParrafos(
             await repositorio.AplicarLoteAsync([], cambios.Select(c => c.Nuevo).ToList(), ct);
             await historial.RegistrarAsync(
                 cambios.Select(c => Actualizacion(c.Anterior, c.Nuevo)).ToList(), ct);
+            await copias.SincronizarAsync(solicitud.PlantillaId, ct);
         }
 
         return await DeSeccionAsync(solicitud.PlantillaId, solicitud.Seccion, ct);
@@ -64,6 +69,7 @@ public sealed class ServicioParrafos(
     public async Task<Parrafo> DuplicarAsync(string id, CancellationToken ct = default)
     {
         var original = await repositorio.ObtenerAsync(id, ct) ?? throw new EntidadNoEncontradaException(repositorio.Coleccion, id);
+        await RechazarCopiaAsync(original.PlantillaId, ct);
         var ahora = reloj.GetUtcNow();
 
         var copia = Clonar(original);
@@ -89,8 +95,19 @@ public sealed class ServicioParrafos(
             new CambioHistorial(repositorio.Coleccion, creada.Id, AccionHistorial.Creacion, creada.Version, null, creada),
             .. desplazados.Select(d => Actualizacion(d.Anterior, d.Nuevo)),
         ], ct);
+        await copias.SincronizarAsync(original.PlantillaId, ct);
 
         return creada;
+    }
+
+    /// <summary>Los párrafos de una plantilla copia (Certificación) no se modifican directamente.</summary>
+    private async Task RechazarCopiaAsync(string plantillaId, CancellationToken ct)
+    {
+        if (!await SincronizadorCopias.EsCopiaAsync(plantillaId, plantillas, tipos, ct))
+            return;
+        var resultado = new Validacion.ResultadoValidacion();
+        resultado.Agregar("plantillaId", SincronizadorCopias.MensajeCopia);
+        resultado.LanzarSiHayErrores();
     }
 
     private async Task<List<Parrafo>> DeSeccionAsync(string plantillaId, Seccion seccion, CancellationToken ct) =>

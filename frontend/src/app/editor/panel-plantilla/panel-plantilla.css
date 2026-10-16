@@ -63,6 +63,14 @@
   font-size: var(--texto-pequeno);
 }
 
+.aviso-copia {
+  flex-wrap: wrap;
+  margin-top: var(--espacio-4);
+  border: 1px solid var(--borde);
+  background: var(--primario-suave);
+  color: var(--texto);
+}
+
 .nota-corrido {
   font-weight: 600;
 }

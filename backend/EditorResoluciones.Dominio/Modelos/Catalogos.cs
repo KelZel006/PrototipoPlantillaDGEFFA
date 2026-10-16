@@ -57,5 +57,11 @@ public class TipoDocumento : IEntidad
     /// </summary>
     public bool TextoCorrido { get; set; }
 
+    /// <summary>
+    /// Si se indica, las plantillas de este tipo son copia de las del tipo indicado con el mismo Rubro, Sub Rubro y
+    /// Documento (la Certificación es copia de la Resolución). Se actualizan solas y no se editan directamente.
+    /// </summary>
+    public string? CopiaDeTipoDocumentoId { get; set; }
+
     public bool Activo { get; set; } = true;
 }

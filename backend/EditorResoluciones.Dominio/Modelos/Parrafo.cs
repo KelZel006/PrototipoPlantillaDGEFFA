@@ -51,6 +51,9 @@ public class Parrafo : IEntidad, IConMarcaTiempo
     /// <summary>Campos dinámicos insertados en el contenido. Lo calcula el servidor a partir del contenido.</summary>
     public List<string> CamposUsados { get; set; } = [];
 
+    /// <summary>En una plantilla copia (Certificación), el párrafo de la Resolución del que se copió.</summary>
+    public string? OrigenParrafoId { get; set; }
+
     public DateTimeOffset FechaModificacion { get; set; }
 }
 

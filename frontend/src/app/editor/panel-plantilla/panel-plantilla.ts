@@ -26,6 +26,23 @@ export class PanelPlantilla {
   protected readonly contexto = inject(ContextoService);
   protected readonly actual = inject(PlantillaActualService);
 
+  /** Cambia la lista Tipo Documento al tipo de origen (de la Certificación a la Resolución). */
+  protected irAOrigen(): void {
+    const origen = this.contexto.tipoDocumento()?.copiaDeTipoDocumentoId;
+    if (!origen) {
+      return;
+    }
+    this.api.tiposDocumento().subscribe({
+      next: (tipos) => {
+        const tipo = tipos.find((t) => t.id === origen);
+        if (tipo) {
+          this.contexto.seleccionarTipoDocumento(tipo);
+        }
+      },
+      error: (error: unknown) => this.interaccion.avisar('error', mensajeError(error)),
+    });
+  }
+
   protected readonly creando = signal(false);
   protected readonly errorCreacion = signal<string | null>(null);
   protected readonly error = computed(() => (this.actual.error() ? mensajeError(this.actual.error()) : null));

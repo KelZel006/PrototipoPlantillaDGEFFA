@@ -1831,7 +1831,8 @@
     "camposUsados": [
       "numero_solicitud"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-001"
   },
   {
     "id": "PAR-031",
@@ -1901,7 +1902,8 @@
       "numero_solicitud",
       "beneficiario"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-002"
   },
   {
     "id": "PAR-032",
@@ -1926,7 +1928,8 @@
     "activo": true,
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-003"
   },
   {
     "id": "PAR-033",
@@ -2045,7 +2048,8 @@
       "monto_exoneracion",
       "fecha_resolucion"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-004"
   },
   {
     "id": "PAR-034",
@@ -2104,7 +2108,8 @@
       "municipio",
       "departamento"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-005"
   },
   {
     "id": "PAR-035",
@@ -2129,7 +2134,8 @@
     "activo": false,
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-006"
   },
   {
     "id": "PAR-036",
@@ -2188,7 +2194,8 @@
       "beneficiario",
       "numero_solicitud"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-1E01245CC6"
   },
   {
     "id": "PAR-037",
@@ -2225,7 +2232,8 @@
     "camposUsados": [
       "beneficiario"
     ],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-007"
   },
   {
     "id": "PAR-038",
@@ -2250,7 +2258,8 @@
     "activo": true,
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-008"
   },
   {
     "id": "PAR-039",
@@ -2297,6 +2306,7 @@
     "activo": true,
     "mostrarSoloSiCumple": false,
     "camposUsados": [],
-    "fechaModificacion": "2026-10-15T00:00:00+00:00"
+    "fechaModificacion": "2026-10-15T00:00:00+00:00",
+    "origenParrafoId": "PAR-009"
   }
 ]

@@ -19,6 +19,9 @@ export class ContextoService {
   /** Hay cambios sin guardar en alguna sección: se advierte antes de cambiar de plantilla o generar el PDF. */
   readonly cambiosSinGuardar = computed(() => this.seccionesConCambios().size > 0);
 
+  /** La plantilla elegida es copia de otra (la Certificación se copia de la Resolución) y no se edita aquí. */
+  readonly esCopia = computed(() => !!this.tipoDocumento()?.copiaDeTipoDocumentoId);
+
   marcarCambios(seccion: Seccion, conCambios: boolean): void {
     this.seccionesConCambios.update((actuales) => {
       if (actuales.has(seccion) === conCambios) {

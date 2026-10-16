@@ -115,6 +115,7 @@ public sealed class ValidadorParrafo(
 {
     public override async Task ValidarGuardadoAsync(Parrafo parrafo, ResultadoValidacion resultado, CancellationToken ct)
     {
+
         if (!Enum.IsDefined(parrafo.Seccion))
         {
             resultado.Agregar("seccion", "La sección no es válida.");

@@ -1,3 +1,4 @@
+using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Comun;
 using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Servicios;
@@ -14,12 +15,16 @@ public static class RegistroDominio
         servicios.AddScoped<IServicioHistorial, ServicioHistorial>();
         servicios.AddScoped(typeof(ServicioEntidades<>));
         servicios.AddScoped<ServicioParrafos>();
+        // Copia de la Resolución a la Certificación después de cada guardado.
+        servicios.AddScoped<SincronizadorCopias>();
+        servicios.AddScoped<IObservadorEntidad<Parrafo>>(p => p.GetRequiredService<SincronizadorCopias>());
+        servicios.AddScoped<IObservadorEntidad<Plantilla>>(p => p.GetRequiredService<SincronizadorCopias>());
         servicios.AddScoped<ServicioValoresCampo>();
         servicios.AddScoped<ServicioDocumento>();
         servicios.AddScoped<ServicioLogos>();
 
         // Registra todos los validadores y normalizadores del dominio (ValidadorRubro, NormalizadorParrafo, …).
-        Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>)];
+        Type[] interfaces = [typeof(IValidadorEntidad<>), typeof(INormalizadorEntidad<>), typeof(IReglaModificacion<>)];
         var implementaciones = typeof(ValidadorEntidad<>).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false })
             .SelectMany(t => t.GetInterfaces()

@@ -4,6 +4,7 @@
     "version": 1,
     "nombre": "Constancia de Registro",
     "textoCorrido": false,
+    "copiaDeTipoDocumentoId": null,
     "activo": true
   },
   {
@@ -11,6 +12,7 @@
     "version": 1,
     "nombre": "Dictamen",
     "textoCorrido": false,
+    "copiaDeTipoDocumentoId": null,
     "activo": true
   },
   {
@@ -18,6 +20,7 @@
     "version": 1,
     "nombre": "Resolución",
     "textoCorrido": false,
+    "copiaDeTipoDocumentoId": null,
     "activo": true
   },
   {
@@ -25,6 +28,7 @@
     "version": 1,
     "nombre": "Certificación",
     "textoCorrido": true,
+    "copiaDeTipoDocumentoId": "TDO-001",
     "activo": true
   }
 ]
