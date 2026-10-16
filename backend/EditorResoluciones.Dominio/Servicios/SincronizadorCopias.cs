@@ -115,9 +115,14 @@ public sealed class SincronizadorCopias(
         var crear = new List<Parrafo>();
         var actualizar = new List<(Parrafo Anterior, Parrafo Nuevo)>();
         var conservados = new HashSet<string>(StringComparer.Ordinal);
+        // En el texto, el nombre del tipo de origen se cambia por el de la copia («resolución» → «certificación»).
+        var tipoOrigen = await tipos.ObtenerAsync(origen.TipoDocumentoId, ct);
+        var cambio = tipoOrigen is null ? null : new CambioPalabra(tipoOrigen.Nombre, tipoCopia.Nombre);
         foreach (var parrafo in deOrigen)
         {
             var nuevo = Clonar(parrafo);
+            if (cambio is not null)
+                nuevo.Contenido = cambio.Aplicar(nuevo.Contenido);
             nuevo.PlantillaId = copia.Id;
             nuevo.OrigenParrafoId = parrafo.Id;
             nuevo.FechaModificacion = ahora;

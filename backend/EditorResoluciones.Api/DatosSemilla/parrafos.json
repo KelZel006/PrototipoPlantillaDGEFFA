@@ -1797,7 +1797,7 @@
           "content": [
             {
               "type": "text",
-              "text": "RESOLUCIÓN DE PRUEBA No. ",
+              "text": "CERTIFICACIÓN DE PRUEBA No. ",
               "marks": [
                 {
                   "type": "bold"
@@ -1848,7 +1848,7 @@
           "content": [
             {
               "type": "text",
-              "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+              "text": "Que mediante certificación se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
             },
             {
               "type": "campo",
@@ -2211,7 +2211,7 @@
           "content": [
             {
               "type": "text",
-              "text": "Notificar la presente resolución a "
+              "text": "Notificar la presente certificación a "
             },
             {
               "type": "campo",

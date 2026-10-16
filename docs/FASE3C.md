@@ -377,3 +377,27 @@ Certificación.
 - **Datos.** PLA-004 quedó enlazada con PLA-001.
 - **Captura:** [diseno/fase3i-certificacion-copia.png](diseno/fase3i-certificacion-copia.png).
 - **Pruebas:** 142 del backend y 91 del frontend, todas correctas.
+
+## «Resolución» → «Certificación» en la copia y logos compartidos (16/10/2026)
+
+Pedido del usuario: al guardar, cambiar automáticamente la palabra resolución por certificación, con tilde, en
+mayúsculas y en minúsculas.
+
+- **Cambio de palabra** (`Dominio/Servicios/CambioPalabra.cs`). Al copiar cada párrafo a la Certificación, en el
+  texto se cambia el nombre del tipo de origen por el de la copia. Las palabras salen de los nombres del catálogo.
+
+  | En la Resolución | En la Certificación |
+  |---|---|
+  | RESOLUCIÓN / RESOLUCION | CERTIFICACIÓN |
+  | Resolución / Resolucion | Certificación |
+  | resolución / resolucion | certificación |
+  | resoluciones / RESOLUCIONES | certificaciones / CERTIFICACIONES |
+
+  Solo cambia palabras completas («resolutivo» o «irresolución» no se tocan) y no toca los campos dinámicos. La
+  Resolución conserva su texto.
+- **Logos compartidos (corrección).** La Resolución y su Certificación usan el mismo archivo de logo. Ahora el
+  servidor no borra un archivo de logo que otra plantilla todavía use. Si una carga de logo se rechaza, el archivo
+  nuevo se descarta.
+  - Antes de esta corrección se había perdido el logo de PLA-001 en los datos en uso (se compartía con PLA-004 y se
+    borró al reemplazar el de PLA-004). Se reparó asignándole el logo vigente de la Certificación.
+- **Pruebas:** 155 del backend y 91 del frontend, todas correctas.

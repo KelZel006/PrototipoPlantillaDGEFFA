@@ -57,7 +57,17 @@ public sealed class ServicioLogos(
 
         var anterior = plantilla.LogoId;
         plantilla.LogoId = recurso.Id;
-        var actualizada = await plantillas.ActualizarAsync(plantilla.Id, plantilla, ct);
+        Plantilla actualizada;
+        try
+        {
+            actualizada = await plantillas.ActualizarAsync(plantilla.Id, plantilla, ct);
+        }
+        catch
+        {
+            // Si la plantilla no acepta el cambio (por ejemplo, una Certificación copiada), el archivo nuevo sobra.
+            await EliminarArchivoAsync(recurso.Id, ct);
+            throw;
+        }
 
         if (!string.IsNullOrEmpty(anterior))
             await EliminarArchivoAsync(anterior, ct);
@@ -92,8 +102,14 @@ public sealed class ServicioLogos(
         _ => null,
     };
 
+    /// <summary>
+    /// Borra el archivo del logo, salvo que otra plantilla todavía lo use (la Certificación comparte el logo de su
+    /// Resolución).
+    /// </summary>
     private async Task EliminarArchivoAsync(string archivoId, CancellationToken ct)
     {
+        if ((await plantillas.ListarAsync(ct)).Any(p => p.LogoId == archivoId))
+            return;
         if (await archivos.ObtenerAsync(archivoId, ct) is not null)
             await archivos.EliminarAsync(archivoId, null, ct);
         await almacen.EliminarAsync(archivoId, ct);
