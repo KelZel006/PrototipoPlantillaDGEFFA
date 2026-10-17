@@ -1,29 +1,30 @@
 <header class="barra-superior">
-  <div class="marca">
+  <a class="marca" routerLink="/consolidados">
     <span class="logotipo" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4" /></svg>
     </span>
     <div>
       <h1>Editor de Resoluciones</h1>
-      <p>Configuración de plantillas</p>
+      <p>Documentos consolidados de plantillas</p>
     </div>
+  </a>
+  <div class="sesion">
+    <label class="usuario">
+      <span>Usuario de prueba</span>
+      <select class="control control-compacto" (change)="usuario.seleccionar($any($event.target).value)">
+        @for (u of usuario.usuarios(); track u.id) {
+          <option [value]="u.id" [selected]="u.id === usuario.id()">{{ u.nombreCompleto }} · {{ nombresRoles(u.roles) }}</option>
+        } @empty {
+          <option [value]="usuario.id()" selected>{{ usuario.id() }}</option>
+        }
+      </select>
+    </label>
+    <span class="insignia insignia-prueba">Prototipo · datos de prueba</span>
   </div>
-  <span class="insignia insignia-prueba">Prototipo · datos de prueba</span>
 </header>
 
 <main class="contenedor">
-  <app-selector-contexto />
-  <app-panel-plantilla />
-  @if (plantillaActual.plantilla(); as plantilla) {
-    <!-- El editor (TipTap, tablas y arrastre) se descarga aparte, solo cuando hay una plantilla. -->
-    @defer {
-      <app-pestanas-secciones [plantilla]="plantilla" />
-    } @loading (minimum 200ms) {
-      <p class="texto-secundario" aria-live="polite">Cargando el editor…</p>
-    } @error {
-      <div class="aviso aviso-error" role="alert">No se pudo cargar el editor. Recargue la página.</div>
-    }
-  }
+  <router-outlet />
   <details class="diagnostico">
     <summary>Estado de los datos de prueba</summary>
     <app-estado-datos />

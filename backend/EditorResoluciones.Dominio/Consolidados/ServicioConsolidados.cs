@@ -18,10 +18,20 @@ public sealed record ResumenConsolidado(
     IReadOnlyList<string> TiposDocumento,
     int TotalPlantillas);
 
-/// <summary>Consolidado con sus propuestas, presentaciones, devoluciones y bitácora.</summary>
+/// <summary>
+/// Fila de «Tipos de documento incluidos»: cada tipo documental una sola vez, aunque tenga varias plantillas o ajustes.
+/// </summary>
+public sealed record ResumenTipo(string TipoDocumentoId, string TipoDocumento, string Operacion, int Plantillas, int Ajustes);
+
+/// <summary>
+/// Consolidado con sus propuestas, presentaciones, devoluciones y bitácora. <c>Ajustes</c> tiene los ajustes de cada
+/// propuesta no retirada, por identificador de propuesta (D8).
+/// </summary>
 public sealed record DetalleConsolidado(
     DocumentoConsolidado Consolidado,
+    IReadOnlyList<ResumenTipo> TiposIncluidos,
     IReadOnlyList<Propuesta> Propuestas,
+    IReadOnlyDictionary<string, IReadOnlyList<Ajuste>> Ajustes,
     IReadOnlyList<Presentacion> Presentaciones,
     IReadOnlyList<Devolucion> Devoluciones,
     IReadOnlyList<Movimiento> Movimientos);
@@ -35,6 +45,7 @@ public sealed class ServicioConsolidados(
     IRepositorio<Devolucion> devoluciones,
     IRepositorio<Movimiento> movimientos,
     IRepositorio<TipoDocumento> tipos,
+    IRepositorio<VersionPlantilla> versiones,
     ServicioAutorizacion autorizacion,
     ZonaHorariaInstitucional zona,
     TimeProvider reloj)
@@ -112,9 +123,32 @@ public sealed class ServicioConsolidados(
         if (consolidado is null || !PuedeVer(usuario, consolidado))
             throw new EntidadNoEncontradaException(consolidados.Coleccion, id);
 
+        var deConsolidado = (await propuestas.ListarAsync(ct)).Where(p => p.ConsolidadoId == id).OrderBy(p => p.FechaCreacion).ToList();
+        var porVersion = (await versiones.ListarAsync(ct)).ToDictionary(v => v.Id, StringComparer.Ordinal);
+        var activas = deConsolidado.Where(p => !p.Retirada).ToList();
+        var ajustes = activas.ToDictionary(
+            p => p.Id,
+            p => ComparadorContenido.Ajustes(
+                p.VersionOrigenId is { } origen && porVersion.TryGetValue(origen, out var v) ? v.Contenido : new ContenidoPlantilla(),
+                p.ContenidoPropuesto),
+            StringComparer.Ordinal);
+        var nombresTipo = (await tipos.ListarAsync(ct)).ToDictionary(t => t.Id, t => t.Nombre, StringComparer.Ordinal);
+        var resumen = activas
+            .GroupBy(p => p.TipoDocumentoId, StringComparer.Ordinal)
+            .Select(g =>
+            {
+                var operaciones = g.Select(p => p.Operacion).Distinct().Order().ToList();
+                var operacion = operaciones.Count == 2 ? "Crear y Modificar" : operaciones[0] == OperacionPropuesta.Crear ? "Crear" : "Modificar";
+                return new ResumenTipo(g.Key, nombresTipo.GetValueOrDefault(g.Key, g.Key), operacion, g.Count(), g.Sum(p => ajustes[p.Id].Count));
+            })
+            .OrderBy(r => r.TipoDocumento, StringComparer.CurrentCulture)
+            .ToList();
+
         return new DetalleConsolidado(
             consolidado,
-            (await propuestas.ListarAsync(ct)).Where(p => p.ConsolidadoId == id).OrderBy(p => p.FechaCreacion).ToList(),
+            resumen,
+            deConsolidado,
+            ajustes,
             (await presentaciones.ListarAsync(ct)).Where(p => p.ConsolidadoId == id).OrderBy(p => p.Numero).ToList(),
             (await devoluciones.ListarAsync(ct)).Where(d => d.ConsolidadoId == id).OrderBy(d => d.Fecha).ToList(),
             (await movimientos.ListarAsync(ct)).Where(m => m.ConsolidadoId == id).OrderBy(m => m.Fecha).ToList());

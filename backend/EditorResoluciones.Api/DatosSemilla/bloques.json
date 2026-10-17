@@ -1,0 +1,111 @@
+[
+  {
+    "id": "CABECERA",
+    "version": 1,
+    "nombre": "Cabecera",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "cabecera",
+    "descripcion": "Encabezado del documento (número, fecha, institución).",
+    "activo": true
+  },
+  {
+    "id": "IDENTIFICACION",
+    "version": 1,
+    "nombre": "Identificación del documento",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "cabecera",
+    "descripcion": "Datos que identifican el documento y al solicitante.",
+    "activo": true
+  },
+  {
+    "id": "ANTECEDENTES",
+    "version": 1,
+    "nombre": "Antecedentes",
+    "titulo": "ANTECEDENTES:",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "activo": true
+  },
+  {
+    "id": "VISTOS",
+    "version": 1,
+    "nombre": "Vistos",
+    "titulo": "VISTOS:",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "activo": true
+  },
+  {
+    "id": "CONSIDERANDO",
+    "version": 1,
+    "nombre": "Considerando",
+    "numeracion": "Considerando",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "activo": true
+  },
+  {
+    "id": "FUNDAMENTACION_LEGAL",
+    "version": 1,
+    "nombre": "Fundamentación legal",
+    "titulo": "FUNDAMENTACIÓN LEGAL:",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "activo": true
+  },
+  {
+    "id": "POR_TANTO",
+    "version": 1,
+    "nombre": "Por Tanto",
+    "titulo": "POR TANTO:",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "portanto",
+    "activo": true
+  },
+  {
+    "id": "RESUELVE",
+    "version": 1,
+    "nombre": "Resuelve",
+    "titulo": "RESUELVE:",
+    "numeracion": "Ordinal",
+    "esFirmas": false,
+    "contextoCampos": "resuelve",
+    "activo": true
+  },
+  {
+    "id": "CERTIFICACION",
+    "version": 1,
+    "nombre": "Certificación",
+    "titulo": "CERTIFICA:",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "resuelve",
+    "descripcion": "Texto de lo que se certifica o hace constar.",
+    "activo": true
+  },
+  {
+    "id": "FIRMAS",
+    "version": 1,
+    "nombre": "Firmas",
+    "numeracion": "Ninguna",
+    "esFirmas": true,
+    "contextoCampos": "firmas",
+    "activo": true
+  },
+  {
+    "id": "SELLOS",
+    "version": 1,
+    "nombre": "Sellos",
+    "numeracion": "Ninguna",
+    "esFirmas": true,
+    "contextoCampos": "firmas",
+    "descripcion": "Sellos y anotaciones al pie de las firmas.",
+    "activo": true
+  }
+]

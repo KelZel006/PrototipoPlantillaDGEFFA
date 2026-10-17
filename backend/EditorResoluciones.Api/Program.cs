@@ -62,9 +62,10 @@ var app = builder.Build();
 using (var alcance = app.Services.CreateScope())
 {
     var migracion = await alcance.ServiceProvider.GetRequiredService<EditorResoluciones.Dominio.Consolidados.MigracionCargaInicial>().EjecutarAsync();
-    if (migracion.VersionesCreadas > 0 || migracion.HuellasCompletadas > 0)
-        app.Logger.LogInformation("Carga inicial: {Versiones} versiones vigentes creadas y {Huellas} huellas completadas.",
-            migracion.VersionesCreadas, migracion.HuellasCompletadas);
+    if (migracion.VersionesCreadas > 0 || migracion.VersionesActualizadas > 0 || migracion.HuellasCompletadas > 0)
+        app.Logger.LogInformation(
+            "Carga inicial: {Creadas} versiones vigentes creadas, {Actualizadas} actualizadas y {Huellas} huellas completadas.",
+            migracion.VersionesCreadas, migracion.VersionesActualizadas, migracion.HuellasCompletadas);
     foreach (var inconsistencia in migracion.Inconsistencias)
         app.Logger.LogError("Inconsistencia de vigencia: {Detalle}", inconsistencia);
 }

@@ -57,10 +57,70 @@ public static class ConstructorContenido
                     MostrarSoloSiCumple = p.MostrarSoloSiCumple,
                     Condicion = p.Condicion,
                     CamposUsados = [.. p.CamposUsados],
+                    OrigenParrafoId = p.OrigenParrafoId,
                 }).ToList(),
             }).ToList(),
         };
     }
+
+    /// <summary>
+    /// Plantilla y párrafos en memoria con el contenido indicado, para generar el PDF de una versión o una propuesta con
+    /// el mismo generador del documento. No se guardan.
+    /// </summary>
+    public static (Plantilla Plantilla, List<BloqueParaDocumento> Bloques) ADocumento(
+        ContenidoPlantilla contenido,
+        string id,
+        string nombre,
+        string rubroId,
+        string subRubroId,
+        string tipoDocumentoId,
+        string claseDocumentoId,
+        IReadOnlyList<BloqueConfigurado>? configurados = null)
+    {
+        var plantilla = new Plantilla
+        {
+            Id = id,
+            Nombre = nombre,
+            RubroId = rubroId,
+            SubRubroId = subRubroId,
+            TipoDocumentoId = tipoDocumentoId,
+            ClaseDocumentoId = claseDocumentoId,
+            LogoId = contenido.Diseno.LogoId,
+            AlineacionLogo = contenido.Diseno.AlineacionLogo,
+            PiePagina = contenido.Diseno.PiePagina,
+            EspacioFirmasCm = contenido.Diseno.EspacioFirmasCm,
+        };
+        // Orden y presentación de la configuración del tipo; los bloques del contenido que no estén configurados, al final.
+        var orden = (configurados ?? CatalogoBloques.Predeterminados).ToList();
+        foreach (var extra in contenido.Bloques.Where(b => b.Parrafos.Count > 0 && orden.All(c => c.Codigo != b.Codigo)))
+            orden.Add(CatalogoBloques.DelCatalogo(extra.Codigo, [], false, orden.Count + 1));
+        var bloques = orden
+            .Select(c => (Config: c, Contenido: contenido.Bloques.FirstOrDefault(b => b.Codigo == c.Codigo)))
+            .Where(x => x.Contenido is { Incluido: true })
+            .Select(x => new BloqueParaDocumento(x.Config, x.Contenido!.Parrafos.Select(p => new Parrafo
+            {
+                Id = p.Id,
+                PlantillaId = id,
+                Seccion = CodigosBloque.ASeccion(x.Config.Codigo) ?? Seccion.Cabecera,
+                Orden = p.Orden,
+                Contenido = p.Contenido,
+                Activo = p.Activo,
+                MostrarSoloSiCumple = p.MostrarSoloSiCumple,
+                Condicion = p.Condicion,
+                CamposUsados = p.CamposUsados,
+            }).ToList()))
+            .ToList();
+        return (plantilla, bloques);
+    }
+
+    /// <summary>
+    /// Contenido vacío con los bloques indicados (los del tipo documental) o, sin indicar, los cinco originales, y el
+    /// diseño predeterminado (operación CREAR).
+    /// </summary>
+    public static ContenidoPlantilla Vacio(IReadOnlyList<BloqueConfigurado>? configurados = null) => new()
+    {
+        Bloques = (configurados ?? CatalogoBloques.Predeterminados).Select(b => new BloqueContenido { Codigo = b.Codigo }).ToList(),
+    };
 }
 
 /// <summary>Formato del número de Documento Consolidado: PLAN-AAAANNNN.</summary>

@@ -1,0 +1,95 @@
+<dialog #dialogo class="dialogo" aria-labelledby="titulo-seleccion" (cancel)="cancelar($event)">
+  <header class="cabecera">
+    <h2 id="titulo-seleccion">Agregar una plantilla</h2>
+    <button type="button" class="boton boton-secundario boton-compacto" [disabled]="enviando()" (click)="cancelar()">Cerrar</button>
+  </header>
+
+  <div class="pestanas" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="pestana() === 'Crear'" [class.activa]="pestana() === 'Crear'" (click)="pestana.set('Crear')">
+      CREAR plantilla
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="pestana() === 'Modificar'"
+      [class.activa]="pestana() === 'Modificar'"
+      (click)="pestana.set('Modificar')"
+    >
+      MODIFICAR plantilla
+    </button>
+  </div>
+
+  @if (error(); as mensaje) {
+    <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+  }
+
+  @if (pestana() === 'Crear') {
+    <p class="texto-secundario">
+      Para una plantilla que todavía no existe. Queda en el consolidado: no será vigente hasta que se apruebe el documento.
+    </p>
+    @if (operacion()) {
+      <app-selector-contexto />
+    }
+    <label class="campo-nombre">
+      <span>Nombre (opcional)</span>
+      <input
+        class="control"
+        maxlength="200"
+        placeholder="Si lo deja vacío: «Tipo (Documento) – Sub Rubro»"
+        [value]="nombre()"
+        (input)="nombre.set($any($event.target).value)"
+      />
+    </label>
+    @if (acompanante(); as otro) {
+      <p class="nota">También se agregará su {{ otro }}: van juntas en el documento y se publican juntas.</p>
+    }
+    <div class="acciones">
+      <button type="button" class="boton boton-primario" [disabled]="!contexto.completo() || enviando()" (click)="crear()">
+        {{ enviando() ? 'Agregando…' : 'Crear plantilla' }}
+      </button>
+    </div>
+  } @else {
+    <p class="texto-secundario">Plantillas vigentes. En el consolidado empieza con su contenido actual; la vigente no cambia hasta la aprobación.</p>
+    <input
+      class="control"
+      type="search"
+      placeholder="Buscar por nombre, código, tipo, rubro o sub rubro"
+      aria-label="Buscar plantilla vigente"
+      [value]="busqueda()"
+      (input)="busqueda.set($any($event.target).value)"
+    />
+    @if (cargandoVigentes() && vigentes().length === 0) {
+      <p class="texto-secundario" aria-live="polite">Cargando plantillas vigentes…</p>
+    } @else if (vigentes().length === 0) {
+      <p class="texto-secundario">No hay plantillas vigentes que coincidan.</p>
+    } @else {
+      <ul class="vigentes">
+        @for (p of vigentes(); track p.plantillaId) {
+          <li [class.bloqueada]="!!p.enConsolidado">
+            <div class="datos">
+              <span class="tipo">{{ p.tipoDocumento }}</span>
+              <strong>{{ p.nombre }}</strong>
+              <span class="texto-secundario sin-margen">
+                <code>{{ p.plantillaId }}</code> · {{ p.rubroId }} / {{ p.subRubroId }} · versión vigente {{ p.numeroVersion }} ·
+                desde {{ p.fechaPublicacion | date: 'dd/MM/yyyy' }}
+              </span>
+              @if (p.enConsolidado) {
+                <span class="nota">Ya está en el documento {{ p.enConsolidado }}.</span>
+              } @else if (acompananteDe(p.tipoDocumentoId); as otro) {
+                <span class="nota">Se agregará también su {{ otro }}.</span>
+              }
+            </div>
+            <button
+              type="button"
+              class="boton boton-secundario boton-compacto"
+              [disabled]="!!p.enConsolidado || enviando()"
+              (click)="modificar(p.plantillaId)"
+            >
+              Modificar
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  }
+</dialog>

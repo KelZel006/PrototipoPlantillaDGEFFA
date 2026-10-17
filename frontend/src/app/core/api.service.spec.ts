@@ -22,40 +22,29 @@ describe('ApiService', () => {
     peticion.flush([]);
   });
 
-  it('busca la plantilla por la combinación de las tres listas', () => {
-    api
-      .plantillas({ rubroId: 'RUB-001', subRubroId: 'SUB-001', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002' })
-      .subscribe();
-    const peticion = http.expectOne((r) => r.url === '/api/plantillas');
-    expect(peticion.request.params.toString()).toBe(
-      'rubroId=RUB-001&subRubroId=SUB-001&tipoDocumentoId=TDO-001&claseDocumentoId=CDO-002',
-    );
-    peticion.flush([]);
-  });
-
-  it('crea plantillas con POST a la API (nunca escribe archivos)', () => {
-    api
-      .crearPlantilla({
-        nombre: 'N',
-        rubroId: 'R',
-        subRubroId: 'S',
-        tipoDocumentoId: 'T',
-        claseDocumentoId: 'C',
-        estado: 'Borrador',
-      })
-      .subscribe();
-    const peticion = http.expectOne('/api/plantillas');
+  it('crea consolidados con POST sin datos: el número lo asigna el servidor', () => {
+    api.crearConsolidado().subscribe();
+    const peticion = http.expectOne('/api/consolidados');
     expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toBeNull();
     peticion.flush({});
   });
 
-  it('agrega la sección solo cuando se indica', () => {
-    api.parrafos('PLA-001').subscribe();
-    expect(http.expectOne((r) => r.url === '/api/parrafos').request.params.has('seccion')).toBe(false);
+  it('agrega plantillas a un consolidado con CREAR y MODIFICAR', () => {
+    api.agregarModificar('CON-1', 'PLA-001').subscribe();
+    const modificar = http.expectOne('/api/consolidados/CON-1/propuestas/modificar');
+    expect(modificar.request.body).toEqual({ plantillaId: 'PLA-001' });
+    modificar.flush([]);
 
-    api.parrafos('PLA-001', 'Resuelve').subscribe();
-    expect(http.expectOne((r) => r.params.get('seccion') === 'Resuelve').request.params.get('plantillaId')).toBe(
-      'PLA-001',
-    );
+    api.agregarCrear('CON-1', { rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'T', claseDocumentoId: 'C' }).subscribe();
+    http.expectOne('/api/consolidados/CON-1/propuestas/crear').flush([]);
+  });
+
+  it('edita los párrafos de la propuesta, nunca los de la plantilla vigente', () => {
+    api.parrafos('PRO-001').subscribe();
+    http.expectOne((r) => r.url === '/api/propuestas/PRO-001/parrafos' && !r.params.has('seccion')).flush([]);
+
+    api.parrafos('PRO-001', 'RESUELVE').subscribe();
+    expect(http.expectOne((r) => r.params.get('bloque') === 'RESUELVE').request.url).toBe('/api/propuestas/PRO-001/parrafos');
   });
 });

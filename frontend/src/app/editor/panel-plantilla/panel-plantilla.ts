@@ -1,51 +1,44 @@
 import { DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../core/api.service';
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
-import { INTERLINEADOS, Interlineado } from '../../core/modelos';
+import { INTERLINEADOS, Interlineado, NOMBRE_ESTADO } from '../../core/modelos';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
 import { DisenoDocumento } from '../diseno-documento/diseno-documento';
 
 /**
- * Plantilla de la combinación seleccionada. Si no existe, permite crearla; si existe, permite generar
- * el PDF de prueba con o sin una solicitud ficticia.
+ * Propuesta abierta en el editor: su nombre, la operación (CREAR o MODIFICAR), el documento consolidado al que
+ * pertenece, la vista previa en PDF y el diseño del documento.
  */
 @Component({
   selector: 'app-panel-plantilla',
-  imports: [DatePipe, DisenoDocumento],
+  imports: [DatePipe, DisenoDocumento, RouterLink],
   templateUrl: './panel-plantilla.html',
   styleUrl: './panel-plantilla.css',
 })
 export class PanelPlantilla {
   private readonly api = inject(ApiService);
   private readonly interaccion = inject(InteraccionService);
-  protected readonly contexto = inject(ContextoService);
+  private readonly contexto = inject(ContextoService);
   protected readonly actual = inject(PlantillaActualService);
 
-  /** Cambia la lista Tipo Documento al tipo de origen (de la Certificación a la Resolución). */
-  protected irAOrigen(): void {
-    const origen = this.contexto.tipoDocumento()?.copiaDeTipoDocumentoId;
-    if (!origen) {
-      return;
-    }
-    this.api.tiposDocumento().subscribe({
-      next: (tipos) => {
-        const tipo = tipos.find((t) => t.id === origen);
-        if (tipo) {
-          this.contexto.seleccionarTipoDocumento(tipo);
-        }
-      },
-      error: (error: unknown) => this.interaccion.avisar('error', mensajeError(error)),
-    });
-  }
-
-  protected readonly creando = signal(false);
-  protected readonly errorCreacion = signal<string | null>(null);
   protected readonly error = computed(() => (this.actual.error() ? mensajeError(this.actual.error()) : null));
+
+  private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });
+
+  /** Tipo de documento de la propuesta (por ejemplo, para avisar que la Certificación va con texto corrido). */
+  protected readonly tipo = computed(() => {
+    const plantilla = this.actual.plantilla();
+    const tipos = this.tiposRecurso.hasValue() ? this.tiposRecurso.value() : [];
+    return plantilla ? (tipos.find((t) => t.id === plantilla.tipoDocumentoId) ?? null) : null;
+  });
+
+  protected readonly nombreEstado = NOMBRE_ESTADO;
 
   private readonly solicitudesRecurso = rxResource({
     params: () => this.actual.plantilla()?.id,
@@ -86,21 +79,6 @@ export class PanelPlantilla {
   protected readonly generando = signal(false);
   protected readonly interlineados = INTERLINEADOS;
   protected readonly interlineado = signal<Interlineado>('1.5');
-
-  protected crearPlantilla(): void {
-    if (this.creando()) {
-      return;
-    }
-    this.creando.set(true);
-    this.errorCreacion.set(null);
-    this.actual.crear().subscribe({
-      next: () => this.creando.set(false),
-      error: (e: unknown) => {
-        this.creando.set(false);
-        this.errorCreacion.set(mensajeError(e));
-      },
-    });
-  }
 
   protected async generarPdf(): Promise<void> {
     const plantilla = this.actual.plantilla();
@@ -148,11 +126,11 @@ export class PanelPlantilla {
       // El navegador bloqueó la ventana: se descarga el archivo.
       const enlace = document.createElement('a');
       enlace.href = url;
-      enlace.download = nombreArchivo(respuesta) ?? 'resolucion-prueba.pdf';
+      enlace.download = nombreArchivo(respuesta) ?? 'propuesta.pdf';
       enlace.click();
     }
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    this.interaccion.avisar('exito', 'PDF de prueba generado.');
+    this.interaccion.avisar('exito', 'Vista previa en PDF generada.');
   }
 }
 

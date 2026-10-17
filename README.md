@@ -13,13 +13,16 @@ en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referenci
 
 **En curso: Documento Consolidado (PLAN-AAAANNNN).** Fase 1 (diseño) aprobada en
 [docs/CONSOLIDADO-FASE1.md](docs/CONSOLIDADO-FASE1.md). Fase 2 (modelo JSON, transacciones, usuarios de prueba y
-permisos) en [docs/CONSOLIDADO-FASE2.md](docs/CONSOLIDADO-FASE2.md).
+permisos) en [docs/CONSOLIDADO-FASE2.md](docs/CONSOLIDADO-FASE2.md). Fase 3 (registro y edición: pantallas A, B y C; el editor trabaja sobre la propuesta y las plantillas vigentes ya no
+se editan directamente) en [docs/CONSOLIDADO-FASE3.md](docs/CONSOLIDADO-FASE3.md). Fase 4 (.NET 10, bloques configurables por tipo
+documental y comparación palabra por palabra) en [docs/CONSOLIDADO-FASE4.md](docs/CONSOLIDADO-FASE4.md). Fase 5 (envío a
+verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md](docs/CONSOLIDADO-FASE5.md).
 
 ## Tecnologías
 
 | Parte | Tecnología |
 |---|---|
-| Backend | C# · ASP.NET Core 9 (API REST con controladores) |
+| Backend | C# · ASP.NET Core 10 (LTS) (API REST con controladores) |
 | Frontend | Angular 22 (componentes standalone, signals, sin zone.js) · TypeScript · CSS |
 | Datos | Archivos JSON (almacenamiento simulado) |
 | Pruebas | xUnit (backend) · Vitest (frontend) |
@@ -46,7 +49,7 @@ PrototipoPlantillaDGEFFA/
 
 ## Requisitos
 
-- SDK de .NET 9 (`dotnet --list-sdks`)
+- SDK de .NET 10 (`dotnet --list-sdks`)
 - Node.js 22.22+ o 24.15+ y npm (`node -v`)
 - Visual Studio Code con las extensiones recomendadas (C# Dev Kit y Angular Language Service)
 

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using EditorResoluciones.Dominio.Comun;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,8 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EditorResoluciones.Pruebas;
 
 /// <summary>
-/// Cada cambio en la Resolución se copia a la Certificación de la misma combinación (datos semilla: PLA-001 → PLA-004).
-/// La Certificación también se edita directamente; lo que después cambie en la Resolución la reemplaza.
+/// La Resolución lleva consigo su Certificación dentro del Documento Consolidado (decisión D3), y una plantilla no puede
+/// estar en dos consolidados abiertos (D4). Se usan los datos semilla sin sus consolidados de demostración, para que
+/// la Resolución PLA-001 y su Certificación PLA-004 estén libres.
 /// </summary>
 public sealed class CopiaCertificacionPruebas : IDisposable
 {
@@ -20,6 +22,259 @@ public sealed class CopiaCertificacionPruebas : IDisposable
     private readonly HttpClient _cliente;
 
     public CopiaCertificacionPruebas()
+    {
+        foreach (var coleccion in new[] { "consolidados", "propuestas", "presentaciones", "devoluciones", "movimientos" })
+            File.WriteAllText(_datos.Archivo($"{coleccion}.json"), "[]");
+        _fabrica = new FabricaApi(_datos.Ruta, Rutas.DatosSemilla);
+        _cliente = _fabrica.CreateClient();
+    }
+
+    public void Dispose()
+    {
+        _cliente.Dispose();
+        _fabrica.Dispose();
+        _datos.Dispose();
+    }
+
+    private static NodoContenido Doc(string texto) => new()
+    {
+        Tipo = "doc",
+        Contenido = [new NodoContenido { Tipo = "paragraph", Contenido = [new NodoContenido { Tipo = "text", Texto = texto }] }],
+    };
+
+    private static string Texto(NodoContenido nodo) =>
+        nodo.Tipo == "text" ? nodo.Texto ?? "" : string.Concat((nodo.Contenido ?? []).Select(Texto));
+
+    private async Task<List<ParrafoPropuesta>> Parrafos(string propuestaId, string? bloque = null) =>
+        (await _cliente.GetFromJsonAsync<List<ParrafoPropuesta>>(
+            $"/api/propuestas/{propuestaId}/parrafos{(bloque is null ? "" : $"?bloque={bloque}")}", Json))!;
+
+    private async Task<ParrafoPropuesta> CrearParrafo(string propuestaId, string bloque, string texto)
+    {
+        var respuesta = await _cliente.PostAsJsonAsync($"/api/propuestas/{propuestaId}/parrafos",
+            new DatosParrafo(bloque, 0, Doc(texto), false, null, 0), Json);
+        respuesta.EnsureSuccessStatusCode();
+        return (await respuesta.Content.ReadFromJsonAsync<ParrafoPropuesta>(Json))!;
+    }
+
+    private async Task Actualizar(string propuestaId, ParrafoPropuesta parrafo, string? texto = null, bool? activo = null) =>
+        (await _cliente.PutAsJsonAsync($"/api/propuestas/{propuestaId}/parrafos/{parrafo.Id}",
+            new DatosParrafo(parrafo.Bloque, parrafo.Orden, texto is null ? parrafo.Contenido : Doc(texto), parrafo.MostrarSoloSiCumple,
+                parrafo.Condicion, parrafo.Version, activo ?? parrafo.Activo), Json)).EnsureSuccessStatusCode();
+
+    /// <summary>Propuesta MODIFICAR de PLA-001 y su Certificación derivada (PLA-004).</summary>
+    private async Task<(string Consolidado, Propuesta Resolucion, Propuesta Certificacion)> ModificarResolucion()
+    {
+        var consolidado = await Consolidados.CrearAsync(_cliente);
+        var agregadas = await Consolidados.ModificarAsync(_cliente, "PLA-001", consolidado);
+        Assert.Equal(2, agregadas.Count);
+        var resolucion = agregadas.Single(p => p.PlantillaId == "PLA-001");
+        var certificacion = agregadas.Single(p => p.PlantillaId == "PLA-004");
+        Assert.Equal(resolucion.Id, certificacion.DerivadaDePropuestaId);
+        Assert.Equal(OperacionPropuesta.Modificar, certificacion.Operacion);
+        return (consolidado, resolucion, certificacion);
+    }
+
+    [Fact]
+    public async Task Los_cambios_de_la_Resolucion_pasan_a_su_Certificacion_sin_tocar_las_vigentes()
+    {
+        var (_, resolucion, certificacion) = await ModificarResolucion();
+        var vigenteAntes = await _cliente.GetStringAsync("/api/versiones-plantilla?vigencia=Vigente");
+
+        // Crear: el nuevo considerando aparece en la Certificación, con «resolución» cambiada.
+        var nuevo = await CrearParrafo(resolucion.Id, CodigosBloque.Considerando, "Que la presente resolución se notifica.");
+        var copia = (await Parrafos(certificacion.Id, CodigosBloque.Considerando)).Single(p => Texto(p.Contenido).Contains("se notifica"));
+        Assert.Equal("Que la presente certificación se notifica.", Texto(copia.Contenido));
+
+        // Actualizar.
+        await Actualizar(resolucion.Id, nuevo, "Que la resolución cambió.");
+        Assert.Equal("Que la certificación cambió.", Texto((await Parrafos(certificacion.Id)).Single(p => p.Id == copia.Id).Contenido));
+
+        // Un párrafo existente: PAR-002 de la Resolución corresponde a PAR-031 de la Certificación.
+        var par002 = (await Parrafos(resolucion.Id)).Single(p => p.Id == "PAR-002");
+        await Actualizar(resolucion.Id, par002, "Texto nuevo del primer considerando.");
+        Assert.Equal("Texto nuevo del primer considerando.", Texto((await Parrafos(certificacion.Id)).Single(p => p.Id == "PAR-031").Contenido));
+
+        // Duplicar y reordenar: la Certificación sigue el mismo orden relativo.
+        (await _cliente.PostAsync($"/api/propuestas/{resolucion.Id}/parrafos/PAR-003/duplicar", null)).EnsureSuccessStatusCode();
+        var considerandos = await Parrafos(resolucion.Id, CodigosBloque.Considerando);
+        considerandos.Reverse();
+        (await _cliente.PostAsJsonAsync($"/api/propuestas/{resolucion.Id}/parrafos/reordenar", new SolicitudReordenPropuesta(CodigosBloque.Considerando,
+            considerandos.Select(p => new ElementoOrden(p.Id, p.Version)).ToList()), Json)).EnsureSuccessStatusCode();
+        var enResolucion = (await Parrafos(resolucion.Id, CodigosBloque.Considerando)).Select(p => p.Id).ToList();
+        var enCertificacion = await Parrafos(certificacion.Id, CodigosBloque.Considerando);
+        var origenes = (await _cliente.GetFromJsonAsync<Propuesta>($"/api/propuestas/{certificacion.Id}", Json))!.ContenidoPropuesto.Bloques
+            .Single(b => b.Codigo == CodigosBloque.Considerando).Parrafos.ToDictionary(p => p.Id, p => p.OrigenParrafoId);
+        Assert.Equal(enResolucion, enCertificacion.Select(p => origenes[p.Id]));
+        Assert.Equal(Enumerable.Range(1, enCertificacion.Count), enCertificacion.Select(p => p.Orden));
+
+        // Eliminar.
+        var actual = (await Parrafos(resolucion.Id)).Single(p => p.Id == nuevo.Id);
+        (await _cliente.DeleteAsync($"/api/propuestas/{resolucion.Id}/parrafos/{nuevo.Id}?version={actual.Version}")).EnsureSuccessStatusCode();
+        Assert.DoesNotContain(await Parrafos(certificacion.Id), p => p.Id == copia.Id);
+
+        // Nada de esto cambió las versiones vigentes (regla 6).
+        Assert.Equal(vigenteAntes, await _cliente.GetStringAsync("/api/versiones-plantilla?vigencia=Vigente"));
+    }
+
+    [Fact]
+    public async Task Lo_editado_en_la_Certificacion_se_conserva_hasta_que_la_Resolucion_cambia_lo_mismo()
+    {
+        var (_, resolucion, certificacion) = await ModificarResolucion();
+        var editada = (await Parrafos(certificacion.Id)).Single(p => p.Id == "PAR-031");
+        var otra = (await Parrafos(certificacion.Id)).Single(p => p.Id == "PAR-032");
+
+        // Se edita directamente la Certificación (texto y estado) y se agrega un párrafo propio.
+        await Actualizar(certificacion.Id, editada, "Texto propio de la certificación", activo: false);
+        var propio = await CrearParrafo(certificacion.Id, CodigosBloque.Considerando, "Párrafo solo de la certificación");
+
+        // Un cambio en otro párrafo de la Resolución llega sin tocar lo editado ni lo propio.
+        await Actualizar(resolucion.Id, (await Parrafos(resolucion.Id)).Single(p => p.Id == "PAR-003"), "Otro texto de la resolución");
+        var parrafos = await Parrafos(certificacion.Id);
+        Assert.Equal("Otro texto de la certificación", Texto(parrafos.Single(p => p.Id == otra.Id).Contenido));
+        Assert.Equal("Texto propio de la certificación", Texto(parrafos.Single(p => p.Id == editada.Id).Contenido));
+        Assert.False(parrafos.Single(p => p.Id == editada.Id).Activo);
+        Assert.Contains(parrafos, p => p.Id == propio.Id);
+
+        // Cuando la Resolución cambia ese mismo texto, gana la Resolución; el estado (no cambió allá) se conserva.
+        await Actualizar(resolucion.Id, (await Parrafos(resolucion.Id)).Single(p => p.Id == "PAR-002"), "La resolución manda");
+        parrafos = await Parrafos(certificacion.Id);
+        Assert.Equal("La certificación manda", Texto(parrafos.Single(p => p.Id == editada.Id).Contenido));
+        Assert.False(parrafos.Single(p => p.Id == editada.Id).Activo);
+        Assert.Contains(parrafos, p => p.Id == propio.Id);
+        // Los cambios de la Certificación no vuelven a la Resolución.
+        Assert.DoesNotContain(await Parrafos(resolucion.Id), p => Texto(p.Contenido).Contains("solo de la certificación"));
+    }
+
+    [Fact]
+    public async Task El_diseno_de_la_Resolucion_pasa_solo_en_lo_que_cambia()
+    {
+        var (_, resolucion, certificacion) = await ModificarResolucion();
+        async Task Diseno(string id, string? pie, double espacio) =>
+            (await _cliente.PutAsJsonAsync($"/api/propuestas/{id}/diseno", new DatosDiseno(AlineacionLogo.Centro, pie, espacio), Json)).EnsureSuccessStatusCode();
+        async Task<PlantillaEdicion> Edicion(string id) => (await _cliente.GetFromJsonAsync<PlantillaEdicion>($"/api/propuestas/{id}/edicion", Json))!;
+
+        await Diseno(resolucion.Id, "Pie de la resolución", 2.5);
+        Assert.Equal(("Pie de la resolución", 2.5), ((await Edicion(certificacion.Id)).PiePagina, (await Edicion(certificacion.Id)).EspacioFirmasCm));
+
+        // La Certificación cambia su pie; luego la Resolución cambia solo el espacio entre firmas.
+        await Diseno(certificacion.Id, "Pie propio", 2.5);
+        await Diseno(resolucion.Id, "Pie de la resolución", 3);
+        Assert.Equal(("Pie propio", 3.0), ((await Edicion(certificacion.Id)).PiePagina, (await Edicion(certificacion.Id)).EspacioFirmasCm));
+    }
+
+    [Fact]
+    public async Task Crear_una_Resolucion_crea_su_Certificacion_derivada()
+    {
+        var consolidado = await Consolidados.CrearAsync(_cliente);
+        var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
+            new SolicitudCrearPlantilla("1600", "1602", "TDO-001", "CDO-001", null), Json);
+        respuesta.EnsureSuccessStatusCode();
+        var agregadas = (await respuesta.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!;
+
+        var resolucion = agregadas.Single(p => p.TipoDocumentoId == "TDO-001");
+        var certificacion = agregadas.Single(p => p.TipoDocumentoId == "TDO-004");
+        Assert.All(agregadas, p => Assert.Equal(OperacionPropuesta.Crear, p.Operacion));
+        Assert.Equal(resolucion.Id, certificacion.DerivadaDePropuestaId);
+        Assert.StartsWith("Certificación (Original) – ", certificacion.Nombre);
+
+        await CrearParrafo(resolucion.Id, CodigosBloque.Resuelve, "RESOLUCIÓN No. 1: Notificar la presente resolución.");
+        var copia = Assert.Single(await Parrafos(certificacion.Id, CodigosBloque.Resuelve));
+        Assert.Equal("CERTIFICACIÓN No. 1: Notificar la presente certificación.", Texto(copia.Contenido));
+        // Ninguna plantilla existe todavía: se crean al aprobar.
+        Assert.Empty(await _cliente.GetFromJsonAsync<List<Plantilla>>("/api/plantillas?rubroId=1600&subRubroId=1602", Json) ?? []);
+    }
+
+    [Fact]
+    public async Task La_Certificacion_que_ya_estaba_en_el_consolidado_se_liga_a_su_Resolucion()
+    {
+        var consolidado = await Consolidados.CrearAsync(_cliente);
+        var sola = Assert.Single(await Consolidados.ModificarAsync(_cliente, "PLA-004", consolidado));
+        Assert.Null(sola.DerivadaDePropuestaId);
+
+        var agregadas = await Consolidados.ModificarAsync(_cliente, "PLA-001", consolidado);
+
+        Assert.Equal(2, agregadas.Count);
+        var ligada = agregadas.Single(p => p.Id == sola.Id);
+        Assert.Equal(agregadas.Single(p => p.PlantillaId == "PLA-001").Id, ligada.DerivadaDePropuestaId);
+    }
+
+    [Fact]
+    public async Task Una_plantilla_no_puede_estar_en_dos_consolidados_abiertos()
+    {
+        var (consolidado, resolucion, certificacion) = await ModificarResolucion();
+
+        // En el mismo consolidado: todos sus ajustes van en la misma propuesta.
+        var repetida = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/modificar", new { plantillaId = "PLA-001" }, Json);
+        Assert.Equal(HttpStatusCode.Conflict, repetida.StatusCode);
+        Assert.Contains("misma propuesta", await repetida.Content.ReadAsStringAsync());
+
+        // En otro consolidado: se rechaza indicando dónde está. Tampoco se puede tomar su Certificación.
+        var otro = await Consolidados.CrearAsync(_cliente);
+        var numero = (await _cliente.GetFromJsonAsync<DetalleConsolidado>($"/api/consolidados/{consolidado}", Json))!.Consolidado.Numero;
+        foreach (var plantilla in new[] { "PLA-001", "PLA-004" })
+        {
+            var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{otro}/propuestas/modificar", new { plantillaId = plantilla }, Json);
+            Assert.Equal(HttpStatusCode.Conflict, respuesta.StatusCode);
+            Assert.Contains(numero, await respuesta.Content.ReadAsStringAsync());
+        }
+        var vigentes = (await _cliente.GetFromJsonAsync<List<PlantillaVigente>>("/api/plantillas-vigentes", Json))!;
+        Assert.Equal(numero, vigentes.Single(v => v.PlantillaId == "PLA-001").EnConsolidado);
+        Assert.Null(vigentes.Single(v => v.PlantillaId == "PLA-002").EnConsolidado);
+
+        // La Certificación sola no se retira; al retirar la Resolución se retiran las dos y quedan libres.
+        var sola = await _cliente.PostAsJsonAsync($"/api/propuestas/{certificacion.Id}/retirar", new SolicitudRetiro("Ya no se necesita"), Json);
+        Assert.Equal(HttpStatusCode.Conflict, sola.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await _cliente.PostAsJsonAsync($"/api/propuestas/{resolucion.Id}/retirar", new SolicitudRetiro(""), Json)).StatusCode);
+        var retiro = await _cliente.PostAsJsonAsync($"/api/propuestas/{resolucion.Id}/retirar", new SolicitudRetiro("Se hará en otro documento"), Json);
+        Assert.Equal(2, (await retiro.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.Count(p => p.Retirada));
+        Assert.Equal(2, (await Consolidados.ModificarAsync(_cliente, "PLA-001", otro)).Count);
+
+        // La bitácora conserva el retiro.
+        var detalle = (await _cliente.GetFromJsonAsync<DetalleConsolidado>($"/api/consolidados/{consolidado}", Json))!;
+        Assert.Contains(detalle.Movimientos, m => m.Tipo == TipoMovimiento.PropuestaRetirada && m.Detalle.Contains("otro documento"));
+        Assert.Empty(detalle.TiposIncluidos);
+    }
+
+    [Fact]
+    public async Task El_resumen_muestra_cada_tipo_una_vez_y_los_ajustes_de_cada_plantilla()
+    {
+        var (consolidado, resolucion, _) = await ModificarResolucion();
+        await CrearParrafo(resolucion.Id, CodigosBloque.Considerando, "Que se agrega un considerando.");
+        await Actualizar(resolucion.Id, (await Parrafos(resolucion.Id)).Single(p => p.Id == "PAR-008"), "Texto nuevo del por tanto.");
+        (await _cliente.PutAsJsonAsync($"/api/propuestas/{resolucion.Id}/diseno", new DatosDiseno(AlineacionLogo.Centro, "Pie nuevo", 1.2), Json)).EnsureSuccessStatusCode();
+
+        var detalle = (await _cliente.GetFromJsonAsync<DetalleConsolidado>($"/api/consolidados/{consolidado}", Json))!;
+
+        Assert.Equal(["Certificación", "Resolución"], detalle.TiposIncluidos.Select(t => t.TipoDocumento));
+        var tipoResolucion = detalle.TiposIncluidos.Single(t => t.TipoDocumento == "Resolución");
+        Assert.Equal(("Modificar", 1, 3), (tipoResolucion.Operacion, tipoResolucion.Plantillas, tipoResolucion.Ajustes));
+        Assert.Equal(["NUEVO CONSIDERANDO (posición 5)", "POR TANTO 1 modificado", "Pie de página modificado"],
+            detalle.Ajustes[resolucion.Id].Select(a => a.Etiqueta));
+    }
+
+    [Fact]
+    public async Task La_carga_inicial_conserva_el_vinculo_de_la_Certificacion_con_su_Resolucion()
+    {
+        using var alcance = _fabrica.Services.CreateScope();
+        var versiones = await alcance.ServiceProvider.GetRequiredService<IRepositorio<VersionPlantilla>>().ListarAsync();
+        var certificacion = versiones.Single(v => v.PlantillaId == "PLA-004" && v.Vigencia == Vigencia.Vigente);
+
+        var cabecera = certificacion.Contenido.Bloques.Single(b => b.Codigo == CodigosBloque.Cabecera).Parrafos.Single();
+        Assert.Equal("PAR-001", cabecera.OrigenParrafoId);
+    }
+}
+
+/// <summary>Quién puede editar una propuesta: solo el analista dueño, y solo mientras el consolidado está EN REGISTRO.</summary>
+public sealed class EdicionPropuestaPermisosPruebas : IDisposable
+{
+    private static readonly JsonSerializerOptions Json = OpcionesJson.Predeterminadas;
+    private readonly DirectorioTemporal _datos = new();
+    private readonly FabricaApi _fabrica;
+    private readonly HttpClient _cliente;
+
+    public EdicionPropuestaPermisosPruebas()
     {
         _fabrica = new FabricaApi(_datos.Ruta, Rutas.DatosSemilla);
         _cliente = _fabrica.CreateClient();
@@ -32,239 +287,47 @@ public sealed class CopiaCertificacionPruebas : IDisposable
         _datos.Dispose();
     }
 
-    private async Task<List<Parrafo>> Parrafos(string plantillaId) =>
-        (await _cliente.GetFromJsonAsync<List<Parrafo>>($"/api/parrafos?plantillaId={plantillaId}", Json))!;
+    private Task<HttpResponseMessage> Enviar(HttpMethod metodo, string ruta, string usuario, object? cuerpo = null)
+    {
+        var mensaje = new HttpRequestMessage(metodo, ruta) { Headers = { { "X-Usuario-Prueba", usuario } } };
+        if (cuerpo is not null)
+            mensaje.Content = JsonContent.Create(cuerpo, options: Json);
+        return _cliente.SendAsync(mensaje);
+    }
 
-    private async Task<List<Plantilla>> Plantillas() =>
-        (await _cliente.GetFromJsonAsync<List<Plantilla>>("/api/plantillas", Json))!;
-
-    private static NodoContenido Doc(string texto) => new()
+    private static DatosParrafo Nuevo() => new(CodigosBloque.Considerando, 0, new NodoContenido
     {
         Tipo = "doc",
-        Contenido = [new NodoContenido { Tipo = "paragraph", Contenido = [new NodoContenido { Tipo = "text", Texto = texto }] }],
-    };
-
-    private static string Texto(NodoContenido nodo) =>
-        nodo.Tipo == "text" ? nodo.Texto ?? "" : string.Concat((nodo.Contenido ?? []).Select(Texto));
-
-    /// <summary>La copia tiene los mismos párrafos, en el mismo orden y con el mismo contenido.</summary>
-    private async Task AfirmarIguales(string origenId, string copiaId)
-    {
-        var origen = (await Parrafos(origenId)).OrderBy(p => p.Seccion).ThenBy(p => p.Orden).ToList();
-        var copia = (await Parrafos(copiaId)).OrderBy(p => p.Seccion).ThenBy(p => p.Orden).ToList();
-        // En la copia, «resolución» se cambia por «certificación».
-        var cambio = new Dominio.Servicios.CambioPalabra("Resolución", "Certificación");
-        // Se compara el orden, no el número: la copia se numera 1, 2, 3… aunque la Resolución tenga huecos.
-        Assert.Equal(origen.Select(p => (p.Id, p.Seccion, cambio.Aplicar(Texto(p.Contenido)), p.Activo)),
-            copia.Select(p => (p.OrigenParrafoId!, p.Seccion, Texto(p.Contenido), p.Activo)));
-    }
+        Contenido = [new NodoContenido { Tipo = "paragraph", Contenido = [new NodoContenido { Tipo = "text", Texto = "x" }] }],
+    }, false, null, 0);
 
     [Fact]
-    public async Task Crear_actualizar_y_eliminar_en_la_Resolucion_se_copia_a_la_Certificacion()
+    public async Task El_dueno_edita_su_propuesta_en_registro()
     {
-        // Crear
-        var nuevo = new Parrafo { PlantillaId = "PLA-001", Seccion = Seccion.Considerando, Contenido = Doc("Que el nuevo considerando…") };
-        var creado = await (await _cliente.PostAsJsonAsync("/api/parrafos", nuevo, Json)).Content.ReadFromJsonAsync<Parrafo>(Json);
-        await AfirmarIguales("PLA-001", "PLA-004");
-
-        // Actualizar
-        creado!.Contenido = Doc("Que el considerando cambió.");
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{creado.Id}", creado, Json)).EnsureSuccessStatusCode();
-        await AfirmarIguales("PLA-001", "PLA-004");
-        Assert.Contains(await Parrafos("PLA-004"), p => Texto(p.Contenido) == "Que el considerando cambió.");
-
-        // Duplicar y reordenar
-        (await _cliente.PostAsync($"/api/parrafos/{creado.Id}/duplicar", null)).EnsureSuccessStatusCode();
-        var considerandos = (await Parrafos("PLA-001")).Where(p => p.Seccion == Seccion.Considerando).OrderBy(p => p.Orden).ToList();
-        considerandos.Reverse();
-        var reorden = new
-        {
-            plantillaId = "PLA-001",
-            seccion = "Considerando",
-            elementos = considerandos.Select(p => new { id = p.Id, version = p.Version }),
-        };
-        (await _cliente.PostAsJsonAsync("/api/parrafos/reordenar", reorden, Json)).EnsureSuccessStatusCode();
-        await AfirmarIguales("PLA-001", "PLA-004");
-
-        // Eliminar
-        var actual = (await Parrafos("PLA-001")).Single(p => p.Id == creado.Id);
-        (await _cliente.DeleteAsync($"/api/parrafos/{creado.Id}?version={actual.Version}")).EnsureSuccessStatusCode();
-        await AfirmarIguales("PLA-001", "PLA-004");
+        // PRO-0005 es la Resolución de PLAN-20260003, de m.lopez, EN REGISTRO. Su Certificación es PRO-0006 (Crear).
+        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Post, "/api/propuestas/PRO-0005/parrafos", "m.lopez", Nuevo())).StatusCode);
+        var edicion = await (await Enviar(HttpMethod.Get, "/api/propuestas/PRO-0005/edicion", "m.lopez")).Content.ReadFromJsonAsync<PlantillaEdicion>(Json);
+        Assert.True(edicion!.Editable);
+        Assert.Equal("PLAN-20260003", edicion.ConsolidadoNumero);
     }
+
+    [Theory]
+    [InlineData("a.perez", "PRO-0005", HttpStatusCode.NotFound)]   // Otro analista: ni siquiera lo ve.
+    [InlineData("j.ramos", "PRO-0005", HttpStatusCode.NotFound)]   // EN REGISTRO: todavía no llega al Oficial Jurídico.
+    [InlineData("admin", "PRO-0005", HttpStatusCode.Forbidden)]    // Lo ve, pero no es analista.
+    [InlineData("j.ramos", "PRO-0002", HttpStatusCode.Forbidden)]  // VERIFICADO: el Oficial Jurídico revisa, no edita.
+    [InlineData("a.perez", "PRO-0001", HttpStatusCode.Conflict)]   // Su consolidado ya está APROBADO.
+    public async Task Nadie_mas_edita_ni_se_edita_fuera_de_registro(string usuario, string propuesta, HttpStatusCode esperado) =>
+        Assert.Equal(esperado, (await Enviar(HttpMethod.Post, $"/api/propuestas/{propuesta}/parrafos", usuario, Nuevo())).StatusCode);
 
     [Fact]
-    public async Task En_la_Certificacion_la_palabra_resolucion_se_cambia_por_certificacion()
+    public async Task El_Oficial_Juridico_consulta_la_propuesta_verificada_sin_poder_editarla()
     {
-        var nuevo = new Parrafo
-        {
-            PlantillaId = "PLA-001",
-            Seccion = Seccion.Resuelve,
-            Contenido = Doc("RESOLUCIÓN No. 1: Notificar la presente resolución; las resoluciones quedan firmes."),
-        };
-        var creado = await (await _cliente.PostAsJsonAsync("/api/parrafos", nuevo, Json)).Content.ReadFromJsonAsync<Parrafo>(Json);
+        var respuesta = await Enviar(HttpMethod.Get, "/api/propuestas/PRO-0002/edicion", "j.ramos");
 
-        var copia = (await Parrafos("PLA-004")).Single(p => p.OrigenParrafoId == creado!.Id);
-        Assert.Equal("CERTIFICACIÓN No. 1: Notificar la presente certificación; las certificaciones quedan firmes.", Texto(copia.Contenido));
-        // La Resolución conserva su texto.
-        Assert.StartsWith("RESOLUCIÓN No. 1", Texto((await Parrafos("PLA-001")).Single(p => p.Id == creado!.Id).Contenido));
-    }
-
-    [Fact]
-    public async Task La_Certificacion_se_edita_y_conserva_sus_cambios_hasta_que_la_Resolucion_cambia_lo_mismo()
-    {
-        var copias = (await Parrafos("PLA-004")).Where(p => p.Seccion == Seccion.Considerando).OrderBy(p => p.Orden).ToList();
-        Assert.True(copias.Count >= 2);
-        var (editada, otra) = (copias[0], copias[1]);
-
-        // Editar directamente en la Certificación: texto y estado. El cliente no puede quitar el vínculo con la Resolución.
-        editada.Contenido = Doc("Texto propio de la certificación");
-        editada.Activo = false;
-        editada.OrigenParrafoId = null;
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{editada.Id}", editada, Json)).EnsureSuccessStatusCode();
-        // Agregar un párrafo propio.
-        var propio = new Parrafo { PlantillaId = "PLA-004", Seccion = Seccion.Considerando, Contenido = Doc("Párrafo solo de la certificación") };
-        var creado = await (await _cliente.PostAsJsonAsync("/api/parrafos", propio, Json)).Content.ReadFromJsonAsync<Parrafo>(Json);
-        Assert.Null(creado!.OrigenParrafoId);
-
-        // Un cambio en otro párrafo de la Resolución llega a la Certificación sin tocar lo editado ni lo propio.
-        var origenOtra = (await Parrafos("PLA-001")).Single(p => p.Id == otra.OrigenParrafoId);
-        origenOtra.Contenido = Doc("Otro texto de la resolución");
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{origenOtra.Id}", origenOtra, Json)).EnsureSuccessStatusCode();
-
-        var certificacion = await Parrafos("PLA-004");
-        Assert.Equal("Otro texto de la certificación", Texto(certificacion.Single(p => p.Id == otra.Id).Contenido));
-        var conservada = certificacion.Single(p => p.Id == editada.Id);
-        Assert.Equal("Texto propio de la certificación", Texto(conservada.Contenido));
-        Assert.False(conservada.Activo);
-        Assert.NotNull(conservada.OrigenParrafoId);
-        Assert.Contains(certificacion, p => p.Id == creado.Id);
-
-        // Cuando la Resolución cambia ese mismo texto, gana la Resolución; el estado (no cambió allá) se conserva.
-        var origenEditada = (await Parrafos("PLA-001")).Single(p => p.Id == conservada.OrigenParrafoId);
-        origenEditada.Contenido = Doc("La resolución manda");
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{origenEditada.Id}", origenEditada, Json)).EnsureSuccessStatusCode();
-
-        certificacion = await Parrafos("PLA-004");
-        conservada = certificacion.Single(p => p.Id == editada.Id);
-        Assert.Equal("La certificación manda", Texto(conservada.Contenido));
-        Assert.False(conservada.Activo);
-        Assert.Contains(certificacion, p => p.Id == creado.Id);
-        // Los cambios de la Certificación no vuelven a la Resolución.
-        Assert.DoesNotContain(await Parrafos("PLA-001"), p => Texto(p.Contenido).Contains("solo de la certificación"));
-    }
-
-    [Fact]
-    public async Task Un_parrafo_nuevo_de_la_Resolucion_se_ubica_despues_de_su_anterior_y_se_conservan_los_propios()
-    {
-        var propio = new Parrafo { PlantillaId = "PLA-004", Seccion = Seccion.Considerando, Contenido = Doc("Párrafo propio al final") };
-        var creado = await (await _cliente.PostAsJsonAsync("/api/parrafos", propio, Json)).Content.ReadFromJsonAsync<Parrafo>(Json);
-
-        var primero = (await Parrafos("PLA-001")).Where(p => p.Seccion == Seccion.Considerando).OrderBy(p => p.Orden).First();
-        var duplicado = await (await _cliente.PostAsync($"/api/parrafos/{primero.Id}/duplicar", null)).Content.ReadFromJsonAsync<Parrafo>(Json);
-
-        var orden = (await Parrafos("PLA-004")).Where(p => p.Seccion == Seccion.Considerando).OrderBy(p => p.Orden).ToList();
-        Assert.Equal(Enumerable.Range(1, orden.Count), orden.Select(p => p.Orden));
-        Assert.Equal(primero.Id, orden[0].OrigenParrafoId);
-        Assert.Equal(duplicado!.Id, orden[1].OrigenParrafoId);
-        Assert.Equal(creado!.Id, orden[^1].Id);
-
-        // Duplicar dentro de la Certificación crea un párrafo propio, no ligado a la Resolución.
-        var dentro = await (await _cliente.PostAsync($"/api/parrafos/{orden[0].Id}/duplicar", null)).Content.ReadFromJsonAsync<Parrafo>(Json);
-        Assert.Null(dentro!.OrigenParrafoId);
-    }
-
-    [Fact]
-    public async Task El_diseno_se_copia_solo_en_lo_que_cambia_en_la_Resolucion()
-    {
-        var resolucion = (await Plantillas()).Single(p => p.Id == "PLA-001");
-        resolucion.PiePagina = "Pie de prueba copiado";
-        resolucion.EspacioFirmasCm = 2.5;
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", resolucion, Json)).EnsureSuccessStatusCode();
-
-        var certificacion = (await Plantillas()).Single(p => p.Id == "PLA-004");
-        Assert.Equal("Pie de prueba copiado", certificacion.PiePagina);
-        Assert.Equal(2.5, certificacion.EspacioFirmasCm);
-
-        // La Certificación cambia su pie; luego la Resolución cambia solo el espacio entre firmas.
-        certificacion.PiePagina = "Pie propio";
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-004", certificacion, Json)).EnsureSuccessStatusCode();
-        resolucion = (await Plantillas()).Single(p => p.Id == "PLA-001");
-        resolucion.EspacioFirmasCm = 3;
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", resolucion, Json)).EnsureSuccessStatusCode();
-
-        certificacion = (await Plantillas()).Single(p => p.Id == "PLA-004");
-        Assert.Equal("Pie propio", certificacion.PiePagina);
-        Assert.Equal(3, certificacion.EspacioFirmasCm);
-
-        // Si la Resolución cambia el pie, gana la Resolución.
-        resolucion = (await Plantillas()).Single(p => p.Id == "PLA-001");
-        resolucion.PiePagina = "Pie nuevo de la resolución";
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", resolucion, Json)).EnsureSuccessStatusCode();
-        Assert.Equal("Pie nuevo de la resolución", (await Plantillas()).Single(p => p.Id == "PLA-004").PiePagina);
-    }
-
-    private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
-
-    private async Task<HttpResponseMessage> CargarLogo(string plantillaId)
-    {
-        using var formulario = new MultipartFormDataContent();
-        var archivo = new ByteArrayContent(Png);
-        archivo.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
-        formulario.Add(archivo, "archivo", "logo.png");
-        return await _cliente.PostAsync($"/api/plantillas/{plantillaId}/logo", formulario);
-    }
-
-    [Fact]
-    public async Task El_logo_se_comparte_con_la_Certificacion_sin_perder_archivos()
-    {
-        var primero = (await (await CargarLogo("PLA-001")).Content.ReadFromJsonAsync<Plantilla>(Json))!.LogoId;
-        Assert.Equal(primero, (await Plantillas()).Single(p => p.Id == "PLA-004").LogoId);
-
-        // La Certificación puede cargar su propio logo; el compartido sigue en uso por la Resolución.
-        var propio = (await (await CargarLogo("PLA-004")).Content.ReadFromJsonAsync<Plantilla>(Json))!.LogoId;
-        Assert.NotEqual(primero, propio);
-        Assert.Equal(primero, (await Plantillas()).Single(p => p.Id == "PLA-001").LogoId);
-        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync($"/api/archivos/{primero}")).StatusCode);
-
-        // Al reemplazarlo en la Resolución, las dos pasan al nuevo y se borran los que ya nadie usa.
-        var segundo = (await (await CargarLogo("PLA-001")).Content.ReadFromJsonAsync<Plantilla>(Json))!.LogoId;
-        Assert.Equal(segundo, (await Plantillas()).Single(p => p.Id == "PLA-004").LogoId);
-        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync($"/api/archivos/{segundo}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync($"/api/archivos/{primero}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync($"/api/archivos/{propio}")).StatusCode);
-        // Solo queda el archivo en uso.
-        using var alcance = _fabrica.Services.CreateScope();
-        var archivos = await alcance.ServiceProvider.GetRequiredService<IRepositorio<ArchivoRecurso>>().ListarAsync();
-        Assert.Equal([segundo], archivos.Select(a => a.Id));
-    }
-
-    [Fact]
-    public async Task Si_no_existe_la_Certificacion_se_crea_al_guardar_la_Resolucion()
-    {
-        // PLA-003 (1600 / 1601, Resolución, Original) no tiene Certificación en los datos semilla.
-        Assert.DoesNotContain(await Plantillas(), p => p is { RubroId: "1600", SubRubroId: "1601", TipoDocumentoId: "TDO-004" });
-
-        var parrafo = (await Parrafos("PLA-003")).First();
-        parrafo.Contenido = Doc("Texto actualizado de la resolución.");
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{parrafo.Id}", parrafo, Json)).EnsureSuccessStatusCode();
-
-        var certificacion = Assert.Single(await Plantillas(), p => p is { RubroId: "1600", SubRubroId: "1601", TipoDocumentoId: "TDO-004" });
-        Assert.Equal("CDO-001", certificacion.ClaseDocumentoId);
-        Assert.StartsWith("Certificación (Original) – ", certificacion.Nombre);
-        await AfirmarIguales("PLA-003", certificacion.Id);
-    }
-
-    [Fact]
-    public async Task Una_Resolucion_de_otra_combinacion_no_toca_la_Certificacion()
-    {
-        var antes = await Parrafos("PLA-004");
-        var parrafo = (await Parrafos("PLA-002")).First();
-        parrafo.Contenido = Doc("Cambio en el dictamen");
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{parrafo.Id}", parrafo, Json)).EnsureSuccessStatusCode();
-
-        Assert.Equal(antes.Select(p => (p.Id, p.Version)), (await Parrafos("PLA-004")).Select(p => (p.Id, p.Version)));
-        // Un Dictamen no tiene copia: no se crea ninguna plantilla nueva.
-        Assert.DoesNotContain(await Plantillas(), p => p.Descripcion?.Contains("PLA-002") == true);
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        Assert.False((await respuesta.Content.ReadFromJsonAsync<PlantillaEdicion>(Json))!.Editable);
+        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Get, "/api/propuestas/PRO-0002/pdf", "j.ramos")).StatusCode);
     }
 }
 

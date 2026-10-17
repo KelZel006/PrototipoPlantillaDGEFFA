@@ -1,0 +1,133 @@
+<section class="tarjeta" aria-labelledby="titulo-consolidados">
+  <header class="encabezado-tarjeta">
+    <div>
+      <h2 id="titulo-consolidados">Documentos consolidados</h2>
+      <p class="texto-secundario sin-margen">
+        @if (usuario.tiene('Administrador')) {
+          Consulta de todos los documentos{{ usuario.tiene('Analista') ? '; como analista, puede crear los suyos' : '' }}.
+        } @else if (usuario.tiene('OficialJuridico') && !usuario.tiene('Analista')) {
+          Su bandeja: documentos VERIFICADOS (pendientes de revisión jurídica) y APROBADOS.
+        } @else if (usuario.tiene('Analista')) {
+          Sus documentos EN REGISTRO y APROBADOS. Los que envía a verificación pasan a la bandeja del Oficial Jurídico.
+        } @else {
+          Consulta de todos los documentos.
+        }
+      </p>
+    </div>
+    @if (usuario.tiene('Analista')) {
+      <button type="button" class="boton boton-primario" [disabled]="creando()" (click)="crear()">
+        {{ creando() ? 'Creando…' : '+ Nuevo consolidado' }}
+      </button>
+    }
+  </header>
+
+  <div class="filtros" role="search">
+    <label>
+      <span>Número</span>
+      <input class="control control-compacto" type="search" placeholder="PLAN-2026…" [value]="numero()" (input)="numero.set($any($event.target).value)" />
+    </label>
+    <label>
+      <span>Año</span>
+      <select class="control control-compacto" (change)="anio.set($any($event.target).value)">
+        <option value="" [selected]="anio() === ''">Todos</option>
+        @for (a of anios(); track a) {
+          <option [value]="a" [selected]="'' + a === anio()">{{ a }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Estado</span>
+      <select class="control control-compacto" (change)="estado.set($any($event.target).value)">
+        <option value="" [selected]="estado() === ''">Todos</option>
+        @for (e of estados; track e.valor) {
+          <option [value]="e.valor" [selected]="e.valor === estado()">{{ e.nombre }}</option>
+        }
+      </select>
+    </label>
+    @if (analistas().length > 1) {
+      <label>
+        <span>Analista</span>
+        <select class="control control-compacto" (change)="analista.set($any($event.target).value)">
+          <option value="" [selected]="analista() === ''">Todos</option>
+          @for (a of analistas(); track a) {
+            <option [value]="a" [selected]="a === analista()">{{ a }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label>
+      <span>Tipo documental</span>
+      <select class="control control-compacto" (change)="tipo.set($any($event.target).value)">
+        <option value="" [selected]="tipo() === ''">Todos</option>
+        @for (t of tipos(); track t) {
+          <option [value]="t" [selected]="t === tipo()">{{ t }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Fecha de creación</span>
+      <input class="control control-compacto" type="date" [value]="fecha()" (change)="fecha.set($any($event.target).value)" />
+    </label>
+    @if (hayFiltros()) {
+      <button type="button" class="boton boton-secundario boton-compacto" (click)="limpiar()">Limpiar filtros</button>
+    }
+  </div>
+
+  @if (error(); as mensaje) {
+    <div class="aviso aviso-error" role="alert">
+      <span>{{ mensaje }}</span>
+      <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+    </div>
+  } @else if (cargando() && filtrados().length === 0) {
+    <p class="texto-secundario" aria-live="polite">Cargando documentos…</p>
+  } @else if (filtrados().length === 0) {
+    <p class="vacio">
+      @if (hayFiltros()) {
+        Ningún documento coincide con los filtros.
+      } @else if (usuario.tiene('Analista')) {
+        No tiene documentos consolidados. Cree uno para empezar a registrar cambios en las plantillas.
+      } @else {
+        No hay documentos en su bandeja.
+      }
+    </p>
+  } @else {
+    <div class="tabla-desplazable">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Número</th>
+            <th scope="col">Creación</th>
+            <th scope="col">Analista</th>
+            <th scope="col">Tipos documentales</th>
+            <th scope="col" class="numero">Plantillas</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Última actualización</th>
+            <th scope="col"><span class="oculto">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of filtrados(); track c.id) {
+            <tr>
+              <td><a class="numero-plan" [routerLink]="['/consolidados', c.id]">{{ c.numero }}</a></td>
+              <td>{{ c.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ c.analistaId }}</td>
+              <td>{{ c.tiposDocumento.length ? c.tiposDocumento.join(', ') : '—' }}</td>
+              <td class="numero">{{ c.totalPlantillas }}</td>
+              <td><app-insignia-estado [estado]="c.estado" /></td>
+              <td>{{ c.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                @if (c.estado === 'Verificado' && usuario.tiene('OficialJuridico')) {
+                  <a class="boton boton-primario boton-compacto" [routerLink]="['/consolidados', c.id, 'revision']">Revisar</a>
+                } @else {
+                  <a class="boton boton-secundario boton-compacto" [routerLink]="['/consolidados', c.id]">
+                    {{ c.estado === 'EnRegistro' && usuario.id() === c.analistaId ? 'Abrir' : 'Consultar' }}
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

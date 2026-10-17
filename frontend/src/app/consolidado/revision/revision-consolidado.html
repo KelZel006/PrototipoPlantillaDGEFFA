@@ -1,0 +1,133 @@
+<a class="volver" routerLink="/consolidados">← Documentos consolidados</a>
+
+@if (error(); as mensaje) {
+  <div class="aviso aviso-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+  </div>
+} @else if (!detalle() && cargando()) {
+  <p class="texto-secundario" aria-live="polite">Cargando el documento…</p>
+} @else if (detalle(); as d) {
+  <section class="tarjeta cabecera" aria-labelledby="titulo-revision">
+    <div class="identidad">
+      <h2 id="titulo-revision">Revisión jurídica · {{ d.consolidado.numero }}</h2>
+      <app-insignia-estado [estado]="d.consolidado.estado" [detalle]="true" />
+    </div>
+    <span class="texto-secundario">
+      Analista {{ d.consolidado.analistaId }} · presentación {{ d.consolidado.numeroPresentacion }} ·
+      {{ activas().length }} {{ activas().length === 1 ? 'plantilla' : 'plantillas' }}
+    </span>
+  </section>
+
+  @if (!puedeRevisar()) {
+    <div class="aviso aviso-copia" role="status">
+      La revisión jurídica la hace el Oficial Jurídico cuando el documento está VERIFICADO.
+      <a [routerLink]="['/consolidados', d.consolidado.id]">Ver el documento</a>
+    </div>
+  } @else {
+    <div class="revision">
+      <nav class="tarjeta navegacion" aria-label="Plantillas del consolidado">
+        <h3>Plantillas</h3>
+        <ul>
+          @for (p of activas(); track p.id) {
+            <li>
+              <button type="button" class="plantilla" [class.activa]="seleccionada()?.id === p.id" [attr.aria-current]="seleccionada()?.id === p.id" (click)="seleccionada.set(p)">
+                <span class="insignia" [class.insignia-exito]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
+                <span class="nombre">{{ p.nombre }}</span>
+                <span class="texto-secundario">{{ ajustes(p.id).length }} {{ ajustes(p.id).length === 1 ? 'ajuste' : 'ajustes' }}</span>
+              </button>
+              @if (seleccionada()?.id === p.id && ajustes(p.id).length) {
+                <ul class="ajustes">
+                  @for (a of ajustes(p.id); track $index) {
+                    <li>{{ a.etiqueta }}</li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <section class="tarjeta principal" aria-label="Comparación">
+        @if (seleccionada(); as p) {
+          <h3>{{ p.nombre }}</h3>
+          <app-comparacion-propuesta [propuestaId]="p.id" />
+        }
+      </section>
+    </div>
+
+    <section class="tarjeta" aria-labelledby="titulo-historial">
+      <h3 id="titulo-historial">Historial de observaciones</h3>
+      <app-historial-revisiones [detalle]="d" />
+    </section>
+
+    <section class="tarjeta acciones" aria-label="Decisión">
+      <p class="texto-secundario sin-margen">
+        Si algo debe cambiar, devuelva el documento: el Oficial Jurídico no edita el contenido.
+      </p>
+      <div class="botones">
+        <button type="button" class="boton boton-peligro" (click)="abrirDevolucion()">DEVOLVER A REGISTRO</button>
+        <button type="button" class="boton boton-primario" disabled title="Disponible en la Fase 6">APROBAR</button>
+      </div>
+    </section>
+
+    <dialog #dialogoDevolucion class="dialogo" aria-labelledby="titulo-devolucion" (cancel)="cerrarDevolucion($event)">
+      <h2 id="titulo-devolucion">Devolver {{ d.consolidado.numero }} a registro</h2>
+      <label class="campo">
+        <span>Justificación de la devolución (obligatoria)</span>
+        <textarea class="control" rows="4" maxlength="2000" [value]="justificacion()" (input)="justificacion.set($any($event.target).value)"></textarea>
+        @if (justificacion().length > 0 && !justificacionValida()) {
+          <small class="texto-error">Escriba al menos {{ minimoJustificacion }} caracteres.</small>
+        }
+      </label>
+
+      <div class="observaciones">
+        <div class="titulo-observaciones">
+          <strong>Observaciones por plantilla y bloque (opcional)</strong>
+          <button type="button" class="boton boton-secundario boton-compacto" (click)="agregarObservacion()">+ Agregar observación</button>
+        </div>
+        @for (o of observaciones(); track $index; let i = $index) {
+          <fieldset class="observacion">
+            <legend>Observación {{ i + 1 }}</legend>
+            <label class="campo">
+              <span>Plantilla observada</span>
+              <select class="control" (change)="cambiarObservacion(i, { propuestaId: $any($event.target).value })">
+                @for (p of activas(); track p.id) {
+                  <option [value]="p.id" [selected]="p.id === o.propuestaId">{{ p.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="campo">
+              <span>Bloque observado</span>
+              <select class="control" (change)="cambiarObservacion(i, { bloqueCodigo: $any($event.target).value })">
+                <option value="" [selected]="!o.bloqueCodigo">Observación general</option>
+                @for (b of bloquesDe(o.propuestaId); track b) {
+                  <option [value]="b" [selected]="b === o.bloqueCodigo">{{ b }}</option>
+                }
+              </select>
+            </label>
+            <label class="campo">
+              <span>Descripción del problema</span>
+              <textarea class="control" rows="2" maxlength="2000" [value]="o.problema" (input)="cambiarObservacion(i, { problema: $any($event.target).value })"></textarea>
+            </label>
+            <label class="campo">
+              <span>Recomendación de corrección (opcional)</span>
+              <textarea class="control" rows="2" maxlength="2000" [value]="o.recomendacion" (input)="cambiarObservacion(i, { recomendacion: $any($event.target).value })"></textarea>
+            </label>
+            <button type="button" class="boton boton-secundario boton-compacto" (click)="quitarObservacion(i)">Quitar</button>
+          </fieldset>
+        }
+      </div>
+
+      @if (errorDevolucion(); as mensaje) {
+        <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+      }
+      <div class="acciones-dialogo">
+        <button type="button" class="boton boton-secundario" (click)="cerrarDevolucion()">Cancelar</button>
+        <button type="button" class="boton boton-peligro" [disabled]="!justificacionValida() || !observacionesValidas() || enviando()" (click)="devolver()">
+          {{ enviando() ? 'Devolviendo…' : 'Devolver a registro' }}
+        </button>
+      </div>
+    </dialog>
+  }
+}

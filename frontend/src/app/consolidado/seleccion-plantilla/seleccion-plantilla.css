@@ -1,0 +1,119 @@
+.dialogo {
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  color: var(--texto);
+  box-shadow: 0 12px 32px rgb(31 42 61 / 18%);
+}
+
+.dialogo::backdrop {
+  background: rgb(31 42 61 / 40%);
+}
+
+.dialogo[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.cabecera h2 {
+  margin: 0;
+}
+
+.pestanas {
+  display: flex;
+  gap: var(--espacio-1);
+  border-bottom: 1px solid var(--borde);
+}
+
+.pestanas button {
+  padding: var(--espacio-2) var(--espacio-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--texto-secundario);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pestanas button.activa {
+  border-bottom-color: var(--primario);
+  color: var(--primario-oscuro);
+}
+
+.campo-nombre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.nota {
+  margin: 0;
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+  color: var(--primario-oscuro);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vigentes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.vigentes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.vigentes li.bloqueada {
+  background: var(--fondo-suave);
+}
+
+.vigentes li.bloqueada .nota {
+  color: var(--prueba);
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tipo {
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--texto-secundario);
+}
+
+.sin-margen {
+  margin: 0;
+}

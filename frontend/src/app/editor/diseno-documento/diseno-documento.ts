@@ -3,7 +3,7 @@ import { identificadorUnico } from '../../compartido/identificador';
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
-import { AlineacionLogo, ESPACIO_FIRMAS, Plantilla } from '../../core/modelos';
+import { AlineacionLogo, ESPACIO_FIRMAS, PlantillaEdicion } from '../../core/modelos';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
 
 /** Límites que también aplica el servidor. */
@@ -22,7 +22,7 @@ export class DisenoDocumento {
   private readonly interaccion = inject(InteraccionService);
   private readonly actual = inject(PlantillaActualService);
 
-  readonly plantilla = input.required<Plantilla>();
+  readonly plantilla = input.required<PlantillaEdicion>();
   /** Solo el identificador: una versión nueva de la misma plantilla no debe reiniciar el formulario. */
   private readonly idPlantilla = computed(() => this.plantilla().id);
 
@@ -146,8 +146,7 @@ export class DisenoDocumento {
     this.guardando.set(true);
     const pie = this.pie().trim();
     this.api
-      .actualizarPlantilla({
-        ...this.plantilla(),
+      .actualizarDiseno(this.plantilla().id, {
         piePagina: pie === '' ? null : pie,
         alineacionLogo: this.alineacion(),
         espacioFirmasCm: Math.round(this.espacioFirmas() * 10) / 10,
@@ -170,7 +169,7 @@ export class DisenoDocumento {
     this.reiniciar(this.plantilla());
   }
 
-  private reiniciar(plantilla: Plantilla): void {
+  private reiniciar(plantilla: PlantillaEdicion): void {
     const base = {
       pie: plantilla.piePagina ?? '',
       alineacion: plantilla.alineacionLogo ?? 'Centro',

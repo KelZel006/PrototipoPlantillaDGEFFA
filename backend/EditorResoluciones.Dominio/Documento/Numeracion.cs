@@ -19,8 +19,16 @@ public static class Numeracion
     /// <summary>Etiqueta del bloque número <paramref name="numero"/> de la sección, o null si la sección no se numera.</summary>
     public static string? Etiqueta(Seccion seccion, int numero) => seccion switch
     {
-        Seccion.Considerando => string.Create(CultureInfo.InvariantCulture, $"CONSIDERANDO({numero}): "),
-        Seccion.Resuelve => $"{Ordinal(numero)}: ",
+        Seccion.Considerando => Etiqueta(NumeracionBloque.Considerando, numero),
+        Seccion.Resuelve => Etiqueta(NumeracionBloque.Ordinal, numero),
+        _ => null,
+    };
+
+    /// <summary>Etiqueta del párrafo número <paramref name="numero"/> según la numeración del bloque; null si no se numera.</summary>
+    public static string? Etiqueta(NumeracionBloque numeracion, int numero) => numeracion switch
+    {
+        NumeracionBloque.Considerando => string.Create(CultureInfo.InvariantCulture, $"CONSIDERANDO({numero}): "),
+        NumeracionBloque.Ordinal => $"{Ordinal(numero)}: ",
         _ => null,
     };
 

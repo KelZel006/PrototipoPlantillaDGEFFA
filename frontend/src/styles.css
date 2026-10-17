@@ -289,3 +289,36 @@ h3 {
 .campo-dinamico.campo-lista::before {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E");
 }
+
+/* Tablas de datos (diagnóstico, documentos consolidados). */
+.tabla-desplazable {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: var(--espacio-2) var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabla thead th {
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+  color: var(--texto-secundario);
+}
+
+.tabla .numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla tbody th {
+  font-weight: 600;
+}

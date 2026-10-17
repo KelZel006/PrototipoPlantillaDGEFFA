@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text;
 using System.Text.Json.Nodes;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Modelos;
+using EditorResoluciones.Dominio.Repositorios;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EditorResoluciones.Pruebas;
@@ -78,8 +80,10 @@ public class EvaluadorCondicionesPruebas
 }
 
 /// <summary>Generación del documento y del PDF con los datos de prueba fijos.</summary>
-public sealed class DocumentoPruebas : IDisposable
+/// <summary>Documento generado a partir de una propuesta que modifica PLA-001 (el mismo armado de la vista previa).</summary>
+public sealed class DocumentoPruebas : IAsyncLifetime, IDisposable
 {
+    private string _propuesta = "";
     private readonly DirectorioTemporal _datos = new();
     private readonly FabricaApi _fabrica;
     private readonly HttpClient _cliente;
@@ -89,6 +93,12 @@ public sealed class DocumentoPruebas : IDisposable
         _fabrica = new FabricaApi(_datos.Ruta);
         _cliente = _fabrica.CreateClient();
     }
+
+    public async Task InitializeAsync() => _propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001")).Single().Id;
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    private string Ruta => $"/api/propuestas/{_propuesta}";
 
     public void Dispose()
     {
@@ -100,7 +110,10 @@ public sealed class DocumentoPruebas : IDisposable
     private async Task<DocumentoResuelto> Generar(string? solicitudId)
     {
         using var alcance = _fabrica.Services.CreateScope();
-        return await alcance.ServiceProvider.GetRequiredService<ServicioDocumento>().GenerarAsync("PLA-001", solicitudId);
+        var propuesta = (await alcance.ServiceProvider.GetRequiredService<IRepositorio<Propuesta>>().ObtenerAsync(_propuesta))!;
+        var (plantilla, parrafos) = ConstructorContenido.ADocumento(propuesta.ContenidoPropuesto, propuesta.Id, propuesta.Nombre,
+            propuesta.RubroId, propuesta.SubRubroId, propuesta.TipoDocumentoId, propuesta.ClaseDocumentoId);
+        return await alcance.ServiceProvider.GetRequiredService<ServicioDocumento>().GenerarAsync(plantilla, parrafos, solicitudId);
     }
 
     private static string Texto(NodoContenido nodo) =>
@@ -186,14 +199,14 @@ public sealed class DocumentoPruebas : IDisposable
         var nuevo = new JsonObject
         {
             ["plantillaId"] = "PLA-001",
-            ["seccion"] = "Resuelve",
+            ["bloque"] = "RESUELVE",
             ["contenido"] = new JsonObject
             {
                 ["type"] = "doc",
                 ["content"] = new JsonArray(new JsonObject { ["type"] = "paragraph", ["content"] = new JsonArray(TextoNodo("Notificar al interesado.")) }),
             },
         };
-        (await _cliente.PostAsync("/api/parrafos", new StringContent(nuevo.ToJsonString(), Encoding.UTF8, "application/json"))).EnsureSuccessStatusCode();
+        (await _cliente.PostAsync($"{Ruta}/parrafos", new StringContent(nuevo.ToJsonString(), Encoding.UTF8, "application/json"))).EnsureSuccessStatusCode();
 
         var resuelve = Seccion(await Generar("SOL-001"), Dominio.Modelos.Seccion.Resuelve).Parrafos;
 
@@ -205,12 +218,12 @@ public sealed class DocumentoPruebas : IDisposable
     [Fact]
     public async Task Por_tanto_y_firmas_van_en_su_lugar_sin_numeracion_y_admiten_campos()
     {
-        foreach (var (seccion, texto) in new[] { ("Firmas", "Firma de "), ("PorTanto", "Con base en lo anterior para ") })
+        foreach (var (seccion, texto) in new[] { ("FIRMAS", "Firma de "), ("POR_TANTO", "Con base en lo anterior para ") })
         {
             var parrafo = new JsonObject
             {
                 ["plantillaId"] = "PLA-001",
-                ["seccion"] = seccion,
+                ["bloque"] = seccion,
                 ["contenido"] = new JsonObject
                 {
                     ["type"] = "doc",
@@ -221,8 +234,8 @@ public sealed class DocumentoPruebas : IDisposable
                     }),
                 },
             };
-            var respuesta = await _cliente.PostAsync("/api/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
-            Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
+            var respuesta = await _cliente.PostAsync($"{Ruta}/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
+            Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         }
 
         var documento = await Generar("SOL-001");
@@ -238,7 +251,7 @@ public sealed class DocumentoPruebas : IDisposable
         Assert.Equal("Firma de Beneficiario Ficticio Uno (prueba)",
             Texto(Seccion(documento, Dominio.Modelos.Seccion.Firmas).Parrafos[0].Contenido));
 
-        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001");
+        var pdf = await _cliente.GetAsync($"{Ruta}/pdf?solicitudId=SOL-001");
         Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
     }
 
@@ -307,11 +320,11 @@ public sealed class DocumentoPruebas : IDisposable
     [InlineData("?solicitudId=SOL-003")]
     public async Task El_endpoint_devuelve_un_pdf(string consulta)
     {
-        var respuesta = await _cliente.GetAsync($"/api/plantillas/PLA-001/pdf{consulta}");
+        var respuesta = await _cliente.GetAsync($"{Ruta}/pdf{consulta}");
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         Assert.Equal("application/pdf", respuesta.Content.Headers.ContentType?.MediaType);
-        Assert.Contains("resolucion-prueba_PLA-001", respuesta.Content.Headers.ContentDisposition?.FileNameStar ?? respuesta.Content.Headers.ContentDisposition?.FileName);
+        Assert.Contains($"propuesta_{_propuesta}", respuesta.Content.Headers.ContentDisposition?.FileNameStar ?? respuesta.Content.Headers.ContentDisposition?.FileName);
         var bytes = await respuesta.Content.ReadAsByteArrayAsync();
         Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes, 0, 4));
     }
@@ -319,8 +332,9 @@ public sealed class DocumentoPruebas : IDisposable
     [Fact]
     public async Task Solicitud_o_plantilla_inexistente_devuelve_404()
     {
-        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-NO")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync("/api/plantillas/PLA-NO/pdf")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync($"{Ruta}/pdf?solicitudId=SOL-NO")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync("/api/propuestas/PRO-NO/pdf")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync("/api/versiones-plantilla/VER-NO/pdf")).StatusCode);
     }
 
     private static JsonObject Celda(string tipo, params JsonNode[] enLinea) => new()
@@ -338,10 +352,10 @@ public sealed class DocumentoPruebas : IDisposable
         var parrafo = new JsonObject
         {
             ["plantillaId"] = "PLA-001",
-            ["seccion"] = "Considerando",
+            ["bloque"] = "CONSIDERANDO",
             ["contenido"] = new JsonObject { ["type"] = "doc", ["content"] = new JsonArray(tabla) },
         };
-        return _cliente.PostAsync("/api/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
+        return _cliente.PostAsync($"{Ruta}/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
     }
 
     [Fact]
@@ -363,13 +377,13 @@ public sealed class DocumentoPruebas : IDisposable
         };
 
         var respuesta = await PublicarParrafo(tabla);
-        Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
 
         var documento = await Generar("SOL-001");
         var conTabla = Seccion(documento, Dominio.Modelos.Seccion.Considerando).Parrafos.Last();
         Assert.Contains("Beneficiario Ficticio Uno (prueba)", Texto(conTabla.Contenido));
 
-        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001");
+        var pdf = await _cliente.GetAsync($"{Ruta}/pdf?solicitudId=SOL-001");
         Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
     }
 

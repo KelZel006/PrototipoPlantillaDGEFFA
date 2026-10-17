@@ -1,19 +1,28 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { ContextoService } from '../../core/contexto.service';
-import { numerarConsiderando, numerarResuelve } from '../../core/numeracion';
-import { Plantilla, Seccion } from '../../core/modelos';
+import { numeradorDe } from '../../core/numeracion';
+import { BloqueConfigurado, PlantillaEdicion, Seccion } from '../../core/modelos';
 import { EditorSeccion, NombreSeccion } from '../editor-seccion/editor-seccion';
 
 interface Pestana {
   seccion: Seccion;
+  titulo: string;
   nombre: NombreSeccion;
-  /** Las secciones se habilitan por fases. */
-  disponible: boolean;
+  bloque: BloqueConfigurado;
 }
 
+/** Textos propios de los cinco bloques originales; los demás bloques del catálogo usan textos generales. */
+const TEXTOS: Record<string, Omit<NombreSeccion, 'numerar'>> = {
+  CABECERA: { texto: 'Texto de la Cabecera', listado: 'Listado de la Cabecera', elemento: 'Párrafo de cabecera' },
+  CONSIDERANDO: { texto: 'Texto del Considerando', listado: 'Listado de Considerandos', elemento: 'Considerando' },
+  POR_TANTO: { texto: 'Texto del Por Tanto', listado: 'Listado del Por Tanto', elemento: 'Párrafo del por tanto' },
+  RESUELVE: { texto: 'Texto del Resuelve', listado: 'Listado de Resolución', elemento: 'Punto resolutivo' },
+  FIRMAS: { texto: 'Texto de Firmas', listado: 'Listado de Firmas', elemento: 'Bloque de firma' },
+};
+
 /**
- * Pestañas Cabecera, Considerando y Resuelve. Las secciones disponibles quedan montadas y solo se oculta
- * la inactiva, para que cada una conserve su borrador al cambiar de pestaña.
+ * Una pestaña por cada bloque del tipo documental (decisión D2), en su orden. Las secciones quedan montadas y solo se
+ * oculta la inactiva, para que cada una conserve su borrador al cambiar de pestaña.
  */
 @Component({
   selector: 'app-pestanas-secciones',
@@ -24,70 +33,37 @@ interface Pestana {
 export class PestanasSecciones {
   protected readonly contexto = inject(ContextoService);
 
-  readonly plantilla = input.required<Plantilla>();
+  readonly plantilla = input.required<PlantillaEdicion>();
 
-  protected readonly pestanas: Pestana[] = [
-    {
-      seccion: 'Cabecera',
-      nombre: { texto: 'Texto de la Cabecera', listado: 'Listado de la Cabecera', elemento: 'Párrafo de cabecera' },
-      disponible: true,
-    },
-    {
-      seccion: 'Considerando',
+  protected readonly pestanas = computed<Pestana[]>(() =>
+    this.plantilla().bloques.map((bloque) => ({
+      seccion: bloque.codigo,
+      titulo: bloque.nombre,
+      bloque,
       nombre: {
-        texto: 'Texto del Considerando',
-        listado: 'Listado de Considerandos',
-        elemento: 'Considerando',
-        numerar: numerarConsiderando,
+        ...(TEXTOS[bloque.codigo] ?? {
+          texto: `Texto de ${bloque.nombre}`,
+          listado: `Listado de ${bloque.nombre}`,
+          elemento: `Párrafo de ${bloque.nombre.toLowerCase()}`,
+        }),
+        numerar: numeradorDe(bloque.numeracion) ?? undefined,
       },
-      disponible: true,
-    },
-    {
-      seccion: 'PorTanto',
-      nombre: { texto: 'Texto del Por Tanto', listado: 'Listado del Por Tanto', elemento: 'Párrafo del por tanto' },
-      disponible: true,
-    },
-    {
-      seccion: 'Resuelve',
-      nombre: {
-        texto: 'Texto del Resuelve',
-        listado: 'Listado de Resolución',
-        elemento: 'Punto resolutivo',
-        numerar: numerarResuelve,
-      },
-      disponible: true,
-    },
-    {
-      seccion: 'Firmas',
-      nombre: { texto: 'Texto de Firmas', listado: 'Listado de Firmas', elemento: 'Bloque de firma' },
-      disponible: true,
-    },
-  ];
+    })),
+  );
 
-  /** Nombre visible de cada sección en su pestaña. */
-  protected readonly titulos: Record<Seccion, string> = {
-    Cabecera: 'Cabecera',
-    Considerando: 'Considerando',
-    PorTanto: 'Por Tanto',
-    Resuelve: 'Resuelve',
-    Firmas: 'Firmas',
-  };
-
-  /** Siempre se empieza por la primera pestaña, Cabecera. */
-  protected readonly activa = signal<Seccion>('Cabecera');
+  /** Siempre se empieza por la primera pestaña. */
+  protected readonly activa = signal<Seccion>('');
   private readonly idPlantilla = computed(() => this.plantilla().id);
 
   constructor() {
     // Al cambiar de plantilla se vuelve a la primera pestaña.
     effect(() => {
       this.idPlantilla();
-      untracked(() => this.activa.set('Cabecera'));
+      untracked(() => this.activa.set(this.pestanas()[0]?.seccion ?? ''));
     });
   }
 
   protected seleccionar(pestana: Pestana): void {
-    if (pestana.disponible) {
-      this.activa.set(pestana.seccion);
-    }
+    this.activa.set(pestana.seccion);
   }
 }

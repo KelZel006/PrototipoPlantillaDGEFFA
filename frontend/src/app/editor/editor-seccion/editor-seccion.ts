@@ -32,7 +32,7 @@ import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { Numerador } from '../../core/numeracion';
 import { PreferenciasService } from '../../core/preferencias.service';
-import { Campo, GrupoCondiciones, NodoContenido, Parrafo, Plantilla, Seccion, esCampoLista } from '../../core/modelos';
+import { BloqueConfigurado, Campo, GrupoCondiciones, NodoContenido, Parrafo, PlantillaEdicion, Seccion, esCampoLista } from '../../core/modelos';
 import { ConstructorCondiciones } from '../constructor-condiciones/constructor-condiciones';
 import { EditorTexto } from '../editor-texto/editor-texto';
 import { ListaParrafos } from '../lista-parrafos/lista-parrafos';
@@ -83,9 +83,11 @@ export class EditorSeccion {
   private readonly contexto = inject(ContextoService);
   protected readonly preferencias = inject(PreferenciasService);
 
-  readonly plantilla = input.required<Plantilla>();
+  readonly plantilla = input.required<PlantillaEdicion>();
   readonly seccion = input.required<Seccion>();
   readonly nombre = input.required<NombreSeccion>();
+  /** Configuración del bloque (contexto de los campos, numeración). */
+  readonly bloque = input<BloqueConfigurado | null>(null);
   /**
    * Solo el identificador: una versión nueva de la misma plantilla (por ejemplo, al cargar el logo) no debe
    * recargar la lista ni borrar el borrador.
@@ -121,7 +123,8 @@ export class EditorSeccion {
   protected readonly conflicto = signal(false);
 
   /** Contexto de uso de los campos, por ejemplo "considerando". */
-  protected readonly contextoCampos = computed(() => this.seccion().toLowerCase());
+  /** Contexto de los campos del bloque (por ejemplo, Vistos usa los del considerando). */
+  protected readonly contextoCampos = computed(() => this.bloque()?.contextoCampos ?? this.seccion().toLowerCase());
   protected readonly camposSeccion = computed(() => this.catalogo.camposDeContexto(this.contextoCampos()));
   protected readonly camposCondicion = this.catalogo.camposCondicionParrafo;
   protected readonly usados = computed(() => camposUsados(this.contenido()));
@@ -205,12 +208,10 @@ export class EditorSeccion {
     const editando = this.editando();
     const peticion: Observable<Parrafo> = editando
       ? this.api.actualizarParrafo({ ...editando, ...datos })
-      : this.api.crearParrafo({
-          plantillaId: this.plantilla().id,
-          seccion: this.seccion(),
+      : this.api.crearParrafo(this.plantilla().id, {
+          bloque: this.seccion(),
           orden: 0,
           activo: true,
-          camposUsados: [],
           ...datos,
         });
 
@@ -263,7 +264,7 @@ export class EditorSeccion {
   }
 
   protected duplicar(parrafo: Parrafo): void {
-    this.ejecutar(this.api.duplicarParrafo(parrafo.id), 'Párrafo duplicado debajo del original.');
+    this.ejecutar(this.api.duplicarParrafo(parrafo), 'Párrafo duplicado debajo del original.');
   }
 
   protected alternarActivo(parrafo: Parrafo): void {

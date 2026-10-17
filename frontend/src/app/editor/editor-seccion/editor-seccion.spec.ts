@@ -53,7 +53,7 @@ describe('EditorSeccion', () => {
     Array.from(elemento.querySelectorAll<HTMLButtonElement>('.acciones button')).find((b) => b.textContent?.includes(texto))!;
   const accionLista = (indice: number, etiqueta: string) =>
     elemento.querySelectorAll('.tarjeta-parrafo')[indice].querySelector<HTMLButtonElement>(`[aria-label="${etiqueta}"]`)!;
-  const parrafosUrl = (r: { url: string; method: string }) => r.method === 'GET' && r.url === '/api/parrafos';
+  const parrafosUrl = (r: { url: string; method: string }) => r.method === 'GET' && r.url === '/api/propuestas/PRO-001/parrafos';
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -66,7 +66,7 @@ describe('EditorSeccion', () => {
     fixture = TestBed.createComponent(EditorSeccion);
     elemento = fixture.nativeElement;
     fixture.componentRef.setInput('plantilla', PLANTILLA);
-    fixture.componentRef.setInput('seccion', 'Considerando');
+    fixture.componentRef.setInput('seccion', 'CONSIDERANDO');
     fixture.componentRef.setInput('nombre', {
       texto: 'Texto del Considerando',
       listado: 'Listado de Considerandos',
@@ -78,7 +78,7 @@ describe('EditorSeccion', () => {
     http.expectOne('/api/campos').flush(CAMPOS);
     http.expectOne('/api/campos/operadores').flush(OPERADORES);
     const peticion = http.expectOne(parrafosUrl);
-    expect(peticion.request.params.get('seccion')).toBe('Considerando');
+    expect(peticion.request.params.get('bloque')).toBe('CONSIDERANDO');
     peticion.flush(lista);
     await refrescar();
   });
@@ -133,13 +133,11 @@ describe('EditorSeccion', () => {
     expect(elemento.textContent).toContain('Cambios sin guardar');
 
     botonAccion('Agregar a la lista').click();
-    const creacion = http.expectOne((r) => r.method === 'POST' && r.url === '/api/parrafos');
+    const creacion = http.expectOne((r) => r.method === 'POST' && r.url === '/api/propuestas/PRO-001/parrafos');
     expect(creacion.request.body).toEqual({
-      plantillaId: 'PLA-001',
-      seccion: 'Considerando',
+      bloque: 'CONSIDERANDO',
       orden: 0,
       activo: true,
-      camposUsados: [],
       contenido: {
         type: 'doc',
         content: [
@@ -171,7 +169,7 @@ describe('EditorSeccion', () => {
     await escribir(DOCUMENTO);
     botonAccion('Actualizar').click();
     const primera = http.expectOne((r) => r.method === 'PUT');
-    expect(primera.request.url).toBe('/api/parrafos/P1');
+    expect(primera.request.url).toBe('/api/propuestas/PRO-001/parrafos/P1');
     expect(primera.request.body.version).toBe(1);
     primera.flush({ title: 'Conflicto con los datos guardados.' }, { status: 409, statusText: 'Conflict' });
     await refrescar();
@@ -205,7 +203,7 @@ describe('EditorSeccion', () => {
     accionLista(1, 'Eliminar párrafo').click();
     await refrescar();
     const eliminacion = http.expectOne((r) => r.method === 'DELETE');
-    expect(eliminacion.request.url).toBe('/api/parrafos/P2');
+    expect(eliminacion.request.url).toBe('/api/propuestas/PRO-001/parrafos/P2');
     expect(eliminacion.request.params.get('version')).toBe('1');
     eliminacion.flush(null);
     await refrescar();
@@ -216,10 +214,9 @@ describe('EditorSeccion', () => {
 
   it('reordena enviando la sección completa con sus versiones', async () => {
     accionLista(0, 'Bajar párrafo').click();
-    const reorden = http.expectOne('/api/parrafos/reordenar');
+    const reorden = http.expectOne('/api/propuestas/PRO-001/parrafos/reordenar');
     expect(reorden.request.body).toEqual({
-      plantillaId: 'PLA-001',
-      seccion: 'Considerando',
+      bloque: 'CONSIDERANDO',
       elementos: [
         { id: 'P2', version: 1 },
         { id: 'P1', version: 1 },
@@ -236,7 +233,7 @@ describe('EditorSeccion', () => {
     fixture.detectChanges();
     expect(Array.from(elemento.querySelectorAll('.resumen')).map((r) => r.textContent?.trim())).toEqual(['Segundo', 'Primero']);
 
-    const reorden = http.expectOne('/api/parrafos/reordenar');
+    const reorden = http.expectOne('/api/propuestas/PRO-001/parrafos/reordenar');
     expect(reorden.request.body.elementos.map((e: { id: string }) => e.id)).toEqual(['P2', 'P1']);
     reorden.flush({ title: 'Conflicto con los datos guardados.' }, { status: 409, statusText: 'Conflict' });
     await refrescar();

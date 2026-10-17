@@ -1,18 +1,27 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { Avisos } from './compartido/avisos';
 import { DialogoConfirmacion } from './compartido/dialogo-confirmacion';
-import { PlantillaActualService } from './core/plantilla-actual.service';
+import { Rol } from './core/modelos';
+import { UsuarioPruebaService } from './core/usuario-prueba.service';
 import { EstadoDatos } from './editor/estado-datos/estado-datos';
-import { PanelPlantilla } from './editor/panel-plantilla/panel-plantilla';
-import { PestanasSecciones } from './editor/pestanas-secciones/pestanas-secciones';
-import { SelectorContexto } from './editor/selector-contexto/selector-contexto';
+
+const NOMBRE_ROL: Record<Rol, string> = {
+  Analista: 'Analista',
+  OficialJuridico: 'Oficial Jurídico',
+  Administrador: 'Administrador',
+};
 
 @Component({
   selector: 'app-root',
-  imports: [SelectorContexto, PanelPlantilla, PestanasSecciones, EstadoDatos, DialogoConfirmacion, Avisos],
+  imports: [RouterOutlet, RouterLink, EstadoDatos, DialogoConfirmacion, Avisos],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly plantillaActual = inject(PlantillaActualService);
+  protected readonly usuario = inject(UsuarioPruebaService);
+
+  protected nombresRoles(roles: Rol[]): string {
+    return roles.map((r) => NOMBRE_ROL[r]).join(', ');
+  }
 }

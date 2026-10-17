@@ -75,6 +75,32 @@ public sealed class FabricaApi(string directorioDatos, string? semilla = null, T
     }
 }
 
+/// <summary>Atajos para preparar un Documento Consolidado en las pruebas del editor.</summary>
+public static class Consolidados
+{
+    private static readonly System.Text.Json.JsonSerializerOptions Json = EditorResoluciones.Dominio.Comun.OpcionesJson.Predeterminadas;
+
+    /// <summary>Crea un consolidado (con el usuario predeterminado, analista) y devuelve su identificador.</summary>
+    public static async Task<string> CrearAsync(HttpClient cliente)
+    {
+        var respuesta = await cliente.PostAsync("/api/consolidados", null);
+        respuesta.EnsureSuccessStatusCode();
+        return (await System.Net.Http.Json.HttpContentJsonExtensions
+            .ReadFromJsonAsync<EditorResoluciones.Dominio.Modelos.DocumentoConsolidado>(respuesta.Content, Json))!.Id;
+    }
+
+    /// <summary>Crea un consolidado con la propuesta MODIFICAR de la plantilla y devuelve las propuestas agregadas.</summary>
+    public static async Task<List<EditorResoluciones.Dominio.Modelos.Propuesta>> ModificarAsync(HttpClient cliente, string plantillaId, string? consolidadoId = null)
+    {
+        consolidadoId ??= await CrearAsync(cliente);
+        var respuesta = await System.Net.Http.Json.HttpClientJsonExtensions.PostAsJsonAsync(
+            cliente, $"/api/consolidados/{consolidadoId}/propuestas/modificar", new { plantillaId }, Json);
+        respuesta.EnsureSuccessStatusCode();
+        return (await System.Net.Http.Json.HttpContentJsonExtensions
+            .ReadFromJsonAsync<List<EditorResoluciones.Dominio.Modelos.Propuesta>>(respuesta.Content, Json))!;
+    }
+}
+
 /// <summary>Reloj que marca la hora indicada (se puede cambiar durante la prueba).</summary>
 public sealed class RelojFijo(DateTimeOffset ahora) : TimeProvider
 {

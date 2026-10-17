@@ -1,6 +1,6 @@
 .pestanas {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--columnas, 5), minmax(0, 1fr));
   gap: var(--espacio-2);
   margin-bottom: var(--espacio-4);
 }
@@ -77,4 +77,13 @@
   .pestanas {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+.obligatorio {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.pestana[aria-selected='true'] .obligatorio {
+  color: inherit;
 }

@@ -5,15 +5,21 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using EditorResoluciones.Dominio.Comun;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Documento;
 using EditorResoluciones.Dominio.Modelos;
+using EditorResoluciones.Dominio.Repositorios;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EditorResoluciones.Pruebas;
 
-/// <summary>Filas que se repiten por registro (campos de lista), logo, pie de página e interlineado.</summary>
-public sealed class ListasYDisenoPruebas : IDisposable
+/// <summary>
+/// Filas que se repiten por registro (campos de lista), logo, pie de página e interlineado, sobre una propuesta que
+/// modifica PLA-001.
+/// </summary>
+public sealed class ListasYDisenoPruebas : IAsyncLifetime, IDisposable
 {
+    private string _propuesta = "";
     private readonly DirectorioTemporal _datos = new();
     private readonly FabricaApi _fabrica;
     private readonly HttpClient _cliente;
@@ -28,6 +34,12 @@ public sealed class ListasYDisenoPruebas : IDisposable
         _fabrica = new FabricaApi(_datos.Ruta);
         _cliente = _fabrica.CreateClient();
     }
+
+    public async Task InitializeAsync() => _propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001")).Single().Id;
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    private string Ruta => $"/api/propuestas/{_propuesta}";
 
     public void Dispose()
     {
@@ -63,17 +75,21 @@ public sealed class ListasYDisenoPruebas : IDisposable
     {
         var parrafo = new JsonObject
         {
-            ["plantillaId"] = "PLA-001",
-            ["seccion"] = "Considerando",
+            ["bloque"] = "CONSIDERANDO",
+            ["activo"] = true,
             ["contenido"] = new JsonObject { ["type"] = "doc", ["content"] = new JsonArray(bloques) },
         };
-        return await _cliente.PostAsync("/api/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
+        return await _cliente.PostAsync($"{Ruta}/parrafos", new StringContent(parrafo.ToJsonString(), Encoding.UTF8, "application/json"));
     }
 
     private async Task<DocumentoResuelto> Generar(string? solicitudId, double interlineado = Interlineados.Predeterminado)
     {
+        // El mismo armado que usa la vista previa en PDF de la propuesta.
         using var alcance = _fabrica.Services.CreateScope();
-        return await alcance.ServiceProvider.GetRequiredService<ServicioDocumento>().GenerarAsync("PLA-001", solicitudId, interlineado);
+        var propuesta = (await alcance.ServiceProvider.GetRequiredService<IRepositorio<Propuesta>>().ObtenerAsync(_propuesta))!;
+        var (plantilla, parrafos) = ConstructorContenido.ADocumento(propuesta.ContenidoPropuesto, propuesta.Id, propuesta.Nombre,
+            propuesta.RubroId, propuesta.SubRubroId, propuesta.TipoDocumentoId, propuesta.ClaseDocumentoId);
+        return await alcance.ServiceProvider.GetRequiredService<ServicioDocumento>().GenerarAsync(plantilla, parrafos, solicitudId, interlineado);
     }
 
     /// <summary>Filas de la tabla del último considerando, como texto por celda.</summary>
@@ -134,7 +150,7 @@ public sealed class ListasYDisenoPruebas : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, fuera.StatusCode);
         Assert.Contains("solo se puede usar dentro de una tabla", await fuera.Content.ReadAsStringAsync());
 
-        Assert.Equal(HttpStatusCode.Created, (await PublicarParrafo(TablaDeBienes())).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await PublicarParrafo(TablaDeBienes())).StatusCode);
     }
 
     private async Task<HttpResponseMessage> CargarLogo(byte[] contenido, string nombre, string tipo = "image/png")
@@ -143,15 +159,15 @@ public sealed class ListasYDisenoPruebas : IDisposable
         var archivo = new ByteArrayContent(contenido);
         archivo.Headers.ContentType = new MediaTypeHeaderValue(tipo);
         formulario.Add(archivo, "archivo", nombre);
-        return await _cliente.PostAsync("/api/plantillas/PLA-001/logo", formulario);
+        return await _cliente.PostAsync($"{Ruta}/logo", formulario);
     }
 
     [Fact]
-    public async Task Carga_reemplaza_y_quita_el_logo_de_la_plantilla()
+    public async Task Carga_reemplaza_y_quita_el_logo_de_la_propuesta()
     {
         var primera = await CargarLogo(Png, "logo.png");
         Assert.Equal(HttpStatusCode.OK, primera.StatusCode);
-        var conLogo = (await primera.Content.ReadFromJsonAsync<Plantilla>(Json))!;
+        var conLogo = (await primera.Content.ReadFromJsonAsync<PlantillaEdicion>(Json))!;
         Assert.StartsWith("ARC-", conLogo.LogoId);
 
         var imagen = await _cliente.GetAsync($"/api/archivos/{conLogo.LogoId}");
@@ -159,11 +175,11 @@ public sealed class ListasYDisenoPruebas : IDisposable
         Assert.Equal(Png, await imagen.Content.ReadAsByteArrayAsync());
 
         // Reemplazar elimina el archivo anterior.
-        var reemplazo = (await (await CargarLogo(Png, "otro.png")).Content.ReadFromJsonAsync<Plantilla>(Json))!;
+        var reemplazo = (await (await CargarLogo(Png, "otro.png")).Content.ReadFromJsonAsync<PlantillaEdicion>(Json))!;
         Assert.NotEqual(conLogo.LogoId, reemplazo.LogoId);
         Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync($"/api/archivos/{conLogo.LogoId}")).StatusCode);
 
-        var sinLogo = (await (await _cliente.DeleteAsync("/api/plantillas/PLA-001/logo")).Content.ReadFromJsonAsync<Plantilla>(Json))!;
+        var sinLogo = (await (await _cliente.DeleteAsync($"{Ruta}/logo")).Content.ReadFromJsonAsync<PlantillaEdicion>(Json))!;
         Assert.Null(sinLogo.LogoId);
         Assert.Equal(HttpStatusCode.NotFound, (await _cliente.GetAsync($"/api/archivos/{reemplazo.LogoId}")).StatusCode);
     }
@@ -193,14 +209,14 @@ public sealed class ListasYDisenoPruebas : IDisposable
 
     private const int ServicioLogosTamano = Dominio.Servicios.ServicioLogos.TamanoMaximo;
 
+    private Task<HttpResponseMessage> CambiarDiseno(AlineacionLogo alineacion, string? pie, double espacio) =>
+        _cliente.PutAsJsonAsync($"{Ruta}/diseno", new DatosDiseno(alineacion, pie, espacio), Json);
+
     [Fact]
     public async Task Guarda_el_pie_de_pagina_y_lo_lleva_al_documento_con_el_logo()
     {
         await CargarLogo(Png, "logo.png");
-        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
-        plantilla.PiePagina = "Dirección de prueba\nTeléfono 0000-0000";
-        plantilla.AlineacionLogo = AlineacionLogo.Izquierda;
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json)).EnsureSuccessStatusCode();
+        (await CambiarDiseno(AlineacionLogo.Izquierda, "Dirección de prueba\nTeléfono 0000-0000", 1.2)).EnsureSuccessStatusCode();
 
         var documento = await Generar("SOL-001", 1.1);
 
@@ -209,7 +225,7 @@ public sealed class ListasYDisenoPruebas : IDisposable
         Assert.Equal(Png, documento.Diseno.Logo);
         Assert.Equal(1.1, documento.Diseno.Interlineado);
 
-        var pdf = await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001&interlineado=1.1");
+        var pdf = await _cliente.GetAsync($"{Ruta}/pdf?solicitudId=SOL-001&interlineado=1.1");
         Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
     }
 
@@ -222,14 +238,13 @@ public sealed class ListasYDisenoPruebas : IDisposable
     [Fact]
     public async Task Guarda_el_espacio_entre_firmas_y_lo_lleva_al_documento()
     {
-        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
-        Assert.Equal(1.2, plantilla.EspacioFirmasCm);
+        var edicion = (await _cliente.GetFromJsonAsync<PlantillaEdicion>($"{Ruta}/edicion", Json))!;
+        Assert.Equal(1.2, edicion.EspacioFirmasCm);
 
-        plantilla.EspacioFirmasCm = 3.5;
-        (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json)).EnsureSuccessStatusCode();
+        (await CambiarDiseno(edicion.AlineacionLogo, edicion.PiePagina, 3.5)).EnsureSuccessStatusCode();
 
         Assert.Equal(3.5, (await Generar("SOL-001")).Diseno.EspacioFirmasCm);
-        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync("/api/plantillas/PLA-001/pdf?solicitudId=SOL-001")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync($"{Ruta}/pdf?solicitudId=SOL-001")).StatusCode);
     }
 
     [Theory]
@@ -237,25 +252,24 @@ public sealed class ListasYDisenoPruebas : IDisposable
     [InlineData(10.5)]
     public async Task Rechaza_un_espacio_entre_firmas_fuera_de_rango(double espacio)
     {
-        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
-        plantilla.EspacioFirmasCm = espacio;
-
-        var respuesta = await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json);
+        var respuesta = await CambiarDiseno(AlineacionLogo.Centro, null, espacio);
 
         Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
         Assert.Contains("entre 0 y 10 cm", await respuesta.Content.ReadAsStringAsync());
     }
 
     [Fact]
-    public async Task Rechaza_un_logo_inexistente_al_actualizar_la_plantilla()
+    public async Task El_diseno_de_la_propuesta_no_cambia_la_version_vigente()
     {
-        var plantilla = (await _cliente.GetFromJsonAsync<Plantilla>("/api/plantillas/PLA-001", Json))!;
-        plantilla.LogoId = "ARC-NOEXISTE";
+        await CargarLogo(Png, "logo.png");
+        (await CambiarDiseno(AlineacionLogo.Derecha, "Pie propuesto", 4)).EnsureSuccessStatusCode();
 
-        var respuesta = await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", plantilla, Json);
-
-        Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
-        Assert.Contains("logoId", await respuesta.Content.ReadAsStringAsync());
+        var vigente = Assert.Single((await _cliente.GetFromJsonAsync<List<VersionPlantilla>>(
+            "/api/versiones-plantilla?plantillaId=PLA-001&vigencia=Vigente", Json))!);
+        Assert.Null(vigente.Contenido.Diseno.LogoId);
+        Assert.Null(vigente.Contenido.Diseno.PiePagina);
+        Assert.Equal(AlineacionLogo.Centro, vigente.Contenido.Diseno.AlineacionLogo);
+        Assert.Equal(HttpStatusCode.OK, (await _cliente.GetAsync($"/api/versiones-plantilla/{vigente.Id}/pdf")).StatusCode);
     }
 
     [Theory]
@@ -271,7 +285,7 @@ public sealed class ListasYDisenoPruebas : IDisposable
     [InlineData("doble", HttpStatusCode.BadRequest)]
     public async Task Valida_el_interlineado_del_pdf(string interlineado, HttpStatusCode esperado)
     {
-        var respuesta = await _cliente.GetAsync($"/api/plantillas/PLA-001/pdf?interlineado={interlineado}");
+        var respuesta = await _cliente.GetAsync($"{Ruta}/pdf?interlineado={interlineado}");
         Assert.Equal(esperado, respuesta.StatusCode);
     }
 }

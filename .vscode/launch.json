@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "compilar backend",
-      "program": "${workspaceFolder}/backend/EditorResoluciones.Api/bin/Debug/net9.0/EditorResoluciones.Api.dll",
+      "program": "${workspaceFolder}/backend/EditorResoluciones.Api/bin/Debug/net10.0/EditorResoluciones.Api.dll",
       "cwd": "${workspaceFolder}/backend/EditorResoluciones.Api",
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",

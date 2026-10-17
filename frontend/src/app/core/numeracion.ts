@@ -33,3 +33,8 @@ export type Numerador = (numero: number) => string;
 export const numerarConsiderando: Numerador = (numero) => `CONSIDERANDO(${numero}):`;
 
 export const numerarResuelve: Numerador = (numero) => `${ordinal(numero)}:`;
+
+/** Numerador según la configuración del bloque; null si el bloque no se numera. */
+export function numeradorDe(numeracion: 'Ninguna' | 'Considerando' | 'Ordinal'): Numerador | null {
+  return numeracion === 'Considerando' ? numerarConsiderando : numeracion === 'Ordinal' ? numerarResuelve : null;
+}

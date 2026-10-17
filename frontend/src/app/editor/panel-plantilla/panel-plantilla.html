@@ -1,35 +1,37 @@
 <section class="tarjeta panel" aria-labelledby="titulo-plantilla">
-  @if (!contexto.completo()) {
-    <p class="texto-secundario sin-margen">
-      Seleccione Rubro, Sub Rubro, Tipo Documento y Documento para cargar la plantilla correspondiente.
-    </p>
-  } @else if (actual.cargando()) {
-    <p class="texto-secundario sin-margen" aria-live="polite">Cargando plantilla…</p>
+  @if (actual.cargando() && !actual.plantilla()) {
+    <p class="texto-secundario sin-margen" aria-live="polite">Cargando la plantilla del consolidado…</p>
   } @else if (error(); as mensaje) {
     <div class="aviso aviso-error" role="alert">
       <span>{{ mensaje }}</span>
       <button type="button" class="boton boton-secundario" (click)="actual.recargar()">Reintentar</button>
     </div>
-  } @else if (actual.sinPlantilla()) {
-    <div class="vacio">
-      <p class="sin-margen">No existe una plantilla para esta combinación.</p>
-      <button type="button" class="boton boton-primario" [disabled]="creando()" (click)="crearPlantilla()">
-        {{ creando() ? 'Creando…' : 'Crear plantilla de prueba' }}
-      </button>
-    </div>
-    @if (errorCreacion(); as mensaje) {
-      <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
-    }
   } @else if (actual.plantilla(); as p) {
     <div class="resumen">
       <div class="nombre">
+        <span class="insignia" [class.insignia-exito]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
         <h2 id="titulo-plantilla">{{ p.nombre }}</h2>
-        <span class="insignia" [class.insignia-exito]="p.estado === 'Publicada'">{{ p.estado }}</span>
       </div>
       <span class="texto-secundario sin-margen">
-        <code>{{ p.id }}</code> · versión {{ p.version }} · modificada {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
+        <a [routerLink]="['/consolidados', p.consolidadoId]">{{ p.consolidadoNumero }}</a> ·
+        <span class="estado-consolidado">{{ nombreEstado[p.estadoConsolidado] }}</span> · modificada
+        {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
       </span>
     </div>
+
+    @if (p.obligatoriosVacios.length && p.editable) {
+      <div class="aviso aviso-obligatorio" role="status">
+        Bloques obligatorios sin párrafos activos: {{ p.obligatoriosVacios.join(', ') }}. Se exigirán al enviar a verificación.
+      </div>
+    }
+
+    @if (p.retirada) {
+      <div class="aviso aviso-error" role="status">Esta plantilla fue retirada del consolidado. Se muestra solo para consulta.</div>
+    } @else if (!p.editable) {
+      <div class="aviso aviso-copia" role="status">
+        Solo lectura: la plantilla se edita mientras el consolidado está EN REGISTRO, y solo la edita su analista.
+      </div>
+    }
 
     <div class="generar">
       <label class="solicitud">
@@ -54,30 +56,31 @@
       </label>
       <button type="button" class="boton boton-primario" [disabled]="generando()" (click)="generarPdf()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M12 11v6M9 14l3 3 3-3" /></svg>
-        {{ generando() ? 'Generando…' : 'Generar PDF' }}
+        {{ generando() ? 'Generando…' : 'Vista previa en PDF' }}
       </button>
       <span class="texto-secundario sin-margen nota-pdf">
-        Orden del documento: Cabecera, Considerando, Por Tanto, Resuelve y Firmas. Con una solicitud se reemplazan los campos y se aplican
-        las condiciones.
+        Vista previa de la plantilla en el consolidado (la versión vigente no cambia hasta que se apruebe el documento). Orden: Cabecera,
+        Considerando, Por Tanto, Resuelve y Firmas. Con una solicitud se reemplazan los campos y se aplican las condiciones.
       </span>
-      @if (contexto.tipoDocumento()?.textoCorrido) {
+      @if (tipo()?.textoCorrido) {
         <span class="texto-secundario sin-margen nota-pdf nota-corrido">
-          {{ contexto.tipoDocumento()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y
-          las firmas conservan su forma.
+          {{ tipo()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y las firmas
+          conservan su forma.
         </span>
       }
     </div>
 
-    @if (contexto.esCopia()) {
+    @if (p.derivadaDePropuestaId) {
       <div class="aviso aviso-copia" role="status">
         <span>
-          Esta {{ contexto.tipoDocumento()?.nombre }} se actualiza automáticamente con la Resolución del mismo Rubro, Sub Rubro y
-          Documento, y también puede editarla aquí. Lo que edite se conserva hasta que se cambie lo mismo en la Resolución: ese
-          cambio la reemplaza. Los párrafos que agregue aquí no se tocan, y los cambios de aquí no pasan a la Resolución.
+          Esta {{ tipo()?.nombre }} acompaña a la Resolución en este documento: cada cambio que se guarda en la Resolución llega
+          aquí, y también puede editarla. Lo que edite se conserva hasta que se cambie lo mismo en la Resolución. Los párrafos que
+          agregue aquí no se tocan, y los cambios de aquí no pasan a la Resolución.
         </span>
-        <button type="button" class="boton boton-secundario boton-compacto" (click)="irAOrigen()">Ir a la Resolución</button>
       </div>
     }
-    <app-diseno-documento [plantilla]="p" />
+    @if (p.editable) {
+      <app-diseno-documento [plantilla]="p" />
+    }
   }
 </section>

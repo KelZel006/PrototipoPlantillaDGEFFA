@@ -375,6 +375,62 @@ public sealed class CargaInicialPruebas : IDisposable
     }
 
     [Fact]
+    public async Task La_carga_inicial_se_actualiza_solo_mientras_ningun_consolidado_la_toma()
+    {
+        async Task CambiarTextoAnterior(FabricaApi fabrica, string texto)
+        {
+            using var alcance = fabrica.Services.CreateScope();
+            var parrafos = alcance.ServiceProvider.GetRequiredService<IRepositorio<Parrafo>>();
+            var parrafo = (await parrafos.ObtenerAsync("PAR-003"))!;
+            parrafo.Contenido = new NodoContenido
+            {
+                Tipo = "doc",
+                Contenido = [new NodoContenido { Tipo = "paragraph", Contenido = [new NodoContenido { Tipo = "text", Texto = texto }] }],
+            };
+            await parrafos.ActualizarAsync(parrafo);
+        }
+        async Task<string> TextoVigente(FabricaApi fabrica)
+        {
+            using var alcance = fabrica.Services.CreateScope();
+            var vigente = (await alcance.ServiceProvider.GetRequiredService<IRepositorio<VersionPlantilla>>().ListarAsync())
+                .Single(v => v.PlantillaId == "PLA-001" && v.Vigencia == Vigencia.Vigente);
+            return vigente.Contenido.Bloques.SelectMany(b => b.Parrafos).Single(p => p.Id == "PAR-003").Contenido.Contenido![0].Contenido![0].Texto!;
+        }
+
+        // Lo editado en la colección anterior (antes de cerrar la edición directa) llega a la carga inicial al iniciar.
+        await using (var primera = new FabricaApi(_datos.Ruta))
+            await CambiarTextoAnterior(primera, "Editado antes de la Fase 3");
+        await using (var segunda = new FabricaApi(_datos.Ruta))
+        {
+            Assert.Equal("Editado antes de la Fase 3", await TextoVigente(segunda));
+            // Un consolidado toma la versión: desde ahí ya no se actualiza.
+            using var cliente = segunda.CreateClient();
+            await Consolidados.ModificarAsync(cliente, "PLA-001");
+            await CambiarTextoAnterior(segunda, "Cambio que ya no debe llegar");
+        }
+        await using var tercera = new FabricaApi(_datos.Ruta);
+        Assert.Equal("Editado antes de la Fase 3", await TextoVigente(tercera));
+    }
+
+    [Fact]
+    public async Task Las_propuestas_de_demostracion_muestran_solo_sus_ajustes_previstos()
+    {
+        var (versiones, propuestas) = await Leer(async s => (await Lista<VersionPlantilla>(s), await Lista<Propuesta>(s)));
+        IEnumerable<string> Ajustes(string id)
+        {
+            var p = propuestas.Single(x => x.Id == id);
+            var original = p.VersionOrigenId is { } v ? versiones.Single(x => x.Id == v).Contenido : ConstructorContenido.Vacio();
+            return ComparadorContenido.Ajustes(original, p.ContenidoPropuesto).Select(a => a.Etiqueta);
+        }
+
+        Assert.Equal(["CONSIDERANDO 1 modificado", "NUEVO CONSIDERANDO (posición 3)"], Ajustes("PRO-0001").Order());
+        Assert.Equal(["NUEVO CONSIDERANDO (posición 2)", "POR TANTO 1 modificado"], Ajustes("PRO-0002"));
+        Assert.Equal(["NUEVO CONSIDERANDO (posición 2)"], Ajustes("PRO-0003"));
+        Assert.Equal(["RESUELVE 1 modificado"], Ajustes("PRO-0005"));
+        Assert.Equal(4, Ajustes("PRO-0004").Count());
+    }
+
+    [Fact]
     public async Task Los_datos_semilla_cumplen_las_reglas_del_consolidado()
     {
         var (plantillas, consolidados, propuestas, devoluciones) = await Leer(async s =>

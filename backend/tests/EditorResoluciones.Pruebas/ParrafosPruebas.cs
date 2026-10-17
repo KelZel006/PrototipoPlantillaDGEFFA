@@ -4,18 +4,23 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using EditorResoluciones.Dominio.Comun;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Servicios;
 
 namespace EditorResoluciones.Pruebas;
 
-/// <summary>Pruebas de la sección Considerando: contenido del editor, condiciones, orden y duplicación.</summary>
-public sealed class ParrafosPruebas : IDisposable
+/// <summary>
+/// Reglas del editor sobre el contenido de una propuesta (sección Considerando de PLA-001): contenido permitido,
+/// condiciones, orden y duplicación. Desde la Fase 3 se edita solo dentro de un Documento Consolidado.
+/// </summary>
+public sealed class ParrafosPruebas : IAsyncLifetime, IDisposable
 {
     private readonly DirectorioTemporal _datos = new();
     private readonly FabricaApi _fabrica;
     private readonly HttpClient _cliente;
     private static readonly JsonSerializerOptions Json = OpcionesJson.Predeterminadas;
+    private string _propuesta = "";
 
     public ParrafosPruebas()
     {
@@ -23,12 +28,18 @@ public sealed class ParrafosPruebas : IDisposable
         _cliente = _fabrica.CreateClient();
     }
 
+    public async Task InitializeAsync() => _propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001")).Single().Id;
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
     public void Dispose()
     {
         _cliente.Dispose();
         _fabrica.Dispose();
         _datos.Dispose();
     }
+
+    private string Ruta => $"/api/propuestas/{_propuesta}/parrafos";
 
     private static JsonObject Texto(string texto) => new() { ["type"] = "text", ["text"] = texto };
 
@@ -44,10 +55,11 @@ public sealed class ParrafosPruebas : IDisposable
     {
         var parrafo = new JsonObject
         {
-            ["plantillaId"] = "PLA-001",
-            ["seccion"] = "Considerando",
+            ["bloque"] = "CONSIDERANDO",
             ["contenido"] = contenido,
+            ["activo"] = true,
             ["mostrarSoloSiCumple"] = condicion is not null,
+            ["camposUsados"] = new JsonArray(),
         };
         if (condicion is not null)
             parrafo["condicion"] = condicion;
@@ -63,11 +75,11 @@ public sealed class ParrafosPruebas : IDisposable
             .ToArray()),
     };
 
-    private Task<HttpResponseMessage> Publicar(JsonNode cuerpo, string url = "/api/parrafos") =>
-        _cliente.PostAsync(url, new StringContent(cuerpo.ToJsonString(), Encoding.UTF8, "application/json"));
+    private Task<HttpResponseMessage> Publicar(JsonNode cuerpo, string? url = null) =>
+        _cliente.PostAsync(url ?? Ruta, new StringContent(cuerpo.ToJsonString(), Encoding.UTF8, "application/json"));
 
-    private async Task<List<Parrafo>> Considerandos() =>
-        (await _cliente.GetFromJsonAsync<List<Parrafo>>("/api/parrafos?plantillaId=PLA-001&seccion=Considerando", Json))!;
+    private async Task<List<ParrafoPropuesta>> Considerandos() =>
+        (await _cliente.GetFromJsonAsync<List<ParrafoPropuesta>>($"{Ruta}?bloque=CONSIDERANDO", Json))!;
 
     [Fact]
     public async Task Nuevo_parrafo_va_al_final_y_el_servidor_calcula_los_campos_usados()
@@ -77,10 +89,11 @@ public sealed class ParrafosPruebas : IDisposable
 
         var respuesta = await Publicar(cuerpo);
 
-        Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
-        var creado = (await respuesta.Content.ReadFromJsonAsync<Parrafo>(Json))!;
+        Assert.True(respuesta.StatusCode == HttpStatusCode.OK, await respuesta.Content.ReadAsStringAsync());
+        var creado = (await respuesta.Content.ReadFromJsonAsync<ParrafoPropuesta>(Json))!;
         Assert.Equal(4, creado.Orden);
         Assert.Equal(["operador"], creado.CamposUsados);
+        Assert.Equal(_propuesta, creado.PropuestaId);
     }
 
     public static TheoryData<string, string> ContenidosRechazados => new()
@@ -111,7 +124,7 @@ public sealed class ParrafosPruebas : IDisposable
         var campoEnNegrita = CampoNodo("numero_solicitud");
         campoEnNegrita["marks"] = new JsonArray(new JsonObject { ["type"] = "bold" });
         var aceptado = await Publicar(Parrafo(Documento(Texto("Solicitud "), campoEnNegrita)));
-        Assert.Equal(HttpStatusCode.Created, aceptado.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, aceptado.StatusCode);
 
         const string parrafoConMarca = """{"type":"doc","content":[{"type":"paragraph","marks":[{"type":"bold"}],"content":[{"type":"text","text":"a"}]}]}""";
         var rechazado = await Publicar(Parrafo(JsonNode.Parse(parrafoConMarca)!.AsObject()));
@@ -125,7 +138,7 @@ public sealed class ParrafosPruebas : IDisposable
         var justo = await Publicar(Parrafo(Documento(Texto(new string('a', 1990)), CampoNodo("operador"))));
         var excedido = await Publicar(Parrafo(Documento(Texto(new string('a', 1991)), CampoNodo("operador"))));
 
-        Assert.Equal(HttpStatusCode.Created, justo.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, justo.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, excedido.StatusCode);
         Assert.Contains("2001 caracteres", await excedido.Content.ReadAsStringAsync());
     }
@@ -162,8 +175,8 @@ public sealed class ParrafosPruebas : IDisposable
 
         var respuesta = await Publicar(Parrafo(Documento(Texto("Con grupos")), condicion));
 
-        Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
-        var creado = (await respuesta.Content.ReadFromJsonAsync<Parrafo>(Json))!;
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        var creado = (await respuesta.Content.ReadFromJsonAsync<ParrafoPropuesta>(Json))!;
         Assert.Single(creado.Condicion!.Grupos);
     }
 
@@ -177,8 +190,8 @@ public sealed class ParrafosPruebas : IDisposable
         Assert.Contains("grupo de condiciones sin reglas", await rechazada.Content.ReadAsStringAsync());
 
         var sinReglas = await Publicar(Parrafo(Documento(Texto("x")), Condicion("Y")));
-        Assert.Equal(HttpStatusCode.Created, sinReglas.StatusCode);
-        Assert.Null((await sinReglas.Content.ReadFromJsonAsync<Parrafo>(Json))!.Condicion);
+        Assert.Equal(HttpStatusCode.OK, sinReglas.StatusCode);
+        Assert.Null((await sinReglas.Content.ReadFromJsonAsync<ParrafoPropuesta>(Json))!.Condicion);
     }
 
     [Fact]
@@ -187,8 +200,7 @@ public sealed class ParrafosPruebas : IDisposable
         var actuales = await Considerandos();
         var invertido = actuales.AsEnumerable().Reverse().Select(p => new ElementoOrden(p.Id, p.Version)).ToList();
 
-        var respuesta = await _cliente.PostAsJsonAsync("/api/parrafos/reordenar",
-            new SolicitudReorden("PLA-001", Seccion.Considerando, invertido), Json);
+        var respuesta = await _cliente.PostAsJsonAsync($"{Ruta}/reordenar", new SolicitudReordenPropuesta(CodigosBloque.Considerando, invertido), Json);
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         var nuevos = await Considerandos();
@@ -202,26 +214,40 @@ public sealed class ParrafosPruebas : IDisposable
     public async Task Rechaza_reordenar_con_datos_desactualizados_sin_cambiar_nada()
     {
         var actuales = await Considerandos();
-        var antes = await _cliente.GetStringAsync("/api/parrafos?plantillaId=PLA-001");
+        var antes = await _cliente.GetStringAsync(Ruta);
 
         var versionVieja = actuales.AsEnumerable().Reverse().Select(p => new ElementoOrden(p.Id, p.Id == "PAR-002" ? 7 : p.Version)).ToList();
         var incompleta = actuales.Skip(1).Select(p => new ElementoOrden(p.Id, p.Version)).ToList();
 
-        var r1 = await _cliente.PostAsJsonAsync("/api/parrafos/reordenar", new SolicitudReorden("PLA-001", Seccion.Considerando, versionVieja), Json);
-        var r2 = await _cliente.PostAsJsonAsync("/api/parrafos/reordenar", new SolicitudReorden("PLA-001", Seccion.Considerando, incompleta), Json);
+        var r1 = await _cliente.PostAsJsonAsync($"{Ruta}/reordenar", new SolicitudReordenPropuesta(CodigosBloque.Considerando, versionVieja), Json);
+        var r2 = await _cliente.PostAsJsonAsync($"{Ruta}/reordenar", new SolicitudReordenPropuesta(CodigosBloque.Considerando, incompleta), Json);
 
         Assert.Equal(HttpStatusCode.Conflict, r1.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, r2.StatusCode);
-        Assert.Equal(antes, await _cliente.GetStringAsync("/api/parrafos?plantillaId=PLA-001"));
+        Assert.Equal(antes, await _cliente.GetStringAsync(Ruta));
+    }
+
+    [Fact]
+    public async Task Una_edicion_con_version_desactualizada_se_rechaza()
+    {
+        var primero = (await Considerandos())[0];
+        var cambio = Parrafo(Documento(Texto("Primer cambio")));
+        cambio["version"] = primero.Version;
+        (await _cliente.PutAsync($"{Ruta}/{primero.Id}", new StringContent(cambio.ToJsonString(), Encoding.UTF8, "application/json"))).EnsureSuccessStatusCode();
+
+        // Otra pestaña todavía tiene la versión anterior.
+        var tarde = await _cliente.PutAsync($"{Ruta}/{primero.Id}", new StringContent(cambio.ToJsonString(), Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.Conflict, tarde.StatusCode);
     }
 
     [Fact]
     public async Task Duplicar_inserta_la_copia_debajo_con_su_condicion()
     {
-        var respuesta = await _cliente.PostAsync("/api/parrafos/PAR-002/duplicar", null);
+        var respuesta = await _cliente.PostAsync($"{Ruta}/PAR-002/duplicar", null);
 
-        Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
-        var copia = (await respuesta.Content.ReadFromJsonAsync<Parrafo>(Json))!;
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        var copia = (await respuesta.Content.ReadFromJsonAsync<ParrafoPropuesta>(Json))!;
         Assert.NotEqual("PAR-002", copia.Id);
         Assert.Equal(1, copia.Version);
         Assert.Equal("estado_solicitud", copia.Condicion!.Reglas[0].CampoId);
@@ -231,15 +257,15 @@ public sealed class ParrafosPruebas : IDisposable
         Assert.Equal([1, 2, 3, 4], (await Considerandos()).Select(p => p.Orden));
 
         // Historial: la creación de la copia y el desplazamiento de los dos párrafos siguientes.
-        var historial = await _cliente.GetFromJsonAsync<List<RegistroHistorial>>("/api/historial?coleccion=parrafos", Json);
-        Assert.Equal(3, historial!.Count);
-        Assert.Single(historial, r => r.Accion == AccionHistorial.Creacion && r.EntidadId == copia.Id);
+        var historial = (await _cliente.GetFromJsonAsync<List<RegistroHistorial>>($"/api/historial?coleccion=propuestas&entidadId={_propuesta}", Json))!;
+        Assert.Equal(3, historial.Count(r => r.Accion == AccionHistorial.Actualizacion));
 
         // Editar la condición de la copia no altera la del original.
-        copia.Condicion.Reglas[0].Valor = "Aprobada";
-        (await _cliente.PutAsJsonAsync($"/api/parrafos/{copia.Id}", copia, Json)).EnsureSuccessStatusCode();
-        var original = await _cliente.GetFromJsonAsync<Parrafo>("/api/parrafos/PAR-002", Json);
-        Assert.Equal("En Curso", original!.Condicion!.Reglas[0].Valor);
+        var cuerpo = JsonSerializer.SerializeToNode(copia, Json)!.AsObject();
+        cuerpo["condicion"]!["reglas"]![0]!["valor"] = "Aprobada";
+        (await _cliente.PutAsync($"{Ruta}/{copia.Id}", new StringContent(cuerpo.ToJsonString(), Encoding.UTF8, "application/json"))).EnsureSuccessStatusCode();
+        var original = (await Considerandos()).Single(p => p.Id == "PAR-002");
+        Assert.Equal("En Curso", original.Condicion!.Reglas[0].Valor);
     }
 
     [Fact]
@@ -264,5 +290,22 @@ public sealed class ParrafosPruebas : IDisposable
 
         Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
         Assert.Contains("condiciones de párrafos", await respuesta.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task La_plantilla_vigente_no_se_edita_directamente()
+    {
+        var nuevo = Parrafo(Documento(Texto("Directo")));
+        nuevo["plantillaId"] = "PLA-001";
+        nuevo["seccion"] = "Considerando";
+
+        var respuesta = await Publicar(nuevo, "/api/parrafos");
+
+        Assert.Equal(HttpStatusCode.Conflict, respuesta.StatusCode);
+        Assert.Contains("Documento Consolidado", await respuesta.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Conflict, (await _cliente.PutAsJsonAsync("/api/plantillas/PLA-001", new { nombre = "x" }, Json)).StatusCode);
+        // La propuesta tampoco cambió la versión vigente.
+        var vigente = (await _cliente.GetFromJsonAsync<List<VersionPlantilla>>("/api/versiones-plantilla?plantillaId=PLA-001&vigencia=Vigente", Json))!;
+        Assert.Equal(3, Assert.Single(vigente).Contenido.Bloques.Single(b => b.Codigo == CodigosBloque.Considerando).Parrafos.Count);
     }
 }

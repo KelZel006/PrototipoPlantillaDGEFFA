@@ -20,14 +20,12 @@ public static class RegistroDominio
         servicios.AddSingleton(proveedor => new ZonaHorariaInstitucional(TimeZoneInfo.FindSystemTimeZoneById(
             proveedor.GetRequiredService<IConfiguration>()["Consolidado:ZonaHoraria"] ?? "America/Tegucigalpa")));
         servicios.AddScoped<ServicioConsolidados>();
+        servicios.AddScoped<ServicioPropuestas>();
+        servicios.AddScoped<CatalogoBloques>();
+        servicios.AddScoped<ServicioRevision>();
         servicios.AddScoped<MigracionCargaInicial>();
         servicios.AddScoped<IServicioHistorial, ServicioHistorial>();
         servicios.AddScoped(typeof(ServicioEntidades<>));
-        servicios.AddScoped<ServicioParrafos>();
-        // Copia de la Resolución a la Certificación después de cada guardado.
-        servicios.AddScoped<SincronizadorCopias>();
-        servicios.AddScoped<IObservadorEntidad<Parrafo>>(p => p.GetRequiredService<SincronizadorCopias>());
-        servicios.AddScoped<IObservadorEntidad<Plantilla>>(p => p.GetRequiredService<SincronizadorCopias>());
         servicios.AddScoped<ServicioValoresCampo>();
         servicios.AddScoped<ServicioDocumento>();
         servicios.AddScoped<ServicioLogos>();

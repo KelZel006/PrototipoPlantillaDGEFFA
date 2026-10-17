@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { InteraccionService } from '../../core/interaccion.service';
-import { Plantilla } from '../../core/modelos';
+import { PlantillaEdicion } from '../../core/modelos';
 import { PLANTILLA } from '../../pruebas/datos-prueba';
 import { DisenoDocumento } from './diseno-documento';
 
@@ -11,7 +11,7 @@ describe('DisenoDocumento', () => {
   let elemento: HTMLElement;
   let http: HttpTestingController;
 
-  const conLogo: Plantilla = { ...PLANTILLA, version: 2, logoId: 'ARC-1', piePagina: 'Pie anterior', alineacionLogo: 'Centro' };
+  const conLogo: PlantillaEdicion = { ...PLANTILLA, version: 2, logoId: 'ARC-1', piePagina: 'Pie anterior', alineacionLogo: 'Centro' };
 
   const elegirArchivo = (archivo: File) => {
     const entrada = elemento.querySelector<HTMLInputElement>('input[type="file"]')!;
@@ -53,7 +53,7 @@ describe('DisenoDocumento', () => {
     http.expectNone((r) => r.url.endsWith('/logo'));
 
     elegirArchivo(new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'logo.png', { type: 'image/png' }));
-    const carga = http.expectOne('/api/plantillas/PLA-001/logo');
+    const carga = http.expectOne('/api/propuestas/PRO-001/logo');
     expect(carga.request.method).toBe('POST');
     expect(carga.request.body).toBeInstanceOf(FormData);
     expect((carga.request.body as FormData).get('archivo')).toBeInstanceOf(File);
@@ -73,14 +73,12 @@ describe('DisenoDocumento', () => {
     expect(elemento.textContent).toContain('Cambios sin guardar');
 
     boton('Guardar diseño')!.click();
-    const guardado = http.expectOne('/api/plantillas/PLA-001');
+    const guardado = http.expectOne('/api/propuestas/PRO-001/diseno');
     expect(guardado.request.method).toBe('PUT');
-    expect(guardado.request.body).toMatchObject({
-      version: 2,
+    expect(guardado.request.body).toEqual({
       piePagina: 'Dirección de prueba\nTeléfono 0000-0000',
       alineacionLogo: 'Derecha',
       espacioFirmasCm: 2.5,
-      logoId: 'ARC-1',
     });
     guardado.flush({ ...conLogo, version: 3, piePagina: 'Dirección de prueba\nTeléfono 0000-0000', alineacionLogo: 'Derecha' });
     fixture.detectChanges();
@@ -121,7 +119,7 @@ describe('DisenoDocumento', () => {
     await Promise.resolve();
 
     expect(confirmar).toHaveBeenCalledOnce();
-    const quitar = http.expectOne('/api/plantillas/PLA-001/logo');
+    const quitar = http.expectOne('/api/propuestas/PRO-001/logo');
     expect(quitar.request.method).toBe('DELETE');
     quitar.flush({ ...conLogo, version: 3, logoId: null });
   });

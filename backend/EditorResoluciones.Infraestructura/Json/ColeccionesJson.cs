@@ -25,6 +25,7 @@ public static class ColeccionesJson
         new("historial", "historial.json", "HIS", typeof(RegistroHistorial)),
         new("archivos", "archivos.json", "ARC", typeof(ArchivoRecurso)),
         new("usuarios", "usuarios.json", "USR", typeof(Usuario)),
+        new("bloques", "bloques.json", "BLQ", typeof(BloqueDocumental)),
         new("versionesPlantilla", "versionesPlantilla.json", "VER", typeof(VersionPlantilla)),
         new("consolidados", "consolidados.json", "CON", typeof(DocumentoConsolidado)),
         new("propuestas", "propuestas.json", "PRO", typeof(Propuesta)),

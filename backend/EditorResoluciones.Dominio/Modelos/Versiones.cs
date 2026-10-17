@@ -83,12 +83,22 @@ public class BloqueContenido
 public class ParrafoContenido
 {
     public string Id { get; set; } = "";
+
+    /// <summary>
+    /// Versión del párrafo dentro de la propuesta: cada cambio la incrementa y una edición con versión desactualizada se
+    /// rechaza (por ejemplo, desde otra pestaña). No forma parte de la comparación.
+    /// </summary>
+    public int Version { get; set; } = 1;
+
     public int Orden { get; set; }
     public NodoContenido Contenido { get; set; } = new();
     public bool Activo { get; set; } = true;
     public bool MostrarSoloSiCumple { get; set; }
     public GrupoCondiciones? Condicion { get; set; }
     public List<string> CamposUsados { get; set; } = [];
+
+    /// <summary>En una Certificación, el párrafo de la Resolución del que se copió (decisión D3).</summary>
+    public string? OrigenParrafoId { get; set; }
 }
 
 /// <summary>
@@ -114,5 +124,23 @@ public static class CodigosBloque
         Seccion.Resuelve => Resuelve,
         Seccion.Firmas => Firmas,
         _ => throw new ArgumentOutOfRangeException(nameof(seccion)),
+    };
+
+    /// <summary>Sección del editor y del PDF que corresponde al bloque; null si el código no existe.</summary>
+    public static Seccion? ASeccion(string codigo) => codigo switch
+    {
+        Cabecera => Seccion.Cabecera,
+        Considerando => Seccion.Considerando,
+        PorTanto => Seccion.PorTanto,
+        Resuelve => Seccion.Resuelve,
+        Firmas => Seccion.Firmas,
+        _ => null,
+    };
+
+    /// <summary>Nombre para mostrar en los ajustes: «POR TANTO», «FUNDAMENTACION LEGAL», «CONSIDERANDO»…</summary>
+    public static string Nombre(string codigo) => codigo switch
+    {
+        Diseno => "DISEÑO",
+        _ => codigo.Replace('_', ' '),
     };
 }

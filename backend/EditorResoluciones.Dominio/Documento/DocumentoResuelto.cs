@@ -1,3 +1,4 @@
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Modelos;
 
 namespace EditorResoluciones.Dominio.Documento;
@@ -8,10 +9,26 @@ public sealed record ParrafoDocumento(string Id, int Posicion, NodoContenido Con
 /// <summary>Párrafo que no se incluyó y el motivo, para el resumen de la generación.</summary>
 public sealed record ParrafoOmitido(string Id, int Posicion, string Resumen, string Motivo);
 
+/// <summary>Bloque del documento con su configuración (título, numeración, firmas) y sus párrafos.</summary>
 public sealed record SeccionDocumento(
-    Seccion Seccion,
+    BloqueConfigurado Bloque,
     IReadOnlyList<ParrafoDocumento> Parrafos,
-    IReadOnlyList<ParrafoOmitido> Omitidos);
+    IReadOnlyList<ParrafoOmitido> Omitidos)
+{
+    /// <summary>Bloque de uno de los cinco originales.</summary>
+    public SeccionDocumento(Seccion seccion, IReadOnlyList<ParrafoDocumento> parrafos, IReadOnlyList<ParrafoOmitido> omitidos)
+        : this(CatalogoBloques.Predeterminados.Single(b => b.Codigo == CodigosBloque.De(seccion)), parrafos, omitidos)
+    {
+    }
+
+    public string Codigo => Bloque.Codigo;
+
+    /// <summary>Sección de los cinco bloques originales; null en los demás bloques del catálogo.</summary>
+    public Seccion? Seccion => CodigosBloque.ASeccion(Bloque.Codigo);
+}
+
+/// <summary>Bloque configurado con los párrafos que se van a resolver.</summary>
+public sealed record BloqueParaDocumento(BloqueConfigurado Bloque, IReadOnlyList<Parrafo> Parrafos);
 
 /// <summary>
 /// Documento listo para presentar: secciones en el orden Cabecera, Considerando y Resuelve,

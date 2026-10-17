@@ -5,7 +5,34 @@
     "nombre": "Constancia de Obligados Tributarios",
     "textoCorrido": false,
     "copiaDeTipoDocumentoId": null,
-    "activo": true
+    "activo": true,
+    "bloques": [
+      {
+        "bloqueId": "CABECERA",
+        "orden": 1,
+        "obligatorio": true
+      },
+      {
+        "bloqueId": "CONSIDERANDO",
+        "orden": 2,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "POR_TANTO",
+        "orden": 3,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "RESUELVE",
+        "orden": 4,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "FIRMAS",
+        "orden": 5,
+        "obligatorio": true
+      }
+    ]
   },
   {
     "id": "TDO-002",
@@ -13,7 +40,34 @@
     "nombre": "Dictamen",
     "textoCorrido": false,
     "copiaDeTipoDocumentoId": null,
-    "activo": true
+    "activo": true,
+    "bloques": [
+      {
+        "bloqueId": "CABECERA",
+        "orden": 1,
+        "obligatorio": true
+      },
+      {
+        "bloqueId": "CONSIDERANDO",
+        "orden": 2,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "POR_TANTO",
+        "orden": 3,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "RESUELVE",
+        "orden": 4,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "FIRMAS",
+        "orden": 5,
+        "obligatorio": true
+      }
+    ]
   },
   {
     "id": "TDO-001",
@@ -21,7 +75,34 @@
     "nombre": "Resolución",
     "textoCorrido": false,
     "copiaDeTipoDocumentoId": null,
-    "activo": true
+    "activo": true,
+    "bloques": [
+      {
+        "bloqueId": "CABECERA",
+        "orden": 1,
+        "obligatorio": true
+      },
+      {
+        "bloqueId": "CONSIDERANDO",
+        "orden": 2,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "POR_TANTO",
+        "orden": 3,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "RESUELVE",
+        "orden": 4,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "FIRMAS",
+        "orden": 5,
+        "obligatorio": true
+      }
+    ]
   },
   {
     "id": "TDO-004",
@@ -29,6 +110,33 @@
     "nombre": "Certificación",
     "textoCorrido": true,
     "copiaDeTipoDocumentoId": "TDO-001",
-    "activo": true
+    "activo": true,
+    "bloques": [
+      {
+        "bloqueId": "CABECERA",
+        "orden": 1,
+        "obligatorio": true
+      },
+      {
+        "bloqueId": "CONSIDERANDO",
+        "orden": 2,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "POR_TANTO",
+        "orden": 3,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "RESUELVE",
+        "orden": 4,
+        "obligatorio": false
+      },
+      {
+        "bloqueId": "FIRMAS",
+        "orden": 5,
+        "obligatorio": true
+      }
+    ]
   }
 ]

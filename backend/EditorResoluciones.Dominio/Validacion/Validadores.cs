@@ -41,12 +41,48 @@ public sealed class ValidadorSubRubro(
     }
 }
 
-public sealed class ValidadorTipoDocumento(IRepositorio<Plantilla> plantillas) : ValidadorEntidad<TipoDocumento>
+public sealed class ValidadorTipoDocumento(
+    IRepositorio<Plantilla> plantillas,
+    IRepositorio<BloqueDocumental> bloques) : ValidadorEntidad<TipoDocumento>
 {
+    public override async Task ValidarGuardadoAsync(TipoDocumento tipo, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        var catalogo = (await bloques.ListarAsync(ct)).ToDictionary(b => b.Id, StringComparer.Ordinal);
+        foreach (var bloque in tipo.Bloques.Where(b => !catalogo.ContainsKey(b.BloqueId)))
+            resultado.Agregar("bloques", $"El bloque '{bloque.BloqueId}' no existe en el catálogo.");
+        if (tipo.Bloques.Select(b => b.BloqueId).Distinct(StringComparer.Ordinal).Count() != tipo.Bloques.Count)
+            resultado.Agregar("bloques", "Un bloque no puede repetirse en el mismo tipo de documento.");
+    }
+
     public override async Task ValidarEliminacionAsync(TipoDocumento tipo, ResultadoValidacion resultado, CancellationToken ct)
     {
         if ((await plantillas.ListarAsync(ct)).Any(p => p.TipoDocumentoId == tipo.Id))
             resultado.Agregar("id", "No se puede eliminar el tipo de documento porque lo usan plantillas.");
+    }
+}
+
+public sealed partial class ValidadorBloqueDocumental(IRepositorio<TipoDocumento> tipos) : ValidadorEntidad<BloqueDocumental>
+{
+    [GeneratedRegex("^[A-Z][A-Z0-9_]{1,39}$")]
+    private static partial Regex CodigoValido();
+
+    public override Task ValidarGuardadoAsync(BloqueDocumental bloque, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        if (!CodigoValido().IsMatch(bloque.Id))
+            resultado.Agregar("id", "El código debe empezar con una letra y usar solo mayúsculas, números y guion bajo (2 a 40 caracteres).");
+        if (bloque.Id == CodigosBloque.Diseno)
+            resultado.Agregar("id", "El código DISENO está reservado para el diseño del documento.");
+        if (!Campo.ContextosValidos.Contains(bloque.ContextoCampos) || bloque.ContextoCampos == "tabla")
+            resultado.Agregar("contextoCampos", $"El contexto debe ser uno de: {string.Join(", ", Campo.ContextosValidos.Where(c => c != "tabla"))}.");
+        if (!Enum.IsDefined(bloque.Numeracion))
+            resultado.Agregar("numeracion", "La numeración no es válida.");
+        return Task.CompletedTask;
+    }
+
+    public override async Task ValidarEliminacionAsync(BloqueDocumental bloque, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        if ((await tipos.ListarAsync(ct)).Any(t => t.Bloques.Any(b => b.BloqueId == bloque.Id)))
+            resultado.Agregar("id", "No se puede eliminar el bloque porque lo usa un tipo de documento.");
     }
 }
 
@@ -162,7 +198,10 @@ public sealed class NormalizadorParrafo(IRepositorio<Parrafo> parrafos) : INorma
     }
 }
 
-public sealed partial class ValidadorCampo(IRepositorio<Parrafo> parrafos) : ValidadorEntidad<Campo>
+public sealed partial class ValidadorCampo(
+    IRepositorio<Parrafo> parrafos,
+    IRepositorio<VersionPlantilla> versiones,
+    IRepositorio<Propuesta> propuestas) : ValidadorEntidad<Campo>
 {
     [GeneratedRegex("^[a-z][a-z0-9_]{1,59}$")]
     private static partial Regex IdentificadorValido();
@@ -190,10 +229,16 @@ public sealed partial class ValidadorCampo(IRepositorio<Parrafo> parrafos) : Val
 
     public override async Task ValidarEliminacionAsync(Campo campo, ResultadoValidacion resultado, CancellationToken ct)
     {
-        var lista = await parrafos.ListarAsync(ct);
-        if (lista.Any(p => p.CamposUsados.Contains(campo.Id)))
+        // Párrafos de la colección anterior, de las versiones publicadas y de las propuestas.
+        var usos = (await parrafos.ListarAsync(ct)).Select(p => (p.CamposUsados, p.Condicion))
+            .Concat((await versiones.ListarAsync(ct)).SelectMany(v => v.Contenido.Bloques).SelectMany(b => b.Parrafos)
+                .Select(p => (p.CamposUsados, p.Condicion)))
+            .Concat((await propuestas.ListarAsync(ct)).SelectMany(p => p.ContenidoPropuesto.Bloques).SelectMany(b => b.Parrafos)
+                .Select(p => (p.CamposUsados, p.Condicion)))
+            .ToList();
+        if (usos.Any(u => u.CamposUsados.Contains(campo.Id)))
             resultado.Agregar("id", "No se puede eliminar el campo porque lo usan párrafos.");
-        if (lista.Any(p => ReglasCondiciones.CamposUsados(p.Condicion).Contains(campo.Id)))
+        if (usos.Any(u => ReglasCondiciones.CamposUsados(u.Condicion).Contains(campo.Id)))
             resultado.Agregar("id", "No se puede eliminar el campo porque lo usan condiciones de párrafos.");
     }
 }

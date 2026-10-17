@@ -66,7 +66,7 @@ public static class TextoCorrido
 
         foreach (var parte in secciones.Where(s => s.Parrafos.Count > 0))
         {
-            if (Numeracion.Titulo(parte.Seccion) is { } titulo)
+            if (parte.Bloque.Titulo is { } titulo)
                 Agregar([Texto(titulo, negrita: true)]);
             foreach (var parrafo in parte.Parrafos)
                 Recorrer(parrafo.Contenido.Contenido ?? []);

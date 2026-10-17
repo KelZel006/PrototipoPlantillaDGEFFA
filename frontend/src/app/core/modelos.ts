@@ -23,7 +23,10 @@ export interface TipoDocumento extends Entidad {
   nombre: string;
   /** El documento se genera con el texto corrido (por ejemplo, la Certificación). */
   textoCorrido?: boolean;
-  /** Si se indica, las plantillas de este tipo se copian solas de las de ese tipo (la Certificación, de la Resolución). */
+  /**
+   * Si se indica, las plantillas de este tipo acompañan a las de ese tipo (la Certificación, a la Resolución): en un
+   * Documento Consolidado, la propuesta de la Resolución lleva consigo la de su Certificación.
+   */
   copiaDeTipoDocumentoId?: string | null;
   activo: boolean;
 }
@@ -34,18 +37,18 @@ export interface ClaseDocumento extends Entidad {
   activo: boolean;
 }
 
-export type EstadoPlantilla = 'Borrador' | 'Publicada';
-
 export type AlineacionLogo = 'Izquierda' | 'Centro' | 'Derecha';
 
-export interface Plantilla extends Entidad {
+/**
+ * Plantilla que se edita: la propuesta de un Documento Consolidado (desde la Fase 3 las plantillas vigentes no se
+ * editan directamente). El identificador es el de la propuesta.
+ */
+export interface PlantillaEdicion extends Entidad {
   nombre: string;
   rubroId: string;
   subRubroId: string;
   tipoDocumentoId: string;
   claseDocumentoId: string;
-  estado: EstadoPlantilla;
-  descripcion?: string;
   /** Logo del encabezado del documento; null si no tiene. */
   logoId?: string | null;
   alineacionLogo?: AlineacionLogo;
@@ -54,12 +57,43 @@ export interface Plantilla extends Entidad {
   /** Espacio en centímetros antes de cada bloque de firma. */
   espacioFirmasCm?: number;
   fechaModificacion: string;
+  operacion: OperacionPropuesta;
+  consolidadoId: string;
+  consolidadoNumero: string;
+  estadoConsolidado: EstadoConsolidado;
+  /** El usuario actual es el analista dueño y el consolidado está EN REGISTRO. */
+  editable: boolean;
+  retirada: boolean;
+  /** Si es la Certificación que acompaña a una Resolución, la propuesta de esa Resolución. */
+  derivadaDePropuestaId?: string | null;
+  /** Plantilla vigente que se modifica; null en una creación. */
+  plantillaId?: string | null;
+  /** Bloques del documento, en el orden del tipo documental: son las pestañas del editor. */
+  bloques: BloqueConfigurado[];
+  /** Nombres de los bloques obligatorios que todavía no tienen párrafos activos. */
+  obligatoriosVacios: string[];
 }
 
-/** Secciones del documento, en el orden en que se generan. */
-export type Seccion = 'Cabecera' | 'Considerando' | 'PorTanto' | 'Resuelve' | 'Firmas';
+/**
+ * Código del bloque del documento (CABECERA, VISTOS, CONSIDERANDO, POR_TANTO…). Los bloques de cada tipo documental
+ * los define el catálogo (decisión D2).
+ */
+export type Seccion = string;
 
-export const SECCIONES: readonly Seccion[] = ['Cabecera', 'Considerando', 'PorTanto', 'Resuelve', 'Firmas'];
+export type NumeracionBloque = 'Ninguna' | 'Considerando' | 'Ordinal';
+
+/** Bloque que usa un tipo documental, con los datos del catálogo. */
+export interface BloqueConfigurado {
+  codigo: Seccion;
+  nombre: string;
+  titulo?: string | null;
+  numeracion: NumeracionBloque;
+  esFirmas: boolean;
+  /** Contexto de los campos que se pueden insertar (por ejemplo, «considerando»). */
+  contextoCampos: string;
+  obligatorio: boolean;
+  orden: number;
+}
 
 /** Nodo del documento del editor (formato de TipTap/ProseMirror). */
 export interface NodoContenido {
@@ -70,9 +104,11 @@ export interface NodoContenido {
   content?: NodoContenido[];
 }
 
+/** Párrafo de una propuesta. Su versión es la del párrafo dentro de la propuesta. */
 export interface Parrafo extends Entidad {
-  plantillaId: string;
-  seccion: Seccion;
+  propuestaId: string;
+  /** Código del bloque al que pertenece. */
+  bloque: Seccion;
   /** Posición en la sección. Con 0, el servidor lo coloca al final. */
   orden: number;
   contenido: NodoContenido;
@@ -82,7 +118,6 @@ export interface Parrafo extends Entidad {
   condicion?: GrupoCondiciones | null;
   /** Lo calcula el servidor a partir del contenido. */
   camposUsados: string[];
-  fechaModificacion: string;
 }
 
 export type OperadorLogico = 'Y' | 'O';
@@ -184,4 +219,230 @@ export interface DetalleProblema {
   detail?: string;
   status?: number;
   errors?: Record<string, string[]>;
+}
+
+// ---------- Documento Consolidado ----------
+
+export type Rol = 'Analista' | 'OficialJuridico' | 'Administrador';
+
+/** Usuario de prueba con sus roles (solo simula el flujo: no es autenticación). */
+export interface Usuario extends Entidad {
+  nombreCompleto: string;
+  roles: Rol[];
+  activo: boolean;
+}
+
+export type EstadoConsolidado = 'EnRegistro' | 'Verificado' | 'Aprobado';
+
+export type OperacionPropuesta = 'Crear' | 'Modificar';
+
+export type Vigencia = 'Vigente' | 'NoVigente';
+
+export interface DocumentoConsolidado extends Entidad {
+  numero: string;
+  anio: number;
+  secuencia: number;
+  estado: EstadoConsolidado;
+  analistaId: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  numeroPresentacion: number;
+  fechaEnvio?: string | null;
+  enviadoPor?: string | null;
+  revisorId?: string | null;
+  fechaRevision?: string | null;
+  aprobadorId?: string | null;
+  fechaAprobacion?: string | null;
+}
+
+/** Fila del listado de consolidados (pantalla A). */
+export interface ResumenConsolidado {
+  id: string;
+  numero: string;
+  anio: number;
+  estado: EstadoConsolidado;
+  analistaId: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  tiposDocumento: string[];
+  totalPlantillas: number;
+}
+
+export interface Propuesta extends Entidad {
+  consolidadoId: string;
+  operacion: OperacionPropuesta;
+  rubroId: string;
+  subRubroId: string;
+  tipoDocumentoId: string;
+  claseDocumentoId: string;
+  nombre: string;
+  plantillaId?: string | null;
+  versionOrigenId?: string | null;
+  derivadaDePropuestaId?: string | null;
+  retirada: boolean;
+  motivoRetiro?: string | null;
+  fechaCreacion: string;
+  fechaModificacion: string;
+  /** Contenido de la plantilla en el consolidado (aquí solo se usan los códigos de sus bloques). */
+  contenidoPropuesto?: { bloques: { codigo: string }[] };
+}
+
+/** Observación de una devolución: plantilla, bloque opcional, problema y recomendación. */
+export interface DatosObservacion {
+  propuestaId: string;
+  bloqueCodigo?: string | null;
+  problema: string;
+  recomendacion?: string | null;
+}
+
+export type TipoAjuste =
+  | 'ParrafoAgregado'
+  | 'ParrafoEliminado'
+  | 'ParrafoModificado'
+  | 'ParrafoMovido'
+  | 'ConfiguracionModificada'
+  | 'DisenoModificado'
+  | 'BloqueAgregado'
+  | 'BloqueEliminado';
+
+/** Un ajuste de la propuesta respecto de la versión original, por ejemplo «NUEVO CONSIDERANDO (posición 2)». */
+export interface Ajuste {
+  tipo: TipoAjuste;
+  bloqueCodigo: string;
+  parrafoId?: string | null;
+  etiqueta: string;
+}
+
+/** «Tipos de documento incluidos»: cada tipo una sola vez. */
+export interface ResumenTipo {
+  tipoDocumentoId: string;
+  tipoDocumento: string;
+  operacion: string;
+  plantillas: number;
+  ajustes: number;
+}
+
+export interface Observacion {
+  propuestaId: string;
+  bloqueCodigo?: string | null;
+  parrafoId?: string | null;
+  problema: string;
+  recomendacion?: string | null;
+}
+
+export interface Devolucion extends Entidad {
+  consolidadoId: string;
+  numeroPresentacion: number;
+  usuario: string;
+  fecha: string;
+  justificacion: string;
+  observaciones: Observacion[];
+}
+
+export interface Presentacion extends Entidad {
+  consolidadoId: string;
+  numero: number;
+  usuario: string;
+  fecha: string;
+  cantidadPlantillas: number;
+}
+
+export interface Movimiento extends Entidad {
+  consolidadoId: string;
+  tipo: string;
+  usuario: string;
+  fecha: string;
+  estadoOrigen?: EstadoConsolidado | null;
+  estadoDestino?: EstadoConsolidado | null;
+  numeroPresentacion?: number | null;
+  detalle: string;
+}
+
+export interface DetalleConsolidado {
+  consolidado: DocumentoConsolidado;
+  tiposIncluidos: ResumenTipo[];
+  propuestas: Propuesta[];
+  /** Ajustes de cada propuesta no retirada, por identificador de propuesta. */
+  ajustes: Record<string, Ajuste[]>;
+  presentaciones: Presentacion[];
+  devoluciones: Devolucion[];
+  movimientos: Movimiento[];
+}
+
+/** Plantilla vigente que se puede elegir para MODIFICAR. */
+export interface PlantillaVigente {
+  plantillaId: string;
+  nombre: string;
+  rubroId: string;
+  subRubroId: string;
+  tipoDocumentoId: string;
+  tipoDocumento: string;
+  claseDocumentoId: string;
+  versionId: string;
+  numeroVersion: number;
+  fechaPublicacion: string;
+  /** Número PLAN del consolidado abierto que ya la incluye; null si está libre. */
+  enConsolidado?: string | null;
+}
+
+export const NOMBRE_ESTADO: Record<EstadoConsolidado, string> = {
+  EnRegistro: 'EN REGISTRO',
+  Verificado: 'VERIFICADO',
+  Aprobado: 'APROBADO',
+};
+
+/** Aclaración del estado VERIFICADO (decisión D6): está pendiente, no revisado. */
+export const DETALLE_ESTADO: Record<EstadoConsolidado, string> = {
+  EnRegistro: 'en preparación por el analista',
+  Verificado: 'pendiente de revisión jurídica',
+  Aprobado: 'cambios publicados',
+};
+
+// ---------- Comparación (Fase 4) ----------
+
+export type TipoSegmento = 'Igual' | 'Agregado' | 'Eliminado' | 'Sustituido';
+
+export interface Segmento {
+  tipo: TipoSegmento;
+  texto: string;
+}
+
+export type EstadoBloqueComparado = 'SinCambios' | 'Modificado' | 'Nuevo' | 'Eliminado';
+
+export type EstadoParrafoComparado = 'SinCambios' | 'Agregado' | 'Eliminado' | 'Modificado';
+
+export interface ParrafoComparado {
+  parrafoId: string;
+  estado: EstadoParrafoComparado;
+  movido: boolean;
+  posicionOriginal?: number | null;
+  posicionPropuesta?: number | null;
+  /** Texto original con sus diferencias; null si el párrafo no existía. */
+  original?: Segmento[] | null;
+  /** Texto propuesto con sus diferencias; null si el párrafo se eliminó. */
+  propuesto?: Segmento[] | null;
+  soloFormato: boolean;
+  configuracion: string[];
+  ajustes: string[];
+}
+
+export interface BloqueComparado {
+  codigo: string;
+  nombre: string;
+  estado: EstadoBloqueComparado;
+  parrafos: ParrafoComparado[];
+}
+
+export interface CampoDiseno {
+  campo: string;
+  original?: string | null;
+  propuesto?: string | null;
+}
+
+export interface ComparacionPropuesta {
+  propuestaId: string;
+  operacion: OperacionPropuesta;
+  bloques: BloqueComparado[];
+  diseno: CampoDiseno[];
+  ajustes: Ajuste[];
 }

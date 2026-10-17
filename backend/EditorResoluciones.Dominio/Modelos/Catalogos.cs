@@ -58,10 +58,17 @@ public class TipoDocumento : IEntidad
     public bool TextoCorrido { get; set; }
 
     /// <summary>
-    /// Si se indica, las plantillas de este tipo son copia de las del tipo indicado con el mismo Rubro, Sub Rubro y
-    /// Documento (la Certificación es copia de la Resolución). Se actualizan solas y no se editan directamente.
+    /// Si se indica, las plantillas de este tipo acompañan a las del tipo indicado con el mismo Rubro, Sub Rubro y
+    /// Documento (la Certificación acompaña a la Resolución): en un Documento Consolidado, la propuesta de la Resolución
+    /// lleva consigo la de su Certificación, que se actualiza con cada cambio de la Resolución (decisión D3).
     /// </summary>
     public string? CopiaDeTipoDocumentoId { get; set; }
+
+    /// <summary>
+    /// Bloques del documento, en su orden (decisión D2). Vacío: los cinco de siempre (Cabecera, Considerando, Por Tanto,
+    /// Resuelve y Firmas).
+    /// </summary>
+    public List<BloqueDeTipo> Bloques { get; set; } = [];
 
     public bool Activo { get; set; } = true;
 }

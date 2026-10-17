@@ -78,3 +78,9 @@
 .interlineado {
   min-width: 130px;
 }
+
+.aviso-obligatorio {
+  border: 1px solid var(--prueba);
+  background: var(--prueba-suave);
+  color: var(--texto);
+}

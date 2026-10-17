@@ -1,0 +1,242 @@
+<a class="volver" routerLink="/consolidados">← Documentos consolidados</a>
+
+@if (error(); as mensaje) {
+  <div class="aviso aviso-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+  </div>
+} @else if (!detalle() && cargando()) {
+  <p class="texto-secundario" aria-live="polite">Cargando el documento…</p>
+} @else if (detalle(); as d) {
+  <section class="tarjeta cabecera" aria-labelledby="titulo-consolidado">
+    <div class="identidad">
+      <h2 id="titulo-consolidado">{{ d.consolidado.numero }}</h2>
+      <app-insignia-estado [estado]="d.consolidado.estado" [detalle]="true" />
+    </div>
+    <dl class="datos">
+      <div><dt>Analista</dt><dd>{{ d.consolidado.analistaId }}</dd></div>
+      <div><dt>Creado</dt><dd>{{ d.consolidado.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+      <div><dt>Última actualización</dt><dd>{{ d.consolidado.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+      <div><dt>Plantillas</dt><dd>{{ activas().length }}</dd></div>
+      @if (d.consolidado.numeroPresentacion > 0) {
+        <div><dt>Presentaciones</dt><dd>{{ d.consolidado.numeroPresentacion }}</dd></div>
+      }
+    </dl>
+  </section>
+
+  @if (ultimaDevolucion(); as dev) {
+    <section class="aviso aviso-devolucion" role="status" aria-labelledby="titulo-devolucion">
+      <h3 id="titulo-devolucion">Devuelto a registro el {{ dev.fecha | date: 'dd/MM/yyyy HH:mm' }} por {{ dev.usuario }}</h3>
+      <p>{{ dev.justificacion }}</p>
+      @if (dev.observaciones.length) {
+        <ul>
+          @for (o of dev.observaciones; track $index) {
+            <li>
+              <strong>{{ nombrePropuesta(o.propuestaId) || o.propuestaId }}{{ o.bloqueCodigo ? ' · ' + o.bloqueCodigo : '' }}:</strong>
+              {{ o.problema }}
+              @if (o.recomendacion) {
+                <em>Recomendación: {{ o.recomendacion }}</em>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <section class="tarjeta" aria-labelledby="titulo-tipos">
+    <header class="encabezado-tarjeta">
+      <h3 id="titulo-tipos">Tipos de documento incluidos</h3>
+      @if (editable()) {
+        <div class="botones">
+          <button type="button" class="boton boton-primario" (click)="seleccion.set('Crear')">CREAR PLANTILLA</button>
+          <button type="button" class="boton boton-secundario" (click)="seleccion.set('Modificar')">MODIFICAR PLANTILLA</button>
+        </div>
+      }
+    </header>
+
+    @if (d.tiposIncluidos.length === 0) {
+      <p class="vacio">
+        Todavía no hay plantillas en este documento.
+        @if (editable()) {
+          Use CREAR PLANTILLA o MODIFICAR PLANTILLA.
+        }
+      </p>
+    } @else {
+      <div class="tabla-desplazable">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th scope="col">Tipo documental</th>
+              <th scope="col">Operación</th>
+              <th scope="col" class="numero">Plantillas afectadas</th>
+              <th scope="col" class="numero">Ajustes</th>
+              <th scope="col"><span class="oculto">Detalle</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of d.tiposIncluidos; track t.tipoDocumentoId) {
+              <tr>
+                <th scope="row">{{ t.tipoDocumento }}</th>
+                <td>{{ t.operacion }}</td>
+                <td class="numero">{{ t.plantillas }}</td>
+                <td class="numero">{{ t.ajustes }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="boton boton-secundario boton-compacto"
+                    [attr.aria-expanded]="tipoAbierto() === t.tipoDocumentoId"
+                    (click)="alternarTipo(t.tipoDocumentoId)"
+                  >
+                    {{ tipoAbierto() === t.tipoDocumentoId ? 'Ocultar' : 'Ver ajustes' }}
+                  </button>
+                </td>
+              </tr>
+              @if (tipoAbierto() === t.tipoDocumentoId) {
+                <tr class="fila-detalle">
+                  <td colspan="5">
+                    @for (p of propuestasDeTipo(t.tipoDocumentoId); track p.id) {
+                      <div class="detalle-tipo">
+                        <strong>{{ p.nombre }}</strong>
+                        @if (ajustes(p.id).length === 0) {
+                          <span class="texto-secundario">Sin ajustes todavía.</span>
+                        } @else {
+                          <ul class="ajustes">
+                            @for (a of ajustes(p.id); track $index) {
+                              <li [class]="'ajuste ajuste-' + a.tipo">{{ a.etiqueta }}</li>
+                            }
+                          </ul>
+                        }
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  @if (activas().length) {
+    <section class="tarjeta" aria-labelledby="titulo-propuestas">
+      <h3 id="titulo-propuestas">Plantillas del consolidado</h3>
+      <ul class="propuestas">
+        @for (p of activas(); track p.id) {
+          <li class="propuesta" [class.derivada]="!!p.derivadaDePropuestaId">
+            <div class="datos-propuesta">
+              <span class="insignia" [class.insignia-exito]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
+              <span class="tipo">{{ nombreTipo(p.tipoDocumentoId) }}</span>
+              <strong>{{ p.nombre }}</strong>
+              <span class="texto-secundario sin-margen">
+                {{ p.plantillaId ? p.plantillaId + ' · ' : '' }}{{ ajustes(p.id).length }}
+                {{ ajustes(p.id).length === 1 ? 'ajuste' : 'ajustes' }} · modificada {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
+              </span>
+              @if (p.derivadaDePropuestaId) {
+                <span class="nota">Acompaña a «{{ nombrePropuesta(p.derivadaDePropuestaId) }}»: se actualiza con ella.</span>
+              }
+            </div>
+            <div class="acciones">
+              <a class="boton boton-primario boton-compacto" [routerLink]="['/consolidados', d.consolidado.id, 'propuestas', p.id]">
+                {{ editable() ? 'Editar' : 'Consultar' }}
+              </a>
+              @if (puedeComparar()) {
+                <a class="boton boton-secundario boton-compacto" [routerLink]="['/consolidados', d.consolidado.id, 'propuestas', p.id, 'diferencias']">
+                  Diferencias
+                </a>
+              }
+              <button type="button" class="boton boton-secundario boton-compacto" [disabled]="generando() === p.id" (click)="vistaPrevia(p)">
+                {{ generando() === p.id ? 'Generando…' : 'Vista previa' }}
+              </button>
+              @if (editable() && !p.derivadaDePropuestaId) {
+                <button type="button" class="boton boton-secundario boton-compacto" (click)="abrirRetiro(p)">Retirar</button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (retiradas().length) {
+    <details class="tarjeta">
+      <summary>Plantillas retiradas del consolidado ({{ retiradas().length }})</summary>
+      <ul class="retiradas">
+        @for (p of retiradas(); track p.id) {
+          <li><strong>{{ p.nombre }}</strong> — {{ p.motivoRetiro }}</li>
+        }
+      </ul>
+    </details>
+  }
+
+  @if (editable()) {
+    <section class="tarjeta pie" aria-label="Acciones del documento">
+      <p class="texto-secundario sin-margen">
+        Los cambios se guardan al guardar cada párrafo o el diseño de la plantilla. Las plantillas vigentes no cambian hasta que el
+        Oficial Jurídico apruebe el documento.
+      </p>
+      <button type="button" class="boton boton-primario" [disabled]="enviando() || activas().length === 0" (click)="enviar()">
+        {{ enviando() ? 'Enviando…' : 'ENVIAR A VERIFICACIÓN' }}
+      </button>
+    </section>
+  }
+
+  @if (puedeComparar()) {
+    <section class="tarjeta pie" aria-label="Revisión jurídica">
+      <p class="texto-secundario sin-margen">El documento está pendiente de su revisión jurídica.</p>
+      <a class="boton boton-primario" [routerLink]="['/consolidados', d.consolidado.id, 'revision']">Revisar</a>
+    </section>
+  }
+
+  @if (d.presentaciones.length) {
+    <section class="tarjeta" aria-labelledby="titulo-revisiones">
+      <h3 id="titulo-revisiones">Presentaciones y devoluciones</h3>
+      <app-historial-revisiones [detalle]="d" />
+    </section>
+  }
+
+  <details class="tarjeta">
+    <summary>Historial del documento ({{ d.movimientos.length }})</summary>
+    <ol class="historial">
+      @for (m of d.movimientos; track m.id) {
+        <li>
+          <span class="fecha">{{ m.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>
+          <span><strong>{{ m.usuario }}</strong> · {{ m.detalle }}</span>
+        </li>
+      }
+    </ol>
+  </details>
+
+  <app-seleccion-plantilla
+    [consolidadoId]="d.consolidado.id"
+    [operacion]="seleccion()"
+    (cerrar)="seleccion.set(null)"
+    (agregado)="alAgregar($event)"
+  />
+}
+
+<dialog #dialogoRetiro class="dialogo" aria-labelledby="titulo-retiro" (cancel)="cerrarRetiro($event)">
+  @if (retirando(); as p) {
+    <h2 id="titulo-retiro">Retirar «{{ p.nombre }}»</h2>
+    <p class="texto-secundario">
+      Se quita del documento y queda registrado con su motivo.
+      @if (acompanante(p); as otra) {
+        También se retira «{{ otra.nombre }}», que la acompaña.
+      }
+    </p>
+    <label class="motivo">
+      <span>Motivo (obligatorio)</span>
+      <textarea class="control" rows="3" maxlength="500" [value]="motivo()" (input)="motivo.set($any($event.target).value)"></textarea>
+    </label>
+    @if (errorRetiro(); as mensaje) {
+      <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+    }
+    <div class="acciones-dialogo">
+      <button type="button" class="boton boton-secundario" (click)="cerrarRetiro()">Cancelar</button>
+      <button type="button" class="boton boton-peligro" [disabled]="motivo().trim().length < 5 || enviandoRetiro()" (click)="confirmarRetiro()">
+        {{ enviandoRetiro() ? 'Retirando…' : 'Retirar' }}
+      </button>
+    </div>
+  }
+</dialog>

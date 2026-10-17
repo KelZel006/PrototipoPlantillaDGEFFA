@@ -1,54 +1,55 @@
-<div class="pestanas" role="tablist" aria-label="Secciones de la resolución">
-  @for (pestana of pestanas; track pestana.seccion) {
+<div class="pestanas" role="tablist" aria-label="Bloques del documento" [style.--columnas]="pestanas().length">
+  @for (pestana of pestanas(); track pestana.seccion) {
     <button
       type="button"
       role="tab"
       class="pestana"
       [id]="'pestana-' + pestana.seccion"
       [attr.aria-selected]="pestana.seccion === activa()"
-      [attr.aria-controls]="pestana.disponible ? 'panel-' + pestana.seccion : null"
-      [attr.aria-disabled]="!pestana.disponible"
-      [title]="pestana.disponible ? titulos[pestana.seccion] : titulos[pestana.seccion] + ': se habilitará en una fase posterior'"
+      [attr.aria-controls]="'panel-' + pestana.seccion"
+      [title]="pestana.titulo + (pestana.bloque.obligatorio ? ' (obligatorio)' : '')"
       (click)="seleccionar(pestana)"
     >
       @switch (pestana.seccion) {
-        @case ('Cabecera') {
+        @case ('CABECERA') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4" /></svg>
         }
-        @case ('Considerando') {
+        @case ('CONSIDERANDO') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h10M18 4v4M14 6h8" /></svg>
         }
-        @case ('PorTanto') {
+        @case ('POR_TANTO') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         }
-        @case ('Firmas') {
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19c3-1 4-6 6-6s1 4 3 4 3-3 4-3 2 2 5 2M15 4l5 5-8 8H7v-5z" /></svg>
-        }
-        @case ('Resuelve') {
+        @case ('RESUELVE') {
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>
         }
+        @default {
+          @if (pestana.bloque.esFirmas) {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19c3-1 4-6 6-6s1 4 3 4 3-3 4-3 2 2 5 2M15 4l5 5-8 8H7v-5z" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3" /></svg>
+          }
+        }
       }
-      <span>{{ titulos[pestana.seccion] }}</span>
+      <span>{{ pestana.titulo }}</span>
+      @if (pestana.bloque.obligatorio) {
+        <span class="obligatorio" aria-label="obligatorio">*</span>
+      }
       @if (contexto.seccionesConCambios().has(pestana.seccion)) {
         <span class="cambios" title="Cambios sin guardar" aria-label="Cambios sin guardar">●</span>
-      }
-      @if (!pestana.disponible) {
-        <span class="proximamente">Próximamente</span>
       }
     </button>
   }
 </div>
 
-@for (pestana of pestanas; track pestana.seccion) {
-  @if (pestana.disponible) {
-    <div
-      class="panel"
-      role="tabpanel"
-      [id]="'panel-' + pestana.seccion"
-      [attr.aria-labelledby]="'pestana-' + pestana.seccion"
-      [hidden]="pestana.seccion !== activa()"
-    >
-      <app-editor-seccion [plantilla]="plantilla()" [seccion]="pestana.seccion" [nombre]="pestana.nombre" />
-    </div>
-  }
+@for (pestana of pestanas(); track pestana.seccion) {
+  <div
+    class="panel"
+    role="tabpanel"
+    [id]="'panel-' + pestana.seccion"
+    [attr.aria-labelledby]="'pestana-' + pestana.seccion"
+    [hidden]="pestana.seccion !== activa()"
+  >
+    <app-editor-seccion [plantilla]="plantilla()" [seccion]="pestana.seccion" [nombre]="pestana.nombre" [bloque]="pestana.bloque" />
+  </div>
 }

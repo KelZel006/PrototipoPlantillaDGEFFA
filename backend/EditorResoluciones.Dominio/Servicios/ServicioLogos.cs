@@ -17,24 +17,29 @@ public interface IAlmacenArchivos
     Task EliminarAsync(string id, CancellationToken ct = default);
 }
 
-/// <summary>Logo del encabezado de una plantilla: carga, reemplazo y eliminación.</summary>
+/// <summary>
+/// Archivos de logo: carga validada, lectura y borrado cuando ya nadie los usa. Un mismo archivo puede estar en la
+/// plantilla anterior, en versiones publicadas, en propuestas y en lo enviado a verificación (por ejemplo, la
+/// Certificación comparte el logo de su Resolución), así que solo se borra si ninguno lo usa.
+/// </summary>
 public sealed class ServicioLogos(
     IRepositorio<ArchivoRecurso> archivos,
     IAlmacenArchivos almacen,
-    ServicioEntidades<Plantilla> plantillas,
+    IRepositorio<Plantilla> plantillas,
+    IRepositorio<VersionPlantilla> versiones,
+    IRepositorio<Propuesta> propuestas,
+    IRepositorio<Presentacion> presentaciones,
     TimeProvider reloj)
 {
     /// <summary>Tamaño máximo de un logo.</summary>
     public const int TamanoMaximo = 1024 * 1024;
 
     /// <summary>
-    /// Guarda el logo y lo asigna a la plantilla. El tipo se comprueba por el contenido del archivo
-    /// (firma PNG o JPEG), no por su nombre ni por lo que declara el navegador.
+    /// Guarda el archivo del logo. El tipo se comprueba por el contenido del archivo (firma PNG o JPEG), no por su
+    /// nombre ni por lo que declara el navegador.
     /// </summary>
-    public async Task<Plantilla> AsignarAsync(string plantillaId, string nombreOriginal, byte[] contenido, CancellationToken ct = default)
+    public async Task<ArchivoRecurso> GuardarAsync(string nombreOriginal, byte[] contenido, CancellationToken ct = default)
     {
-        var plantilla = await plantillas.ObtenerAsync(plantillaId, ct);
-
         var resultado = new ResultadoValidacion();
         var tipo = TipoImagen(contenido);
         if (contenido.Length == 0)
@@ -45,46 +50,34 @@ public sealed class ServicioLogos(
             resultado.Agregar("archivo", "El logo debe ser una imagen PNG o JPEG.");
         resultado.LanzarSiHayErrores();
 
+        var nombre = Path.GetFileName(nombreOriginal);
         var recurso = await archivos.CrearAsync(new ArchivoRecurso
         {
-            NombreOriginal = Path.GetFileName(nombreOriginal).Length > 150 ? Path.GetFileName(nombreOriginal)[..150] : Path.GetFileName(nombreOriginal),
+            NombreOriginal = nombre.Length > 150 ? nombre[..150] : nombre,
             TipoContenido = tipo!,
             Tamano = contenido.Length,
             Sha256 = Convert.ToHexString(SHA256.HashData(contenido)),
             FechaCarga = reloj.GetUtcNow(),
         }, ct);
         await almacen.GuardarAsync(recurso.Id, contenido, ct);
-
-        var anterior = plantilla.LogoId;
-        plantilla.LogoId = recurso.Id;
-        Plantilla actualizada;
-        try
-        {
-            actualizada = await plantillas.ActualizarAsync(plantilla.Id, plantilla, ct);
-        }
-        catch
-        {
-            // Si la plantilla no acepta el cambio, el archivo nuevo sobra.
-            await EliminarArchivoAsync(recurso.Id, ct);
-            throw;
-        }
-
-        if (!string.IsNullOrEmpty(anterior))
-            await EliminarArchivoAsync(anterior, ct);
-        return actualizada;
+        return recurso;
     }
 
-    public async Task<Plantilla> QuitarAsync(string plantillaId, CancellationToken ct = default)
+    /// <summary>Borra el archivo si ninguna plantilla, versión, propuesta ni presentación lo usa.</summary>
+    public async Task EliminarSiNoSeUsaAsync(string? archivoId, CancellationToken ct = default)
     {
-        var plantilla = await plantillas.ObtenerAsync(plantillaId, ct);
-        var anterior = plantilla.LogoId;
-        if (string.IsNullOrEmpty(anterior))
-            return plantilla;
-
-        plantilla.LogoId = null;
-        var actualizada = await plantillas.ActualizarAsync(plantilla.Id, plantilla, ct);
-        await EliminarArchivoAsync(anterior, ct);
-        return actualizada;
+        if (string.IsNullOrEmpty(archivoId))
+            return;
+        var enUso =
+            (await plantillas.ListarAsync(ct)).Any(p => p.LogoId == archivoId) ||
+            (await versiones.ListarAsync(ct)).Any(v => v.Contenido.Diseno.LogoId == archivoId) ||
+            (await propuestas.ListarAsync(ct)).Any(p => p.ContenidoPropuesto.Diseno.LogoId == archivoId) ||
+            (await presentaciones.ListarAsync(ct)).Any(p => p.Propuestas.Any(e => e.ContenidoPropuesto.Diseno.LogoId == archivoId));
+        if (enUso)
+            return;
+        if (await archivos.ObtenerAsync(archivoId, ct) is not null)
+            await archivos.EliminarAsync(archivoId, null, ct);
+        await almacen.EliminarAsync(archivoId, ct);
     }
 
     public async Task<(ArchivoRecurso Datos, byte[] Contenido)> LeerAsync(string archivoId, CancellationToken ct = default)
@@ -101,17 +94,4 @@ public sealed class ServicioLogos(
         [0xFF, 0xD8, 0xFF, ..] => "image/jpeg",
         _ => null,
     };
-
-    /// <summary>
-    /// Borra el archivo del logo, salvo que otra plantilla todavía lo use (la Certificación comparte el logo de su
-    /// Resolución).
-    /// </summary>
-    private async Task EliminarArchivoAsync(string archivoId, CancellationToken ct)
-    {
-        if ((await plantillas.ListarAsync(ct)).Any(p => p.LogoId == archivoId))
-            return;
-        if (await archivos.ObtenerAsync(archivoId, ct) is not null)
-            await archivos.EliminarAsync(archivoId, null, ct);
-        await almacen.EliminarAsync(archivoId, ct);
-    }
 }

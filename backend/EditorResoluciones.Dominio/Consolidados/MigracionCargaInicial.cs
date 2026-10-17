@@ -5,12 +5,15 @@ using EditorResoluciones.Dominio.Servicios;
 namespace EditorResoluciones.Dominio.Consolidados;
 
 /// <summary>Resultado de la migración, para el registro de inicio y las pruebas.</summary>
-public sealed record ResultadoMigracion(int VersionesCreadas, int HuellasCompletadas, IReadOnlyList<string> Inconsistencias);
+public sealed record ResultadoMigracion(int VersionesCreadas, int VersionesActualizadas, int HuellasCompletadas, IReadOnlyList<string> Inconsistencias);
 
 /// <summary>
 /// Se ejecuta al iniciar la API (decisión D5):
 /// <list type="bullet">
 /// <item>Cada plantilla sin versión vigente recibe una versión VIGENTE «Carga inicial» con su contenido actual.</item>
+/// <item>Transición de la Fase 3: una versión «Carga inicial» que ningún consolidado tomó se actualiza con el
+/// contenido actual de la plantilla (lo editado antes de que se cerrara la edición directa). Desde la Fase 3 esos datos
+/// ya no cambian, así que después no vuelve a ocurrir.</item>
 /// <item>Completa lo que los datos semilla no pueden traer escrito: las huellas y, en las propuestas MODIFICAR sin
 /// versión original, la versión vigente de su plantilla (creada al iniciar).</item>
 /// <item>Informa las inconsistencias de vigencia (más de una versión vigente para una plantilla o identidad).</item>
@@ -28,7 +31,11 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
         var parrafos = await tx.ListarAsync<Parrafo>(ct);
         var versiones = (await tx.ListarAsync<VersionPlantilla>(ct)).ToList();
         var creadas = 0;
+        var actualizadas = 0;
         var huellas = 0;
+        var tomadas = (await tx.ListarAsync<Propuesta>(ct)).Select(p => p.VersionOrigenId)
+            .Concat((await tx.ListarAsync<Presentacion>(ct)).SelectMany(p => p.Propuestas.Select(e => e.VersionOrigenId)))
+            .OfType<string>().ToHashSet(StringComparer.Ordinal);
 
         // Huellas que faltan en las versiones de los datos semilla.
         foreach (var version in versiones.Where(v => string.IsNullOrEmpty(v.Huella)).ToList())
@@ -41,8 +48,26 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
         foreach (var plantilla in plantillas)
         {
             var propias = versiones.Where(v => v.PlantillaId == plantilla.Id).ToList();
-            if (propias.Any(v => v.Vigencia == Vigencia.Vigente))
+            if (propias.FirstOrDefault(v => v.Vigencia == Vigencia.Vigente) is { } vigente)
+            {
+                if (vigente.CargaInicial && !tomadas.Contains(vigente.Id) && versiones.All(v => v.VersionAnteriorId != vigente.Id))
+                {
+                    var actual = ConstructorContenido.Desde(plantilla, parrafos);
+                    var huella = HuellaContenido.De(actual);
+                    if (huella != vigente.Huella)
+                    {
+                        var anterior = new { vigente.Contenido, vigente.Huella };
+                        vigente.Contenido = actual;
+                        vigente.Huella = huella;
+                        await tx.ActualizarAsync(vigente, ct);
+                        await tx.CrearAsync(ServicioHistorial.Construir(
+                            new CambioHistorial("versionesPlantilla", vigente.Id, AccionHistorial.Actualizacion, vigente.Version, anterior, vigente),
+                            UsuarioCargaInicial, ahora), ct);
+                        actualizadas++;
+                    }
+                }
                 continue;
+            }
 
             var contenido = ConstructorContenido.Desde(plantilla, parrafos);
             var version = await tx.CrearAsync(new VersionPlantilla
@@ -103,7 +128,7 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
             huellas++;
         }
 
-        return new ResultadoMigracion(creadas, huellas, Inconsistencias(plantillas, versiones));
+        return new ResultadoMigracion(creadas, actualizadas, huellas, Inconsistencias(plantillas, versiones));
     }, ct);
 
     /// <summary>Como máximo una versión vigente por plantilla y una plantilla por identidad funcional (regla 14).</summary>

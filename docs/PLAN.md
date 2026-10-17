@@ -11,7 +11,7 @@ Resumen del diagnóstico y del plan aprobados en la Fase 1 (13/10/2026), con los
 | Diseño | Se sigue [diseno/referencia.png](diseno/referencia.png): tres columnas (condiciones y editor, listado, campos disponibles), pestañas en bloque y campos mostrados como etiquetas resaltadas |
 | Datos | Todos ficticios y marcados como de prueba. Se guardan en archivos JSON |
 | Entorno | Visual Studio Code. Visual Studio queda solo como referencia, sin instalar |
-| .NET | .NET 9, que es el SDK instalado. Pasar a .NET 10 (LTS) solo requiere cambiar `TargetFramework` (el soporte de .NET 9 termina el 10/11/2026) |
+| .NET | **.NET 10 (LTS)** desde el 17/10/2026 (decisión D9 del Documento Consolidado). Antes, .NET 9 |
 | Sin condiciones | Un párrafo sin condiciones se muestra siempre, como indica el diseño |
 | Límite del párrafo | 2000 caracteres, también según el diseño. Cada campo cuenta como su etiqueta entre llaves, por ejemplo `{Operador}` |
 | Formato de salida | **PDF** (definido el 14/10/2026), con PDFsharp-MigraDoc **6.2.4 (MIT)**. No actualizar a 6.5.0 o posterior: cambió a AGPL-3.0 |

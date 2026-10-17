@@ -92,8 +92,11 @@ public static class ContenidoEditor
             _ => 0,
         });
 
-    /// <summary>Texto plano con los campos como "{Etiqueta}" y las tablas como "[Tabla]"; sirve para resúmenes.</summary>
-    public static string TextoPlano(NodoContenido raiz, IReadOnlyDictionary<string, Campo> catalogo)
+    /// <summary>
+    /// Texto plano con los campos como "{Etiqueta}". Las tablas se resumen como "[Tabla]" o, con
+    /// <paramref name="conTablas"/>, con su texto: "[Tabla: celda | celda / celda | celda]" (para comparar).
+    /// </summary>
+    public static string TextoPlano(NodoContenido raiz, IReadOnlyDictionary<string, Campo> catalogo, bool conTablas = false)
     {
         var partes = new System.Text.StringBuilder();
         void Visitar(NodoContenido nodo)
@@ -107,8 +110,25 @@ public static class ContenidoEditor
                     var id = CampoId(nodo) ?? "";
                     partes.Append('{').Append(catalogo.TryGetValue(id, out var campo) ? campo.Etiqueta : id).Append('}');
                     return;
-                case "table":
+                case "table" when !conTablas:
                     partes.Append(" [Tabla] ");
+                    return;
+                case "table":
+                    partes.Append(" [Tabla: ");
+                    var filas = nodo.Contenido ?? [];
+                    for (var f = 0; f < filas.Count; f++)
+                    {
+                        if (f > 0)
+                            partes.Append(" / ");
+                        var celdas = filas[f].Contenido ?? [];
+                        for (var c = 0; c < celdas.Count; c++)
+                        {
+                            if (c > 0)
+                                partes.Append(" | ");
+                            Visitar(celdas[c]);
+                        }
+                    }
+                    partes.Append("] ");
                     return;
                 case "hardBreak":
                     partes.Append(' ');

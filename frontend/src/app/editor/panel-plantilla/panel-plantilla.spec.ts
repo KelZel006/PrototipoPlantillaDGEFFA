@@ -4,23 +4,19 @@ import { LOCALE_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
-import { ContextoService } from '../../core/contexto.service';
+import { provideRouter } from '@angular/router';
 import { InteraccionService } from '../../core/interaccion.service';
+import { PlantillaEdicion } from '../../core/modelos';
+import { PlantillaActualService } from '../../core/plantilla-actual.service';
+import { PLANTILLA } from '../../pruebas/datos-prueba';
 import { PanelPlantilla } from './panel-plantilla';
 
 registerLocaleData(localeEs);
 
-const plantilla = {
-  id: 'PLA-001',
-  version: 1,
-  nombre: 'Plantilla de prueba',
-  rubroId: 'RUB-001',
-  subRubroId: 'SUB-001',
-  tipoDocumentoId: 'TDO-001',
-  claseDocumentoId: 'CDO-001',
-  estado: 'Borrador',
-  fechaModificacion: '2026-10-14T00:00:00+00:00',
-};
+const TIPOS = [
+  { id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true },
+  { id: 'TDO-004', version: 1, nombre: 'Certificación', textoCorrido: true, copiaDeTipoDocumentoId: 'TDO-001', activo: true },
+];
 
 describe('PanelPlantilla', () => {
   let fixture: ComponentFixture<PanelPlantilla>;
@@ -38,7 +34,7 @@ describe('PanelPlantilla', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [PanelPlantilla],
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: LOCALE_ID, useValue: 'es' }],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: LOCALE_ID, useValue: 'es' }],
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PanelPlantilla);
@@ -47,127 +43,58 @@ describe('PanelPlantilla', () => {
 
   afterEach(() => http.verify());
 
-  const seleccionarCombinacion = () => {
-    const contexto = TestBed.inject(ContextoService);
-    contexto.seleccionarRubro({ id: 'RUB-001', version: 1, nombre: 'Rubro', activo: true });
-    contexto.seleccionarSubRubro({ id: 'SUB-001', version: 1, rubroId: 'RUB-001', nombre: 'Sub', activo: true });
-    contexto.seleccionarTipoDocumento({ id: 'TDO-001', version: 1, nombre: 'Tipo', activo: true });
-    contexto.seleccionarClaseDocumento({ id: 'CDO-001', version: 1, nombre: 'Original', activo: true });
+  /** Abre la propuesta y responde las consultas iniciales. */
+  const abrir = async (propuesta: PlantillaEdicion, solicitudes: unknown[] = [], bienes: unknown[] = []) => {
+    TestBed.inject(PlantillaActualService).abrir(propuesta.id);
+    fixture.detectChanges();
+    await estabilizar();
+    http.expectOne('/api/tipos-documento').flush(TIPOS);
+    http.expectOne(`/api/propuestas/${propuesta.id}/edicion`).flush(propuesta);
+    await estabilizar();
+    http.expectOne('/api/solicitudes').flush(solicitudes);
+    http.expectOne('/api/detalles-bienes').flush(bienes);
+    await estabilizar();
   };
 
-  it('pide completar las tres listas antes de consultar', async () => {
-    fixture.detectChanges();
-    await estabilizar();
-    expect(elemento.textContent).toContain('Seleccione Rubro, Sub Rubro, Tipo Documento y Documento');
+  it('muestra la operación, el documento consolidado y el diseño si la propuesta es editable', async () => {
+    await abrir(PLANTILLA);
+
+    expect(elemento.textContent).toContain('MODIFICAR');
+    expect(elemento.textContent).toContain('Plantilla de prueba');
+    expect(elemento.querySelector('a')?.textContent).toContain('PLAN-20260001');
+    expect(elemento.textContent).toContain('EN REGISTRO');
+    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
+    expect(elemento.textContent).not.toContain('Solo lectura');
   });
 
-  it('muestra la plantilla de la combinación elegida', async () => {
-    seleccionarCombinacion();
-    fixture.detectChanges();
-    await estabilizar();
-    const peticion = http.expectOne((r) => r.url === '/api/plantillas');
-    expect(peticion.request.params.get('tipoDocumentoId')).toBe('TDO-001');
-    expect(peticion.request.params.get('claseDocumentoId')).toBe('CDO-001');
-    peticion.flush([plantilla]);
-    await estabilizar();
-    http.expectOne('/api/solicitudes').flush([]);
-    http.expectOne('/api/detalles-bienes').flush([]);
-    await estabilizar();
+  it('sin permiso de edición queda en solo lectura, sin el diseño', async () => {
+    await abrir({ ...PLANTILLA, editable: false, estadoConsolidado: 'Verificado' });
 
-    expect(elemento.querySelector('h2')?.textContent).toContain('Plantilla de prueba');
-    expect(elemento.textContent).toContain('PLA-001');
-    expect(elemento.textContent).toContain('Borrador');
-    expect(elemento.querySelector('.nota-corrido')).toBeNull();
+    expect(elemento.textContent).toContain('Solo lectura');
+    expect(elemento.textContent).toContain('VERIFICADO');
+    expect(elemento.querySelector('app-diseno-documento')).toBeNull();
   });
 
-  it('avisa que la Certificación se genera con el texto corrido', async () => {
-    seleccionarCombinacion();
-    TestBed.inject(ContextoService).seleccionarTipoDocumento({
-      id: 'TDO-004',
-      version: 1,
-      nombre: 'Certificación',
-      textoCorrido: true,
-      activo: true,
-    });
-    fixture.detectChanges();
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([{ ...plantilla, tipoDocumentoId: 'TDO-004' }]);
-    await estabilizar();
-    http.expectOne('/api/solicitudes').flush([]);
-    http.expectOne('/api/detalles-bienes').flush([]);
-    await estabilizar();
+  it('la Certificación que acompaña a la Resolución lo avisa y advierte el texto corrido', async () => {
+    await abrir({ ...PLANTILLA, id: 'PRO-002', tipoDocumentoId: 'TDO-004', derivadaDePropuestaId: 'PRO-001' });
 
+    expect(elemento.querySelector('.aviso-copia')?.textContent).toContain('acompaña a la Resolución');
     expect(elemento.querySelector('.nota-corrido')?.textContent).toContain('Certificación: el texto se genera corrido');
-    // Sin copiaDeTipoDocumentoId se edita normalmente.
-    expect(elemento.querySelector('.aviso-copia')).toBeNull();
-    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
   });
 
-  it('la Certificación se edita, avisa que se actualiza con la Resolución y lleva a ella', async () => {
-    seleccionarCombinacion();
-    const contexto = TestBed.inject(ContextoService);
-    contexto.seleccionarTipoDocumento({
-      id: 'TDO-004',
-      version: 1,
-      nombre: 'Certificación',
-      textoCorrido: true,
-      copiaDeTipoDocumentoId: 'TDO-001',
-      activo: true,
-    });
-    fixture.detectChanges();
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([{ ...plantilla, tipoDocumentoId: 'TDO-004' }]);
-    await estabilizar();
-    http.expectOne('/api/solicitudes').flush([]);
-    http.expectOne('/api/detalles-bienes').flush([]);
-    await estabilizar();
-
-    expect(contexto.esCopia()).toBe(true);
-    const aviso = elemento.querySelector('.aviso-copia');
-    expect(aviso?.textContent).toContain('se actualiza automáticamente con la Resolución');
-    expect(aviso?.textContent).toContain('también puede editarla aquí');
-    // El diseño de la Certificación también se edita.
-    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
-
-    aviso!.querySelector('button')!.click();
-    http.expectOne('/api/tipos-documento').flush([
-      { id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true },
-      { id: 'TDO-004', version: 1, nombre: 'Certificación', copiaDeTipoDocumentoId: 'TDO-001', activo: true },
-    ]);
-    expect(contexto.tipoDocumento()?.nombre).toBe('Resolución');
-    expect(contexto.esCopia()).toBe(false);
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
-    await estabilizar();
-    http.expectOne('/api/solicitudes').flush([]);
-    http.expectOne('/api/detalles-bienes').flush([]);
-    await estabilizar();
-    expect(elemento.querySelector('.aviso-copia')).toBeNull();
-    expect(elemento.querySelector('app-diseno-documento')).not.toBeNull();
-  });
-
-  describe('generar PDF', () => {
+  describe('vista previa en PDF', () => {
     const solicitudes = [
       { id: 'SOL-004', version: 1, numeroSolicitud: 'P-4', beneficiario: 'Otro', rubroId: 'RUB-002', subRubroId: 'SUB-003', esDatoPrueba: true },
       { id: 'SOL-001', version: 1, numeroSolicitud: 'P-1', beneficiario: 'Uno', rubroId: 'RUB-001', subRubroId: 'SUB-001', esDatoPrueba: true },
     ];
+    const bienes = [
+      { id: 'BIE-1', version: 1, solicitudId: 'SOL-001', codigoArancelario: '1' },
+      { id: 'BIE-2', version: 1, solicitudId: 'SOL-001', codigoArancelario: '2' },
+    ];
     let ventana: { location: { href: string }; close: ReturnType<typeof vi.fn> };
 
-    const cargarPlantilla = async () => {
-      seleccionarCombinacion();
-      fixture.detectChanges();
-      await estabilizar();
-      http.expectOne((r) => r.url === '/api/plantillas').flush([plantilla]);
-      await estabilizar();
-      http.expectOne('/api/solicitudes').flush(solicitudes);
-      http.expectOne('/api/detalles-bienes').flush([
-        { id: 'BIE-1', version: 1, solicitudId: 'SOL-001', codigoArancelario: '1' },
-        { id: 'BIE-2', version: 1, solicitudId: 'SOL-001', codigoArancelario: '2' },
-      ]);
-      await estabilizar();
-    };
     const botonPdf = () =>
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Generar PDF'))!;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Vista previa en PDF'))!;
 
     beforeEach(() => {
       ventana = { location: { href: '' }, close: vi.fn() };
@@ -178,8 +105,8 @@ describe('PanelPlantilla', () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    it('propone primero la solicitud de la misma combinación y abre el PDF', async () => {
-      await cargarPlantilla();
+    it('propone primero la solicitud de la misma combinación y abre el PDF de la propuesta', async () => {
+      await abrir(PLANTILLA, solicitudes, bienes);
       const opciones = Array.from(elemento.querySelectorAll('.solicitud option')).map((o) => o.textContent?.trim());
       expect(opciones.map((o) => o?.replace(/\s+/g, ' '))).toEqual([
         'Sin datos (mostrar los campos)',
@@ -189,7 +116,7 @@ describe('PanelPlantilla', () => {
 
       botonPdf().click();
       await estabilizar();
-      const peticion = http.expectOne((r) => r.url === '/api/plantillas/PLA-001/pdf');
+      const peticion = http.expectOne((r) => r.url === '/api/propuestas/PRO-001/pdf');
       expect(peticion.request.params.get('solicitudId')).toBe('SOL-001');
       expect(peticion.request.params.get('interlineado')).toBe('1.5');
       expect(peticion.request.responseType).toBe('blob');
@@ -200,7 +127,7 @@ describe('PanelPlantilla', () => {
     });
 
     it('sin solicitud no envía el parámetro y muestra los errores del servidor', async () => {
-      await cargarPlantilla();
+      await abrir(PLANTILLA, solicitudes, bienes);
       const lista = elemento.querySelector<HTMLSelectElement>('.solicitud select')!;
       lista.value = '';
       lista.dispatchEvent(new Event('change'));
@@ -208,13 +135,12 @@ describe('PanelPlantilla', () => {
       expect(Array.from(interlineado.options).map((o) => o.value)).toEqual([
         '0.8', '0.9', '1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9', '2.0',
       ]);
-      expect(interlineado.value).toBe('1.5');
       interlineado.value = '0.9';
       interlineado.dispatchEvent(new Event('change'));
 
       botonPdf().click();
       await estabilizar();
-      const peticion = http.expectOne((r) => r.url === '/api/plantillas/PLA-001/pdf');
+      const peticion = http.expectOne((r) => r.url === '/api/propuestas/PRO-001/pdf');
       expect(peticion.request.params.has('solicitudId')).toBe(false);
       expect(peticion.request.params.get('interlineado')).toBe('0.9');
       peticion.flush(new Blob([JSON.stringify({ title: 'Registro no encontrado.' })], { type: 'application/json' }), {
@@ -228,55 +154,5 @@ describe('PanelPlantilla', () => {
       const interaccion = TestBed.inject(InteraccionService);
       expect(interaccion.avisos().map((a) => a.texto)).toContain('No se pudo generar el PDF. Registro no encontrado.');
     });
-  });
-
-  it('crea la plantilla cuando la combinación no tiene una', async () => {
-    seleccionarCombinacion();
-    fixture.detectChanges();
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([]);
-    await estabilizar();
-
-    const boton = elemento.querySelector<HTMLButtonElement>('.boton-primario')!;
-    expect(boton.textContent).toContain('Crear plantilla de prueba');
-    boton.click();
-
-    const creacion = http.expectOne((r) => r.method === 'POST' && r.url === '/api/plantillas');
-    expect(creacion.request.body).toMatchObject({
-      rubroId: 'RUB-001',
-      subRubroId: 'SUB-001',
-      tipoDocumentoId: 'TDO-001',
-      claseDocumentoId: 'CDO-001',
-      nombre: 'Tipo (Original) – Sub',
-    });
-    creacion.flush(plantilla);
-    await estabilizar();
-
-    // Tras crearla se vuelve a consultar.
-    http.expectOne((r) => r.method === 'GET' && r.url === '/api/plantillas').flush([plantilla]);
-    await estabilizar();
-    http.expectOne('/api/solicitudes').flush([]);
-    http.expectOne('/api/detalles-bienes').flush([]);
-    await estabilizar();
-    expect(elemento.textContent).toContain('PLA-001');
-  });
-
-  it('muestra los errores de validación del servidor al crear', async () => {
-    seleccionarCombinacion();
-    fixture.detectChanges();
-    await estabilizar();
-    http.expectOne((r) => r.url === '/api/plantillas').flush([]);
-    await estabilizar();
-
-    elemento.querySelector<HTMLButtonElement>('.boton-primario')!.click();
-    http
-      .expectOne((r) => r.method === 'POST')
-      .flush(
-        { title: 'Los datos enviados no son válidos.', errors: { tipoDocumentoId: ['Ya existe una plantilla.'] } },
-        { status: 400, statusText: 'Bad Request' },
-      );
-    await estabilizar();
-
-    expect(elemento.querySelector('[role="alert"]')?.textContent).toContain('Ya existe una plantilla.');
   });
 });

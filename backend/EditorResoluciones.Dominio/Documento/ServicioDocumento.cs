@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using EditorResoluciones.Dominio.Comun;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
 using EditorResoluciones.Dominio.Servicios;
@@ -67,6 +68,35 @@ public sealed class ServicioDocumento(
     {
         var plantilla = await plantillas.ObtenerAsync(plantillaId, ct)
             ?? throw new EntidadNoEncontradaException(plantillas.Coleccion, plantillaId);
+        var deLaPlantilla = (await parrafos.ListarAsync(ct)).Where(p => p.PlantillaId == plantilla.Id).ToList();
+        return await GenerarAsync(plantilla, deLaPlantilla, solicitudId, interlineado, ct);
+    }
+
+    /// <summary>Genera el documento con párrafos de las cinco secciones originales (Cabecera, Considerando…).</summary>
+    public Task<DocumentoResuelto> GenerarAsync(
+        Plantilla plantilla,
+        IReadOnlyList<Parrafo> deLaPlantilla,
+        string? solicitudId,
+        double interlineado = Interlineados.Predeterminado,
+        CancellationToken ct = default) =>
+        GenerarAsync(
+            plantilla,
+            CatalogoBloques.Predeterminados
+                .Select(b => new BloqueParaDocumento(b, deLaPlantilla.Where(p => CodigosBloque.De(p.Seccion) == b.Codigo).ToList()))
+                .ToList(),
+            solicitudId, interlineado, ct);
+
+    /// <summary>
+    /// Genera el documento con una plantilla y párrafos ya armados (por ejemplo, desde una versión vigente o una
+    /// propuesta del Documento Consolidado).
+    /// </summary>
+    public async Task<DocumentoResuelto> GenerarAsync(
+        Plantilla plantilla,
+        IReadOnlyList<BloqueParaDocumento> bloques,
+        string? solicitudId,
+        double interlineado = Interlineados.Predeterminado,
+        CancellationToken ct = default)
+    {
         Solicitud? solicitud = null;
         if (!string.IsNullOrEmpty(solicitudId))
         {
@@ -75,7 +105,6 @@ public sealed class ServicioDocumento(
         }
 
         var catalogo = (await campos.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal);
-        var todos = (await parrafos.ListarAsync(ct)).Where(p => p.PlantillaId == plantilla.Id).ToList();
         var registros = solicitud is null
             ? []
             : (await bienes.ListarAsync(ct)).Where(b => b.SolicitudId == solicitud.Id).OrderBy(b => b.Id, StringComparer.Ordinal).ToList();
@@ -86,18 +115,18 @@ public sealed class ServicioDocumento(
 
         var contexto = new ContextoSustitucion(catalogo, solicitud, registros, advertencias);
         var secciones = new List<SeccionDocumento>();
-        foreach (var seccion in OrdenSecciones)
+        foreach (var (bloque, deBloque) in bloques)
         {
             var incluidos = new List<ParrafoDocumento>();
             var omitidos = new List<ParrafoOmitido>();
-            var deSeccion = todos.Where(p => p.Seccion == seccion).OrderBy(p => p.Orden).ToList();
+            var deSeccion = deBloque.OrderBy(p => p.Orden).ToList();
 
             for (var i = 0; i < deSeccion.Count; i++)
             {
                 var parrafo = deSeccion[i];
                 var posicion = i + 1;
                 var resumen = Resumir(parrafo.Contenido, catalogo);
-                var ubicacion = $"{seccion} {posicion}";
+                var ubicacion = $"{bloque.Nombre} {posicion}";
 
                 if (!parrafo.Activo)
                 {
@@ -124,12 +153,12 @@ public sealed class ServicioDocumento(
 
                 var contenido = contexto.Sustituir(parrafo.Contenido, null, ubicacion);
                 // Considerando y Resuelve se numeran por su orden en el documento: los omitidos no consumen número.
-                if (Numeracion.Etiqueta(seccion, incluidos.Count + 1) is { } etiqueta)
+                if (Numeracion.Etiqueta(bloque.Numeracion, incluidos.Count + 1) is { } etiqueta)
                     contenido = Numerar(contenido, etiqueta);
                 incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, contenido));
             }
 
-            secciones.Add(new SeccionDocumento(seccion, incluidos, omitidos));
+            secciones.Add(new SeccionDocumento(bloque, incluidos, omitidos));
         }
 
         byte[]? logo = null;

@@ -98,23 +98,23 @@ public sealed class GeneradorPdfMigraDoc : IGeneradorPdf
         if (diseno.TextoCorrido)
         {
             // Texto corrido: el cuerpo va seguido y solo las tablas cortan el texto. Las firmas se presentan aparte.
-            AgregarBloques(TextoCorrido.Unir(partes.Where(p => p.Seccion != Seccion.Firmas)), seccion.AddParagraph, seccion, anchoUtil, 0);
-            partes = partes.Where(p => p.Seccion == Seccion.Firmas).ToList();
+            AgregarBloques(TextoCorrido.Unir(partes.Where(p => !p.Bloque.EsFirmas)), seccion.AddParagraph, seccion, anchoUtil, 0);
+            partes = partes.Where(p => p.Bloque.EsFirmas).ToList();
         }
 
         foreach (var parte in partes)
         {
-            var titulo = Numeracion.Titulo(parte.Seccion);
+            var titulo = parte.Bloque.Titulo;
             if (titulo is not null)
                 seccion.AddParagraph(titulo).Style = "TituloSeccion";
 
             foreach (var parrafo in parte.Parrafos)
             {
                 // Cada bloque de firma lleva el espacio configurado antes (separa las firmas entre sí y del texto anterior).
-                if (parte.Seccion == Seccion.Firmas)
+                if (parte.Bloque.EsFirmas)
                     AgregarEspacio(seccion, diseno.EspacioFirmasCm);
                 AgregarBloques(parrafo.Contenido.Contenido ?? [], seccion.AddParagraph, seccion, anchoUtil, 0,
-                    parte.Seccion == Seccion.Firmas ? "Firma" : null);
+                    parte.Bloque.EsFirmas ? "Firma" : null);
             }
         }
 

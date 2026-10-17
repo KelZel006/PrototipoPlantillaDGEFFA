@@ -1,16 +1,20 @@
-using EditorResoluciones.Dominio.Documento;
+using EditorResoluciones.Dominio.Consolidados;
 using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
+using EditorResoluciones.Dominio.Seguridad;
 using EditorResoluciones.Dominio.Servicios;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace EditorResoluciones.Api.Controllers;
 
 [Route("api/rubros")]
+[CatalogoDeAdministrador]
 public sealed class RubrosController(ServicioEntidades<Rubro> servicio) : ControladorCrud<Rubro>(servicio);
 
 /// <summary>Filtro: <c>?rubroId=</c>.</summary>
 [Route("api/subrubros")]
+[CatalogoDeAdministrador]
 public sealed class SubRubrosController(ServicioEntidades<SubRubro> servicio) : ControladorCrud<SubRubro>(servicio)
 {
     protected override IEnumerable<SubRubro> Filtrar(IEnumerable<SubRubro> registros, IQueryCollection consulta) =>
@@ -19,58 +23,38 @@ public sealed class SubRubrosController(ServicioEntidades<SubRubro> servicio) : 
 
 /// <summary>Lista "Documento": Original, Modificación o Aclaratoria.</summary>
 [Route("api/clases-documento")]
+[CatalogoDeAdministrador]
 public sealed class ClasesDocumentoController(ServicioEntidades<ClaseDocumento> servicio) : ControladorCrud<ClaseDocumento>(servicio);
 
+/// <summary>Tipos de documento con sus bloques (<c>bloques</c>: código, orden y si es obligatorio), decisión D2.</summary>
 [Route("api/tipos-documento")]
-public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> servicio) : ControladorCrud<TipoDocumento>(servicio);
-
-/// <summary>Filtros: <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=&amp;claseDocumentoId=</c>.</summary>
-[Route("api/plantillas")]
-public sealed class PlantillasController(
-    ServicioEntidades<Plantilla> servicio,
-    ServicioDocumento documentos,
-    IGeneradorPdf generadorPdf,
-    ServicioLogos logos) : ControladorCrud<Plantilla>(servicio)
+[CatalogoDeAdministrador]
+public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> servicio, CatalogoBloques catalogo)
+    : ControladorCrud<TipoDocumento>(servicio)
 {
-    /// <summary>
-    /// PDF de prueba con Cabecera, Considerando y Resuelve, en ese orden. Con <c>?solicitudId=</c> se sustituyen
-    /// los campos y se aplican las condiciones; sin ella, los campos se muestran como {Etiqueta}.
-    /// </summary>
-    [HttpGet("{id}/pdf")]
-    [Produces("application/pdf")]
-    public async Task<IActionResult> Pdf(
-        string id,
-        [FromQuery] string? solicitudId,
-        [FromQuery] string? interlineado,
-        CancellationToken ct)
+    /// <summary>Bloques del tipo, con los datos del catálogo y en su orden (los cinco originales si no tiene configuración).</summary>
+    [HttpGet("{id}/bloques")]
+    public async Task<ActionResult<IReadOnlyList<BloqueConfigurado>>> Bloques(string id, CancellationToken ct)
     {
-        var documento = await documentos.GenerarAsync(id, solicitudId, Interlineados.Interpretar(interlineado), ct);
-        var bytes = generadorPdf.Generar(documento);
-        var sufijo = string.IsNullOrEmpty(solicitudId) ? "plantilla" : solicitudId;
-        return File(bytes, "application/pdf", $"resolucion-prueba_{id}_{sufijo}.pdf");
+        await Servicio.ObtenerAsync(id, ct);
+        return Ok(await catalogo.DeTipoAsync(id, ct));
     }
+}
 
-    /// <summary>Carga o reemplaza el logo del encabezado (PNG o JPEG, hasta 1 MB).</summary>
-    [HttpPost("{id}/logo")]
-    [Consumes("multipart/form-data")]
-    [RequestSizeLimit(2 * 1024 * 1024)]
-    public async Task<ActionResult<Plantilla>> CargarLogo(string id, IFormFile archivo, CancellationToken ct)
-    {
-        if (archivo.Length > ServicioLogos.TamanoMaximo)
-            return ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
-            {
-                ["archivo"] = ["El logo no puede superar 1 MB."],
-            }) { Title = "Los datos enviados no son válidos." });
+/// <summary>Catálogo de bloques documentales (CABECERA, VISTOS, CONSIDERANDO, FUNDAMENTACION_LEGAL…).</summary>
+[Route("api/bloques")]
+[CatalogoDeAdministrador]
+public sealed class BloquesController(ServicioEntidades<BloqueDocumental> servicio) : ControladorCrud<BloqueDocumental>(servicio);
 
-        using var memoria = new MemoryStream();
-        await archivo.CopyToAsync(memoria, ct);
-        return Ok(await logos.AsignarAsync(id, archivo.FileName, memoria.ToArray(), ct));
-    }
-
-    [HttpDelete("{id}/logo")]
-    public async Task<ActionResult<Plantilla>> QuitarLogo(string id, CancellationToken ct) =>
-        Ok(await logos.QuitarAsync(id, ct));
-
+/// <summary>
+/// Identidad de las plantillas (Rubro, Sub Rubro, Tipo Documento y Documento): solo lectura. Las plantillas se crean y
+/// se modifican dentro de un Documento Consolidado (decisión D11). Filtros:
+/// <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=&amp;claseDocumentoId=</c>.
+/// </summary>
+[Route("api/plantillas")]
+[EdicionDirectaCerrada]
+public sealed class PlantillasController(ServicioEntidades<Plantilla> servicio) : ControladorCrud<Plantilla>(servicio)
+{
     protected override IEnumerable<Plantilla> Filtrar(IEnumerable<Plantilla> registros, IQueryCollection consulta)
     {
         registros = PorParametro(registros, consulta, "rubroId", (p, v) => p.RubroId == v);
@@ -80,10 +64,13 @@ public sealed class PlantillasController(
     }
 }
 
-/// <summary>Filtros: <c>?plantillaId=&amp;seccion=</c>. Se devuelven ordenados por sección y orden.</summary>
+/// <summary>
+/// Párrafos de la colección anterior a la Fase 3: solo lectura (decisión D11). El contenido vigente está en las
+/// versiones publicadas; se edita dentro de una propuesta. Filtros: <c>?plantillaId=&amp;seccion=</c>.
+/// </summary>
 [Route("api/parrafos")]
-public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio, ServicioParrafos parrafos)
-    : ControladorCrud<Parrafo>(servicio)
+[EdicionDirectaCerrada]
+public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio) : ControladorCrud<Parrafo>(servicio)
 {
     protected override IEnumerable<Parrafo> Filtrar(IEnumerable<Parrafo> registros, IQueryCollection consulta)
     {
@@ -92,22 +79,10 @@ public sealed class ParrafosController(ServicioEntidades<Parrafo> servicio, Serv
             (p, v) => string.Equals(p.Seccion.ToString(), v, StringComparison.OrdinalIgnoreCase));
         return registros.OrderBy(p => p.Seccion).ThenBy(p => p.Orden);
     }
-
-    /// <summary>Aplica un nuevo orden a todos los párrafos de una sección, en una sola operación.</summary>
-    [HttpPost("reordenar")]
-    public async Task<ActionResult<IEnumerable<Parrafo>>> Reordenar([FromBody] SolicitudReorden solicitud, CancellationToken ct) =>
-        Ok(await parrafos.ReordenarAsync(solicitud, ct));
-
-    /// <summary>Copia el párrafo (con su condición) justo debajo del original.</summary>
-    [HttpPost("{id}/duplicar")]
-    public async Task<ActionResult<Parrafo>> Duplicar(string id, CancellationToken ct)
-    {
-        var copia = await parrafos.DuplicarAsync(id, ct);
-        return CreatedAtAction(nameof(Obtener), new { id = copia.Id }, copia);
-    }
 }
 
 [Route("api/campos")]
+[CatalogoDeAdministrador]
 public sealed class CamposController(ServicioEntidades<Campo> servicio, ServicioValoresCampo valores)
     : ControladorCrud<Campo>(servicio)
 {
@@ -183,5 +158,43 @@ public sealed class SaludController(IDiagnosticoAlmacenamiento diagnostico) : Co
             almacenamiento = "Archivos JSON (datos de prueba, sin base de datos)",
             colecciones,
         });
+    }
+}
+
+/// <summary>
+/// Rechaza las escrituras: las plantillas vigentes no se editan directamente (decisión D11). Toda creación o
+/// modificación pasa por un Documento Consolidado y su aprobación. Es un filtro de recurso: se aplica antes de leer y
+/// validar el cuerpo de la petición.
+/// </summary>
+public sealed class EdicionDirectaCerradaAttribute : Attribute, IResourceFilter
+{
+    public void OnResourceExecuted(ResourceExecutedContext contexto)
+    {
+    }
+
+    public void OnResourceExecuting(ResourceExecutingContext contexto)
+    {
+        if (HttpMethods.IsGet(contexto.HttpContext.Request.Method))
+            return;
+        contexto.Result = new ObjectResult(new ProblemDetails
+        {
+            Status = StatusCodes.Status409Conflict,
+            Title = "Las plantillas vigentes no se editan directamente.",
+            Detail = "Cree o modifique la plantilla dentro de un Documento Consolidado; los cambios se publican al aprobarse.",
+        }) { StatusCode = StatusCodes.Status409Conflict };
+    }
+}
+
+/// <summary>
+/// Los catálogos (rubros, tipos de documento, bloques, campos…) se consultan libremente, pero solo el administrador los
+/// modifica (sección 11 de la especificación). Se valida en el servidor, antes de leer el cuerpo de la petición.
+/// </summary>
+public sealed class CatalogoDeAdministradorAttribute : Attribute, IAsyncResourceFilter
+{
+    public async Task OnResourceExecutionAsync(ResourceExecutingContext contexto, ResourceExecutionDelegate siguiente)
+    {
+        if (!HttpMethods.IsGet(contexto.HttpContext.Request.Method))
+            await contexto.HttpContext.RequestServices.GetRequiredService<ServicioAutorizacion>().ExigirAsync(Rol.Administrador);
+        await siguiente();
     }
 }

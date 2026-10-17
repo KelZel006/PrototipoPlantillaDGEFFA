@@ -1,0 +1,53 @@
+.sin-margen {
+  margin: 0;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: min(100%, 150px);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.numero {
+  text-align: right;
+}
+
+.numero-plan {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vacio {
+  margin: 0;
+  padding: var(--espacio-5);
+  border: 1px dashed var(--borde);
+  border-radius: var(--radio);
+  color: var(--texto-secundario);
+  text-align: center;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+a.boton {
+  text-decoration: none;
+  white-space: nowrap;
+}
