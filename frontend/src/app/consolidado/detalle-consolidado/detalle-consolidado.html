@@ -24,6 +24,16 @@
     </dl>
   </section>
 
+  @if (d.consolidado.estado === 'Aprobado') {
+    <section class="aviso aviso-aprobado" role="status">
+      <span>
+        Aprobado el {{ d.consolidado.fechaAprobacion | date: 'dd/MM/yyyy HH:mm' }} por {{ d.consolidado.aprobadorId }}. Sus plantillas están
+        publicadas como VIGENTES y el documento ya no se modifica.
+      </span>
+      <a class="boton boton-secundario boton-compacto" routerLink="/vigentes">Ver plantillas vigentes</a>
+    </section>
+  }
+
   @if (ultimaDevolucion(); as dev) {
     <section class="aviso aviso-devolucion" role="status" aria-labelledby="titulo-devolucion">
       <h3 id="titulo-devolucion">Devuelto a registro el {{ dev.fecha | date: 'dd/MM/yyyy HH:mm' }} por {{ dev.usuario }}</h3>

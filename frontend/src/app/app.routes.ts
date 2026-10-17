@@ -28,5 +28,10 @@ export const rutas: Routes = [
     title: 'Revisión jurídica',
     loadComponent: () => import('./consolidado/revision/revision-consolidado').then((m) => m.RevisionConsolidado),
   },
+  {
+    path: 'vigentes',
+    title: 'Consolidado de plantillas',
+    loadComponent: () => import('./consolidado/plantillas-vigentes/plantillas-vigentes').then((m) => m.PlantillasVigentes),
+  },
   { path: '**', redirectTo: 'consolidados' },
 ];

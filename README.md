@@ -16,7 +16,9 @@ en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referenci
 permisos) en [docs/CONSOLIDADO-FASE2.md](docs/CONSOLIDADO-FASE2.md). Fase 3 (registro y edición: pantallas A, B y C; el editor trabaja sobre la propuesta y las plantillas vigentes ya no
 se editan directamente) en [docs/CONSOLIDADO-FASE3.md](docs/CONSOLIDADO-FASE3.md). Fase 4 (.NET 10, bloques configurables por tipo
 documental y comparación palabra por palabra) en [docs/CONSOLIDADO-FASE4.md](docs/CONSOLIDADO-FASE4.md). Fase 5 (envío a
-verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md](docs/CONSOLIDADO-FASE5.md).
+verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md](docs/CONSOLIDADO-FASE5.md). Fase 6
+(aprobación, publicación transaccional, vigencia y consolidado de plantillas) en
+[docs/CONSOLIDADO-FASE6.md](docs/CONSOLIDADO-FASE6.md).
 
 ## Tecnologías
 

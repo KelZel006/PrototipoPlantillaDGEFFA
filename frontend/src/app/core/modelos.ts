@@ -446,3 +446,37 @@ export interface ComparacionPropuesta {
   diseno: CampoDiseno[];
   ajustes: Ajuste[];
 }
+
+// ---------- Publicación y vigencia (Fase 6) ----------
+
+/** Versión de una plantilla en el consolidado de plantillas. */
+export interface VersionResumen {
+  id: string;
+  numeroVersion: number;
+  vigencia: Vigencia;
+  cargaInicial: boolean;
+  publicadaPor: string;
+  fechaPublicacion: string;
+  inicioVigencia: string;
+  finVigencia?: string | null;
+  consolidadoId?: string | null;
+  consolidadoNumero?: string | null;
+  versionAnteriorId?: string | null;
+}
+
+export interface PlantillaConVersiones {
+  plantillaId: string;
+  nombre: string;
+  rubroId: string;
+  subRubroId: string;
+  tipoDocumentoId: string;
+  tipoDocumento: string;
+  claseDocumentoId: string;
+  /** De la más reciente a la más antigua. */
+  versiones: VersionResumen[];
+}
+
+export interface ResultadoAprobacion {
+  consolidado: DocumentoConsolidado;
+  publicadas: { id: string; plantillaId: string; numeroVersion: number }[];
+}

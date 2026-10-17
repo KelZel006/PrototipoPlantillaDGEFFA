@@ -111,7 +111,7 @@ describe('Revisión del Documento Consolidado', () => {
     const elemento: HTMLElement = fixture.nativeElement;
 
     expect(elemento.querySelector('.navegacion')?.textContent).toContain('NUEVO CONSIDERANDO (posición 2)');
-    expect(boton(elemento, 'APROBAR').disabled).toBe(true);
+    expect(boton(elemento, 'APROBAR').disabled).toBe(false);
 
     boton(elemento, 'DEVOLVER A REGISTRO').click();
     fixture.detectChanges();
@@ -145,6 +145,33 @@ describe('Revisión del Documento Consolidado', () => {
       observaciones: [{ propuestaId: 'PRO-1', bloqueCodigo: 'CONSIDERANDO', problema: 'Falta la referencia legal.', recomendacion: null }],
     });
     peticion.flush({});
+  });
+
+  it('el Oficial Jurídico aprueba tras confirmar y vuelve al documento aprobado', async () => {
+    TestBed.inject(UsuarioPruebaService).seleccionar('j.ramos');
+    const fixture = TestBed.createComponent(RevisionConsolidado);
+    fixture.componentRef.setInput('id', 'CON-2');
+    fixture.detectChanges();
+    await estabilizar(fixture);
+    http.expectOne('/api/usuarios').flush(USUARIOS);
+    http.expectOne('/api/consolidados/CON-2').flush(detalle('Verificado'));
+    await estabilizar(fixture);
+    http.expectOne('/api/propuestas/PRO-1/comparacion').flush({ propuestaId: 'PRO-1', operacion: 'Modificar', bloques: [], diseno: [], ajustes: [] });
+    await estabilizar(fixture);
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
+
+    boton(fixture.nativeElement, 'APROBAR').click();
+    await estabilizar(fixture);
+    const interaccion = TestBed.inject(InteraccionService);
+    expect(interaccion.confirmacion()?.mensaje).toContain('Se publicarán 1 plantilla como VIGENTES');
+    interaccion.responder(true);
+    await estabilizar(fixture);
+
+    const aprobacion = http.expectOne('/api/consolidados/CON-2/aprobar');
+    expect(aprobacion.request.method).toBe('POST');
+    aprobacion.flush({ consolidado: { ...detalle('Verificado').consolidado, estado: 'Aprobado' }, publicadas: [{ id: 'VER-9', plantillaId: 'PLA-001', numeroVersion: 2 }] });
+    expect(navegar).toHaveBeenCalledWith(['/consolidados', 'CON-2']);
+    expect(interaccion.avisos().map((a) => a.texto)).toContain('PLAN-20260002 aprobado: 1 plantilla publicada.');
   });
 
   it('fuera de VERIFICADO no se revisa', async () => {

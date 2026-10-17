@@ -1,0 +1,107 @@
+<section class="tarjeta" aria-labelledby="titulo-vigentes">
+  <header class="encabezado-tarjeta">
+    <div>
+      <h2 id="titulo-vigentes">Consolidado de plantillas</h2>
+      <p class="texto-secundario sin-margen">
+        Plantillas publicadas y su vigencia. Cada versión indica el documento consolidado que la publicó; las anteriores se
+        conservan como NO VIGENTES.
+      </p>
+    </div>
+  </header>
+
+  <div class="filtros" role="search">
+    <label>
+      <span>Buscar</span>
+      <input class="control control-compacto" type="search" placeholder="Nombre, código, rubro o sub rubro" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+    </label>
+    <label>
+      <span>Tipo documental</span>
+      <select class="control control-compacto" (change)="tipo.set($any($event.target).value)">
+        <option value="" [selected]="tipo() === ''">Todos</option>
+        @for (t of tipos(); track t) {
+          <option [value]="t" [selected]="t === tipo()">{{ t }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (error(); as mensaje) {
+    <div class="aviso aviso-error" role="alert">
+      <span>{{ mensaje }}</span>
+      <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+    </div>
+  } @else if (cargando() && filtradas().length === 0) {
+    <p class="texto-secundario" aria-live="polite">Cargando plantillas…</p>
+  } @else if (filtradas().length === 0) {
+    <p class="vacio">No hay plantillas que coincidan.</p>
+  } @else {
+    <div class="tabla-desplazable">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Tipo</th>
+            <th scope="col">Plantilla</th>
+            <th scope="col">Rubro / Sub rubro</th>
+            <th scope="col" class="numero">Versión</th>
+            <th scope="col">Vigente desde</th>
+            <th scope="col">Publicada por</th>
+            <th scope="col"><span class="oculto">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filtradas(); track p.plantillaId) {
+            @let v = vigente(p);
+            <tr>
+              <td>{{ p.tipoDocumento }}</td>
+              <td><strong>{{ p.nombre }}</strong><br /><code>{{ p.plantillaId }}</code></td>
+              <td>{{ p.rubroId }} / {{ p.subRubroId }}</td>
+              <td class="numero">{{ v?.numeroVersion ?? '—' }}</td>
+              <td>{{ v ? (v.inicioVigencia | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+              <td>
+                @if (v?.consolidadoNumero) {
+                  <a [routerLink]="['/consolidados', v?.consolidadoId]">{{ v?.consolidadoNumero }}</a>
+                } @else if (v?.cargaInicial) {
+                  Carga inicial
+                }
+              </td>
+              <td class="acciones">
+                <button type="button" class="boton boton-secundario boton-compacto" [attr.aria-expanded]="abierta() === p.plantillaId" (click)="alternar(p.plantillaId)">
+                  {{ abierta() === p.plantillaId ? 'Ocultar' : 'Versiones (' + p.versiones.length + ')' }}
+                </button>
+              </td>
+            </tr>
+            @if (abierta() === p.plantillaId) {
+              <tr class="fila-detalle">
+                <td colspan="7">
+                  <ol class="versiones">
+                    @for (ver of p.versiones; track ver.id) {
+                      <li>
+                        <span class="numero-version">Versión {{ ver.numeroVersion }}</span>
+                        <app-insignia-vigencia [vigencia]="ver.vigencia" />
+                        <span class="texto-secundario">
+                          desde {{ ver.inicioVigencia | date: 'dd/MM/yyyy HH:mm' }}
+                          @if (ver.finVigencia) {
+                            hasta {{ ver.finVigencia | date: 'dd/MM/yyyy HH:mm' }}
+                          }
+                          ·
+                          @if (ver.consolidadoNumero) {
+                            publicada por <a [routerLink]="['/consolidados', ver.consolidadoId]">{{ ver.consolidadoNumero }}</a> ({{ ver.publicadaPor }})
+                          } @else {
+                            carga inicial
+                          }
+                        </span>
+                        <button type="button" class="boton boton-secundario boton-compacto" [disabled]="generando() === ver.id" (click)="verPdf(p, ver)">
+                          {{ generando() === ver.id ? 'Generando…' : 'PDF' }}
+                        </button>
+                      </li>
+                    }
+                  </ol>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

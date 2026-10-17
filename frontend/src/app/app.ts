@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Avisos } from './compartido/avisos';
 import { DialogoConfirmacion } from './compartido/dialogo-confirmacion';
 import { Rol } from './core/modelos';
@@ -14,7 +14,7 @@ const NOMBRE_ROL: Record<Rol, string> = {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, EstadoDatos, DialogoConfirmacion, Avisos],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, EstadoDatos, DialogoConfirmacion, Avisos],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

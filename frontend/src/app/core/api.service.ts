@@ -15,9 +15,11 @@ import {
   Interlineado,
   OperadoresPorTipo,
   Parrafo,
+  PlantillaConVersiones,
   PlantillaEdicion,
   PlantillaVigente,
   Propuesta,
+  ResultadoAprobacion,
   ResumenConsolidado,
   Rubro,
   Salud,
@@ -110,6 +112,24 @@ export class ApiService {
     return this.http.post<Devolucion>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/devolver`, {
       justificacion,
       observaciones,
+    });
+  }
+
+  /** VERIFICADO → APROBADO: publica todas las plantillas en una sola operación. */
+  aprobar(consolidadoId: string): Observable<ResultadoAprobacion> {
+    return this.http.post<ResultadoAprobacion>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/aprobar`, null);
+  }
+
+  /** Consolidado de plantillas: cada plantilla con todas sus versiones (pantalla F). */
+  consolidadoDePlantillas(): Observable<PlantillaConVersiones[]> {
+    return this.http.get<PlantillaConVersiones[]>(`${this.base}/consolidado-plantillas`);
+  }
+
+  /** PDF de una versión publicada (vigente o no). */
+  pdfVersion(versionId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.base}/versiones-plantilla/${encodeURIComponent(versionId)}/pdf`, {
+      responseType: 'blob',
+      observe: 'response',
     });
   }
 

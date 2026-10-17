@@ -150,6 +150,47 @@ export class RevisionConsolidado {
     });
   }
 
+  // ---------- Aprobación ----------
+
+  protected readonly aprobando = signal(false);
+
+  /**
+   * VERIFICADO → APROBADO. El servidor publica todas las plantillas en una sola operación: las modificadas quedan con
+   * una versión nueva VIGENTE (la anterior pasa a NO VIGENTE) y las nuevas, con su versión 1.
+   */
+  protected async aprobar(): Promise<void> {
+    const detalle = this.detalle();
+    if (!detalle || this.aprobando()) {
+      return;
+    }
+    const plantillas = this.activas().length;
+    const aceptado = await this.interaccion.confirmar({
+      titulo: `Aprobar ${detalle.consolidado.numero}`,
+      mensaje: `Se publicarán ${plantillas} ${plantillas === 1 ? 'plantilla' : 'plantillas'} como VIGENTES. Las versiones que reemplazan pasan a NO VIGENTES y se conservan. El documento quedará APROBADO y no podrá modificarse.`,
+      aceptar: 'Aprobar y publicar',
+    });
+    if (!aceptado) {
+      return;
+    }
+    this.aprobando.set(true);
+    this.api.aprobar(detalle.consolidado.id).subscribe({
+      next: (resultado) => {
+        this.aprobando.set(false);
+        this.interaccion.avisar(
+          'exito',
+          `${resultado.consolidado.numero} aprobado: ${resultado.publicadas.length} ${resultado.publicadas.length === 1 ? 'plantilla publicada' : 'plantillas publicadas'}.`,
+          6000,
+        );
+        void this.router.navigate(['/consolidados', detalle.consolidado.id]);
+      },
+      error: (error: unknown) => {
+        this.aprobando.set(false);
+        this.interaccion.avisar('error', `No se aprobó. ${mensajeError(error)}`, 10000);
+        this.recurso.reload();
+      },
+    });
+  }
+
   protected recargar(): void {
     this.recurso.reload();
   }

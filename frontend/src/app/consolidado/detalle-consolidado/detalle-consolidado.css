@@ -264,3 +264,14 @@ details summary {
     margin-left: var(--espacio-3);
   }
 }
+
+.aviso-aprobado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  border: 1px solid var(--exito);
+  background: var(--exito-suave);
+  color: var(--texto);
+}

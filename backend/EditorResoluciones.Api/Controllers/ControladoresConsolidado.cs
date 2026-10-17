@@ -15,9 +15,20 @@ namespace EditorResoluciones.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/consolidados")]
-public sealed class ConsolidadosController(ServicioConsolidados servicio, ServicioPropuestas propuestas, ServicioRevision revision)
-    : ControllerBase
+public sealed class ConsolidadosController(
+    ServicioConsolidados servicio,
+    ServicioPropuestas propuestas,
+    ServicioRevision revision,
+    ServicioPublicacion publicacion) : ControllerBase
 {
+    /// <summary>
+    /// Aprueba y publica (VERIFICADO → APROBADO): solo el Oficial Jurídico. Todas las plantillas se publican en una sola
+    /// transacción; si algo falla, no se publica nada.
+    /// </summary>
+    [HttpPost("{id}/aprobar")]
+    public async Task<ActionResult<ResultadoAprobacion>> Aprobar(string id, CancellationToken ct) =>
+        Ok(await publicacion.AprobarAsync(id, ct));
+
     /// <summary>Envía a verificación (EN REGISTRO → VERIFICADO): solo el analista dueño.</summary>
     [HttpPost("{id}/enviar")]
     public async Task<ActionResult<DocumentoConsolidado>> Enviar(string id, CancellationToken ct) =>
@@ -173,6 +184,16 @@ public sealed class PropuestasController(
         var sufijo = string.IsNullOrEmpty(solicitudId) ? "plantilla" : solicitudId;
         return File(generadorPdf.Generar(documento), "application/pdf", $"propuesta_{id}_{sufijo}.pdf");
     }
+}
+
+/// <summary>Consolidado de plantillas (pantalla F): cada plantilla con todas sus versiones y el PLAN que publicó cada una.</summary>
+[ApiController]
+[Route("api/consolidado-plantillas")]
+public sealed class ConsolidadoPlantillasController(ServicioPublicacion servicio) : ControllerBase
+{
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<PlantillaConVersiones>>> Listar(CancellationToken ct) =>
+        Ok(await servicio.ConsolidadoDePlantillasAsync(ct));
 }
 
 /// <summary>Catálogo de plantillas vigentes para la operación MODIFICAR (indica si ya están en un consolidado abierto).</summary>

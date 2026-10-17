@@ -1,0 +1,72 @@
+.sin-margen {
+  margin: 0;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: min(100%, 220px);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.vacio {
+  margin: 0;
+  padding: var(--espacio-5);
+  border: 1px dashed var(--borde);
+  border-radius: var(--radio);
+  color: var(--texto-secundario);
+  text-align: center;
+}
+
+.acciones {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fila-detalle td {
+  background: var(--fondo-suave);
+}
+
+.versiones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.versiones li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.numero-version {
+  min-width: 80px;
+  font-weight: 700;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tabla a {
+  white-space: nowrap;
+}

@@ -99,3 +99,21 @@
 .usuario select {
   max-width: min(60vw, 360px);
 }
+
+.navegacion {
+  display: flex;
+  gap: var(--espacio-1);
+}
+
+.navegacion a {
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  color: var(--texto-secundario);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navegacion a.activo {
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}

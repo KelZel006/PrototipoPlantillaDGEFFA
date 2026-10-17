@@ -23,6 +23,7 @@ public static class RegistroDominio
         servicios.AddScoped<ServicioPropuestas>();
         servicios.AddScoped<CatalogoBloques>();
         servicios.AddScoped<ServicioRevision>();
+        servicios.AddScoped<ServicioPublicacion>();
         servicios.AddScoped<MigracionCargaInicial>();
         servicios.AddScoped<IServicioHistorial, ServicioHistorial>();
         servicios.AddScoped(typeof(ServicioEntidades<>));
