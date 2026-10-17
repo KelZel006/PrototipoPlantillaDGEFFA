@@ -1,0 +1,48 @@
+[
+  {
+    "id": "CON-0001",
+    "version": 4,
+    "numero": "PLAN-20260001",
+    "anio": 2026,
+    "secuencia": 1,
+    "estado": "Aprobado",
+    "analistaId": "a.perez",
+    "fechaCreacion": "2026-10-05T14:00:00+00:00",
+    "fechaActualizacion": "2026-10-07T16:30:00+00:00",
+    "numeroPresentacion": 1,
+    "fechaEnvio": "2026-10-06T15:00:00+00:00",
+    "enviadoPor": "a.perez",
+    "revisorId": "j.ramos",
+    "fechaRevision": "2026-10-07T16:30:00+00:00",
+    "aprobadorId": "j.ramos",
+    "fechaAprobacion": "2026-10-07T16:30:00+00:00"
+  },
+  {
+    "id": "CON-0002",
+    "version": 6,
+    "numero": "PLAN-20260002",
+    "anio": 2026,
+    "secuencia": 2,
+    "estado": "Verificado",
+    "analistaId": "a.perez",
+    "fechaCreacion": "2026-10-12T14:50:00+00:00",
+    "fechaActualizacion": "2026-10-15T15:00:00+00:00",
+    "numeroPresentacion": 2,
+    "fechaEnvio": "2026-10-15T15:00:00+00:00",
+    "enviadoPor": "a.perez",
+    "revisorId": "j.ramos",
+    "fechaRevision": "2026-10-14T16:00:00+00:00"
+  },
+  {
+    "id": "CON-0003",
+    "version": 2,
+    "numero": "PLAN-20260003",
+    "anio": 2026,
+    "secuencia": 3,
+    "estado": "EnRegistro",
+    "analistaId": "m.lopez",
+    "fechaCreacion": "2026-10-16T12:55:00+00:00",
+    "fechaActualizacion": "2026-10-16T13:00:00+00:00",
+    "numeroPresentacion": 0
+  }
+]

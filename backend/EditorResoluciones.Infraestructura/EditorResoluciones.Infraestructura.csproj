@@ -10,6 +10,11 @@
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Las pruebas simulan fallos a mitad de una transacción. -->
+    <InternalsVisibleTo Include="EditorResoluciones.Pruebas" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

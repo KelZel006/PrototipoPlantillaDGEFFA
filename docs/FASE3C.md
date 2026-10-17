@@ -277,7 +277,7 @@ llenar Tipo Documento y agregar la lista Documento.
     | SUB-005 | 1601 |
 
   - Los nombres guardados de esas plantillas no cambian. Se pueden renombrar si hace falta.
-- **Tipo Documento.** Constancia de Registro, Dictamen, Resolución y Certificación, en ese orden.
+- **Tipo Documento.** Constancia de Registro (desde el 16/10/2026, Constancia de Obligados Tributarios), Dictamen, Resolución y Certificación, en ese orden.
 - **Lista Documento (nueva).**
   - Es la cuarta lista, con Original, Modificación y Aclaratoria.
   - Forma parte de la combinación que identifica la plantilla: la misma combinación de Rubro, Sub Rubro y Tipo

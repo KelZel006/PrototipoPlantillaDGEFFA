@@ -1,0 +1,24 @@
+[
+  {
+    "id": "DEV-0001",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "numeroPresentacion": 1,
+    "usuario": "j.ramos",
+    "fecha": "2026-10-14T16:00:00+00:00",
+    "justificacion": "El nuevo considerando de la Resolución no indica con qué documento se acredita el cumplimiento. Debe citar la constancia. (Dato de prueba.)",
+    "observaciones": [
+      {
+        "propuestaId": "PRO-0002",
+        "bloqueCodigo": "CONSIDERANDO",
+        "parrafoId": "PAR-N001",
+        "problema": "El considerando no cita la constancia que acredita el cumplimiento.",
+        "recomendacion": "Indicar que se acredita con la constancia vigente de obligados tributarios."
+      },
+      {
+        "propuestaId": "PRO-0004",
+        "problema": "Revisar que el nombre de la plantilla coincida con el catálogo."
+      }
+    ]
+  }
+]

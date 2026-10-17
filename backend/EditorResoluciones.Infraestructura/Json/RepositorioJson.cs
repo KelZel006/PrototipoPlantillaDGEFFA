@@ -97,12 +97,18 @@ public sealed class RepositorioJson<T>(AlmacenJson almacen) : IRepositorio<T> wh
             return new LoteAplicado<T>(crear, actualizar);
         }, ct);
 
-    private static string GenerarId(List<T> registros)
+    private static string GenerarId(List<T> registros) => GeneradorIds.Nuevo(Definicion.Prefijo, registros);
+}
+
+/// <summary>Identificadores generados: prefijo de la colección y 10 caracteres hexadecimales al azar.</summary>
+internal static class GeneradorIds
+{
+    public static string Nuevo<T>(string prefijo, List<T> registros) where T : IEntidad
     {
         string id;
         do
         {
-            id = $"{Definicion.Prefijo}-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}";
+            id = $"{prefijo}-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}";
         } while (registros.Any(e => e.Id == id));
         return id;
     }

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using EditorResoluciones.Dominio.Comun;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,6 +22,8 @@ public sealed class OpcionesAlmacenJson
 /// <item>Un bloqueo por colección evita que dos escrituras simultáneas se pisen dentro del proceso.</item>
 /// <item>La escritura es atómica: se escribe un temporal y se reemplaza el original, que queda como <c>.bak</c>.</item>
 /// <item>Un archivo dañado nunca se sobrescribe: se copia a <c>cuarentena/</c> y se informa el error.</item>
+/// <item>Las transacciones de varias colecciones (<see cref="UnidadDeTrabajoJson"/>) dejan un diario en
+/// <c>transacciones/</c>; si el proceso se interrumpe al guardar, se completan al iniciar.</item>
 /// </list>
 /// </summary>
 public sealed class AlmacenJson
@@ -42,9 +45,24 @@ public sealed class AlmacenJson
             ? null
             : Path.GetFullPath(opciones.Value.DirectorioSemilla);
         Directory.CreateDirectory(_directorio);
+        RecuperarTransacciones();
     }
 
     public string Directorio => _directorio;
+
+    /// <summary>Carpeta de los diarios de transacción pendientes.</summary>
+    internal string DirectorioTransacciones => Path.Combine(_directorio, "transacciones");
+
+    /// <summary>Permite una sola transacción de varias colecciones a la vez (evita bloqueos cruzados).</summary>
+    internal SemaphoreSlim BloqueoTransacciones { get; } = new(1, 1);
+
+    /// <summary>Solo para pruebas: se ejecuta antes de escribir cada colección de una transacción ya preparada.</summary>
+    internal Func<string, Task>? AntesDeEscribirEnTransaccion { get; set; }
+
+    /// <summary>Toma el bloqueo de la colección. Se libera con <see cref="Liberar"/>.</summary>
+    internal async Task BloquearAsync(string coleccion, CancellationToken ct) => await Bloqueo(coleccion).WaitAsync(ct);
+
+    internal void Liberar(string coleccion) => Bloqueo(coleccion).Release();
 
     public async Task<List<T>> LeerAsync<T>(string coleccion, CancellationToken ct = default)
     {
@@ -101,7 +119,7 @@ public sealed class AlmacenJson
         return ruta;
     }
 
-    private async Task<List<T>> LeerSinBloqueoAsync<T>(string coleccion, CancellationToken ct)
+    internal async Task<List<T>> LeerSinBloqueoAsync<T>(string coleccion, CancellationToken ct)
     {
         var ruta = RutaArchivo(coleccion);
         if (!File.Exists(ruta) && !CopiarSemilla(coleccion, ruta))
@@ -138,7 +156,7 @@ public sealed class AlmacenJson
         }
     }
 
-    private async Task EscribirSinBloqueoAsync<T>(string coleccion, List<T> registros, CancellationToken ct)
+    internal async Task EscribirSinBloqueoAsync<T>(string coleccion, List<T> registros, CancellationToken ct)
     {
         var ruta = RutaArchivo(coleccion);
         var temporal = ruta + ExtensionTemporal;
@@ -178,6 +196,42 @@ public sealed class AlmacenJson
                 // Un antivirus o un indexador pueden retener el archivo un instante.
                 await Task.Delay(50 * intento);
             }
+        }
+    }
+
+    /// <summary>
+    /// Completa las transacciones cuyo diario quedó preparado pero no se terminó de aplicar (por ejemplo, si el proceso
+    /// se detuvo mientras se guardaban los archivos). El diario tiene el contenido final de cada colección.
+    /// </summary>
+    private void RecuperarTransacciones()
+    {
+        if (!Directory.Exists(DirectorioTransacciones))
+            return;
+        foreach (var diario in Directory.GetFiles(DirectorioTransacciones, "*.json").Order(StringComparer.Ordinal))
+        {
+            JsonObject colecciones;
+            try
+            {
+                colecciones = JsonNode.Parse(File.ReadAllText(diario))?["colecciones"]?.AsObject()
+                    ?? throw new JsonException("El diario no tiene colecciones.");
+            }
+            catch (JsonException ex)
+            {
+                // El diario se escribe completo o no se escribe; uno ilegible no se aplica.
+                _logger.LogError(ex, "Diario de transacción ilegible: {Diario}. No se aplicó.", diario);
+                File.Move(diario, diario + ".ilegible", overwrite: true);
+                continue;
+            }
+
+            foreach (var (coleccion, registros) in colecciones)
+            {
+                var ruta = RutaArchivo(coleccion);
+                var temporal = ruta + ExtensionTemporal;
+                File.WriteAllText(temporal, registros?.ToJsonString(OpcionesJson.Predeterminadas) ?? "[]");
+                ReemplazarConReintentosAsync(temporal, ruta).GetAwaiter().GetResult();
+            }
+            File.Delete(diario);
+            _logger.LogWarning("Se completó la transacción pendiente {Diario}.", Path.GetFileName(diario));
         }
     }
 

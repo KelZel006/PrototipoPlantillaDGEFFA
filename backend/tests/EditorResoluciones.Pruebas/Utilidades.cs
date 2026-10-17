@@ -1,6 +1,8 @@
 using EditorResoluciones.Infraestructura.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -57,13 +59,26 @@ public static class Rutas
             NullLogger<AlmacenJson>.Instance);
 }
 
-/// <summary>API en memoria que lee y escribe en una carpeta de datos indicada (copiada de la semilla).</summary>
-public sealed class FabricaApi(string directorioDatos, string? semilla = null) : WebApplicationFactory<Program>
+/// <summary>
+/// API en memoria que lee y escribe en una carpeta de datos indicada (copiada de la semilla). Con <paramref name="reloj"/>,
+/// la API usa esa hora en lugar de la real.
+/// </summary>
+public sealed class FabricaApi(string directorioDatos, string? semilla = null, TimeProvider? reloj = null) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("AlmacenJson:Directorio", directorioDatos);
         builder.UseSetting("AlmacenJson:DirectorioSemilla", semilla ?? Rutas.DatosPrueba);
+        if (reloj is not null)
+            builder.ConfigureTestServices(servicios => servicios.AddSingleton(reloj));
     }
+}
+
+/// <summary>Reloj que marca la hora indicada (se puede cambiar durante la prueba).</summary>
+public sealed class RelojFijo(DateTimeOffset ahora) : TimeProvider
+{
+    public DateTimeOffset Ahora { get; set; } = ahora;
+
+    public override DateTimeOffset GetUtcNow() => Ahora.ToUniversalTime();
 }

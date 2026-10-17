@@ -1,0 +1,57 @@
+[
+  {
+    "id": "usuario.prueba",
+    "version": 1,
+    "nombreCompleto": "Usuario de prueba",
+    "roles": [
+      "Analista",
+      "Administrador"
+    ],
+    "activo": true
+  },
+  {
+    "id": "a.perez",
+    "version": 1,
+    "nombreCompleto": "Ana Pérez (analista, prueba)",
+    "roles": [
+      "Analista"
+    ],
+    "activo": true
+  },
+  {
+    "id": "m.lopez",
+    "version": 1,
+    "nombreCompleto": "Mario López (analista, prueba)",
+    "roles": [
+      "Analista"
+    ],
+    "activo": true
+  },
+  {
+    "id": "j.ramos",
+    "version": 1,
+    "nombreCompleto": "Julia Ramos (Oficial Jurídico, prueba)",
+    "roles": [
+      "OficialJuridico"
+    ],
+    "activo": true
+  },
+  {
+    "id": "admin",
+    "version": 1,
+    "nombreCompleto": "Administrador (prueba)",
+    "roles": [
+      "Administrador"
+    ],
+    "activo": true
+  },
+  {
+    "id": "inactivo",
+    "version": 1,
+    "nombreCompleto": "Usuario dado de baja (prueba)",
+    "roles": [
+      "Analista"
+    ],
+    "activo": false
+  }
+]

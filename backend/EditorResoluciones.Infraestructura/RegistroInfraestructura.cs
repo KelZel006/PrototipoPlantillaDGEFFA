@@ -17,6 +17,7 @@ public static class RegistroInfraestructura
     {
         servicios.AddSingleton<AlmacenJson>();
         servicios.AddSingleton(typeof(IRepositorio<>), typeof(RepositorioJson<>));
+        servicios.AddSingleton<IUnidadDeTrabajo, UnidadDeTrabajoJson>();
         servicios.AddSingleton<IDiagnosticoAlmacenamiento, DiagnosticoAlmacenamientoJson>();
         servicios.AddSingleton<IGeneradorPdf, GeneradorPdfMigraDoc>();
         servicios.AddSingleton<IAlmacenArchivos, AlmacenArchivosDisco>();

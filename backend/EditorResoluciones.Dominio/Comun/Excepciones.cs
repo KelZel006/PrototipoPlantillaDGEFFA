@@ -20,3 +20,10 @@ public sealed class ValidacionException(IReadOnlyDictionary<string, string[]> er
 
 /// <summary>El almacenamiento no pudo leer o escribir los datos (por ejemplo, un archivo JSON dañado).</summary>
 public sealed class AlmacenamientoException(string mensaje, Exception? causa = null) : Exception(mensaje, causa);
+
+/// <summary>El usuario no tiene el rol o el permiso que exige la operación (403).</summary>
+public sealed class AccesoDenegadoException(string mensaje) : Exception(mensaje);
+
+/// <summary>El usuario de prueba indicado no existe o está inactivo (401).</summary>
+public sealed class UsuarioNoReconocidoException(string usuario)
+    : Exception($"El usuario '{usuario}' no está registrado o está inactivo.");

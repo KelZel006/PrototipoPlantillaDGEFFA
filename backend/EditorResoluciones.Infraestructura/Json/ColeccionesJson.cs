@@ -24,6 +24,13 @@ public static class ColeccionesJson
         new("detallesBienes", "detallesBienes.json", "BIE", typeof(DetalleBien)),
         new("historial", "historial.json", "HIS", typeof(RegistroHistorial)),
         new("archivos", "archivos.json", "ARC", typeof(ArchivoRecurso)),
+        new("usuarios", "usuarios.json", "USR", typeof(Usuario)),
+        new("versionesPlantilla", "versionesPlantilla.json", "VER", typeof(VersionPlantilla)),
+        new("consolidados", "consolidados.json", "CON", typeof(DocumentoConsolidado)),
+        new("propuestas", "propuestas.json", "PRO", typeof(Propuesta)),
+        new("presentaciones", "presentaciones.json", "PRE", typeof(Presentacion)),
+        new("devoluciones", "devoluciones.json", "DEV", typeof(Devolucion)),
+        new("movimientos", "movimientos.json", "MOV", typeof(Movimiento)),
     ];
 
     private static readonly Dictionary<string, DefinicionColeccion> PorNombre =

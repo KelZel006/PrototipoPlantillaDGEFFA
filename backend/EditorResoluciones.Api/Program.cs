@@ -57,6 +57,18 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Decisión D5: las plantillas sin versión vigente reciben su versión 1 «Carga inicial»; se completan las huellas de
+// los datos semilla y se informan las inconsistencias de vigencia.
+using (var alcance = app.Services.CreateScope())
+{
+    var migracion = await alcance.ServiceProvider.GetRequiredService<EditorResoluciones.Dominio.Consolidados.MigracionCargaInicial>().EjecutarAsync();
+    if (migracion.VersionesCreadas > 0 || migracion.HuellasCompletadas > 0)
+        app.Logger.LogInformation("Carga inicial: {Versiones} versiones vigentes creadas y {Huellas} huellas completadas.",
+            migracion.VersionesCreadas, migracion.HuellasCompletadas);
+    foreach (var inconsistencia in migracion.Inconsistencias)
+        app.Logger.LogError("Inconsistencia de vigencia: {Detalle}", inconsistencia);
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 

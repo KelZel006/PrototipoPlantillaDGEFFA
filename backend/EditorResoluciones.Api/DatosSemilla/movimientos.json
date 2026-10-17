@@ -1,0 +1,157 @@
+[
+  {
+    "id": "MOV-0001",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "Creacion",
+    "usuario": "a.perez",
+    "fecha": "2026-10-05T14:00:00+00:00",
+    "estadoDestino": "EnRegistro",
+    "detalle": "Se creó el documento consolidado PLAN-20260001."
+  },
+  {
+    "id": "MOV-0002",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "PropuestaAgregada",
+    "usuario": "a.perez",
+    "fecha": "2026-10-05T14:10:00+00:00",
+    "detalle": "Modificar: Dictamen (PLA-002)."
+  },
+  {
+    "id": "MOV-0003",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "EnvioVerificacion",
+    "usuario": "a.perez",
+    "fecha": "2026-10-06T15:00:00+00:00",
+    "estadoOrigen": "EnRegistro",
+    "estadoDestino": "Verificado",
+    "numeroPresentacion": 1,
+    "detalle": "Primera presentación: 1 plantilla."
+  },
+  {
+    "id": "MOV-0004",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "Aprobacion",
+    "usuario": "j.ramos",
+    "fecha": "2026-10-07T16:30:00+00:00",
+    "estadoOrigen": "Verificado",
+    "estadoDestino": "Aprobado",
+    "numeroPresentacion": 1,
+    "detalle": "Aprobado por el Oficial Jurídico."
+  },
+  {
+    "id": "MOV-0005",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "Publicacion",
+    "usuario": "j.ramos",
+    "fecha": "2026-10-07T16:30:00+00:00",
+    "numeroPresentacion": 1,
+    "detalle": "Publicada la versión 2 de PLA-002 (VER-0002)."
+  },
+  {
+    "id": "MOV-0006",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "tipo": "CambioVigencia",
+    "usuario": "j.ramos",
+    "fecha": "2026-10-07T16:30:00+00:00",
+    "numeroPresentacion": 1,
+    "detalle": "VER-0001 pasa a NO VIGENTE; VER-0002 queda VIGENTE."
+  },
+  {
+    "id": "MOV-0007",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "Creacion",
+    "usuario": "a.perez",
+    "fecha": "2026-10-12T14:50:00+00:00",
+    "estadoDestino": "EnRegistro",
+    "detalle": "Se creó el documento consolidado PLAN-20260002."
+  },
+  {
+    "id": "MOV-0008",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "PropuestaAgregada",
+    "usuario": "a.perez",
+    "fecha": "2026-10-12T15:00:00+00:00",
+    "detalle": "Modificar: Resolución (PLA-001) y su Certificación (PLA-004)."
+  },
+  {
+    "id": "MOV-0009",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "PropuestaAgregada",
+    "usuario": "a.perez",
+    "fecha": "2026-10-12T15:20:00+00:00",
+    "detalle": "Crear: Constancia de Obligados Tributarios (1100 / 1107 / Original)."
+  },
+  {
+    "id": "MOV-0010",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "EnvioVerificacion",
+    "usuario": "a.perez",
+    "fecha": "2026-10-13T15:00:00+00:00",
+    "estadoOrigen": "EnRegistro",
+    "estadoDestino": "Verificado",
+    "numeroPresentacion": 1,
+    "detalle": "Primera presentación: 3 plantillas."
+  },
+  {
+    "id": "MOV-0011",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "Devolucion",
+    "usuario": "j.ramos",
+    "fecha": "2026-10-14T16:00:00+00:00",
+    "estadoOrigen": "Verificado",
+    "estadoDestino": "EnRegistro",
+    "numeroPresentacion": 1,
+    "detalle": "Primera devolución (DEV-0001)."
+  },
+  {
+    "id": "MOV-0012",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "PropuestaModificada",
+    "usuario": "a.perez",
+    "fecha": "2026-10-15T14:00:00+00:00",
+    "detalle": "Corrección del considerando nuevo de la Resolución (PRO-0002)."
+  },
+  {
+    "id": "MOV-0013",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "tipo": "EnvioVerificacion",
+    "usuario": "a.perez",
+    "fecha": "2026-10-15T15:00:00+00:00",
+    "estadoOrigen": "EnRegistro",
+    "estadoDestino": "Verificado",
+    "numeroPresentacion": 2,
+    "detalle": "Segunda presentación: 3 plantillas."
+  },
+  {
+    "id": "MOV-0014",
+    "version": 1,
+    "consolidadoId": "CON-0003",
+    "tipo": "Creacion",
+    "usuario": "m.lopez",
+    "fecha": "2026-10-16T12:55:00+00:00",
+    "estadoDestino": "EnRegistro",
+    "detalle": "Se creó el documento consolidado PLAN-20260003."
+  },
+  {
+    "id": "MOV-0015",
+    "version": 1,
+    "consolidadoId": "CON-0003",
+    "tipo": "PropuestaAgregada",
+    "usuario": "m.lopez",
+    "fecha": "2026-10-16T13:00:00+00:00",
+    "detalle": "Modificar: Resolución (PLA-003); Crear: su Certificación."
+  }
+]

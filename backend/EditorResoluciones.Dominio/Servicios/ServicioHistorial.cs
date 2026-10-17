@@ -51,19 +51,22 @@ public sealed class ServicioHistorial(
             return;
 
         var fecha = reloj.GetUtcNow();
-        var registros = cambios.Select(cambio => new RegistroHistorial
-        {
-            Fecha = fecha,
-            Usuario = usuario.Nombre,
-            Coleccion = cambio.Coleccion,
-            EntidadId = cambio.EntidadId,
-            Accion = cambio.Accion,
-            VersionEntidad = cambio.VersionEntidad,
-            Anterior = Serializar(cambio.Anterior),
-            Nuevo = Serializar(cambio.Nuevo),
-        }).ToList();
+        var registros = cambios.Select(cambio => Construir(cambio, usuario.Nombre, fecha)).ToList();
         await repositorio.AplicarLoteAsync(registros, [], ct);
     }
+
+    /// <summary>Registro de historial de un cambio (también se usa dentro de las transacciones de varias colecciones).</summary>
+    public static RegistroHistorial Construir(CambioHistorial cambio, string usuario, DateTimeOffset fecha) => new()
+    {
+        Fecha = fecha,
+        Usuario = usuario,
+        Coleccion = cambio.Coleccion,
+        EntidadId = cambio.EntidadId,
+        Accion = cambio.Accion,
+        VersionEntidad = cambio.VersionEntidad,
+        Anterior = Serializar(cambio.Anterior),
+        Nuevo = Serializar(cambio.Nuevo),
+    };
 
     private static JsonElement? Serializar(object? valor) =>
         valor is null ? null : JsonSerializer.SerializeToElement(valor, valor.GetType(), OpcionesJson.Predeterminadas);

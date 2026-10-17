@@ -11,6 +11,10 @@ condiciones de visualización y tablas configurables.
 [docs/FASE3.md](docs/FASE3.md) y [docs/FASE2.md](docs/FASE2.md). Plan general
 en [docs/PLAN.md](docs/PLAN.md). Diseño de referencia en [docs/diseno/referencia.png](docs/diseno/referencia.png).
 
+**En curso: Documento Consolidado (PLAN-AAAANNNN).** Fase 1 (diseño) aprobada en
+[docs/CONSOLIDADO-FASE1.md](docs/CONSOLIDADO-FASE1.md). Fase 2 (modelo JSON, transacciones, usuarios de prueba y
+permisos) en [docs/CONSOLIDADO-FASE2.md](docs/CONSOLIDADO-FASE2.md).
+
 ## Tecnologías
 
 | Parte | Tecnología |

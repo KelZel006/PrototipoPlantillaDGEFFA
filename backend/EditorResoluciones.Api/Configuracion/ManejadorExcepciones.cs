@@ -28,6 +28,18 @@ public sealed class ManejadorExcepciones(IProblemDetailsService problemas, ILogg
                 Title = "Conflicto con los datos guardados.",
                 Detail = ex.Message,
             },
+            UsuarioNoReconocidoException ex => new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Usuario no reconocido.",
+                Detail = ex.Message,
+            },
+            AccesoDenegadoException ex => new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "No tiene permiso para esta acción.",
+                Detail = ex.Message,
+            },
             AlmacenamientoException ex => new ProblemDetails
             {
                 Status = StatusCodes.Status503ServiceUnavailable,

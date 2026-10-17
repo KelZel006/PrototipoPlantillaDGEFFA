@@ -1,0 +1,3307 @@
+[
+  {
+    "id": "PRE-0001",
+    "version": 1,
+    "consolidadoId": "CON-0001",
+    "numero": 1,
+    "usuario": "a.perez",
+    "fecha": "2026-10-06T15:00:00+00:00",
+    "cantidadPlantillas": 1,
+    "huellaIntegridad": "",
+    "propuestas": [
+      {
+        "id": "PRO-0001",
+        "version": 1,
+        "consolidadoId": "CON-0001",
+        "operacion": "Modificar",
+        "rubroId": "1800",
+        "subRubroId": "1801",
+        "tipoDocumentoId": "TDO-002",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Denegación – asociaciones civiles (prueba)",
+        "plantillaId": "PLA-002",
+        "versionOrigenId": "VER-0001",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-010",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "DICTAMEN TÉCNICO No. ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Documento de prueba generado con datos simulados."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud"
+                  ]
+                },
+                {
+                  "id": "PAR-011",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "VISTO: ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "Para resolver la solicitud presentada por "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", a favor de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", por medio de la "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "unidad_ejecutora"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", relativa a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "tipo_beneficio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "operador",
+                    "beneficiario",
+                    "unidad_ejecutora",
+                    "tipo_beneficio"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-012",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " se clasifica en el rubro «ASOCIACIONES SIN FINES DE LUCRO» y sub rubro «ONGS», de acuerdo con el catálogo vigente (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ]
+                },
+                {
+                  "id": "PAR-013",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que la solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " cumple con los requisitos establecidos en la normativa aplicable para el año de gestión "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "anio_gestion"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud",
+                    "anio_gestion"
+                  ]
+                },
+                {
+                  "id": "PAR-014",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que los bienes objeto de la solicitud y los montos autorizados son los siguientes:"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "table",
+                        "content": [
+                          {
+                            "type": "tableRow",
+                            "content": [
+                              {
+                                "type": "tableHeader",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "center"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "text",
+                                        "text": "CÓDIGO ARANCELARIO"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "tableHeader",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "center"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "text",
+                                        "text": "DESCRIPCIÓN ARANCELARIA"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "tableHeader",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "center"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "text",
+                                        "text": "MONTO AUTORIZADO"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "tableRow",
+                            "content": [
+                              {
+                                "type": "tableCell",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "center"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "campo",
+                                        "attrs": {
+                                          "campoId": "codigo_arancelario"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "tableCell",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "justify"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "campo",
+                                        "attrs": {
+                                          "campoId": "descripcion_arancelaria"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "tableCell",
+                                "attrs": {
+                                  "colspan": 1,
+                                  "rowspan": 1
+                                },
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "attrs": {
+                                      "textAlign": "right"
+                                    },
+                                    "content": [
+                                      {
+                                        "type": "campo",
+                                        "attrs": {
+                                          "campoId": "monto_autorizado"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "codigo_arancelario",
+                    "descripcion_arancelaria",
+                    "monto_autorizado"
+                  ]
+                },
+                {
+                  "id": "PAR-015",
+                  "orden": 4,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el monto de exoneración solicitado asciende a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", por lo que supera el límite ordinario y requiere revisión adicional (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "monto_exoneracion"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "Y",
+                    "reglas": [
+                      {
+                        "campoId": "monto_exoneracion",
+                        "operador": "MayorQue",
+                        "valor": "100000"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-016",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Esta unidad técnica, después de revisar el expediente y con fundamento en los considerandos anteriores, emite el siguiente dictamen (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-017",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Dictaminar favorablemente a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " el beneficio de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "tipo_beneficio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " por un monto de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "tipo_beneficio",
+                    "monto_exoneracion"
+                  ]
+                },
+                {
+                  "id": "PAR-018",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Notificar el presente documento a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", con domicilio en "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "municipio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", departamento de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "departamento"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", para los efectos legales correspondientes (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "operador",
+                    "municipio",
+                    "departamento"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-019",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________________"
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Nombre del firmante (prueba)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Jefe(a) de la Unidad Técnica (prueba)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            }
+          ]
+        },
+        "retirada": false,
+        "fechaCreacion": "2026-10-05T14:10:00+00:00",
+        "fechaModificacion": "2026-10-05T14:10:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "PRE-0002",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "numero": 1,
+    "usuario": "a.perez",
+    "fecha": "2026-10-13T15:00:00+00:00",
+    "cantidadPlantillas": 3,
+    "huellaIntegridad": "",
+    "propuestas": [
+      {
+        "id": "PRO-0002",
+        "version": 3,
+        "consolidadoId": "CON-0002",
+        "operacion": "Modificar",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-001",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Aprobación – cooperación bilateral (prueba)",
+        "plantillaId": "PLA-001",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-001",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "RESOLUCIÓN DE PRUEBA No. ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-002",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", con número de solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y correspondiente al beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "operador",
+                    "numero_solicitud",
+                    "beneficiario"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "Y",
+                    "reglas": [
+                      {
+                        "campoId": "estado_solicitud",
+                        "operador": "IgualA",
+                        "valor": "En Curso"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-N001",
+                  "orden": 2,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " cumple los requisitos."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "PAR-003",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-004",
+                  "orden": 4,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el "
+                          },
+                          {
+                            "type": "text",
+                            "text": "monto de exoneración",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " solicitado asciende a"
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "y requiere revisión adicional (texto de prueba)."
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "fecha_resolucion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "monto_exoneracion",
+                    "fecha_resolucion"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "monto_exoneracion",
+                        "operador": "MayorQue",
+                        "valor": "100000"
+                      },
+                      {
+                        "campoId": "tipo_beneficio",
+                        "operador": "Contiene",
+                        "valor": "Importación"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-1E01245CC6",
+                  "orden": 5,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "esta es una prueba para el beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y se requiere hacer el "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "  ejercicio correspondiente"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "beneficiario",
+                        "operador": "IgualA",
+                        "valor": "Beneficiario Ficticio Dos (prueba)"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-008",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Esta Dirección, en uso de sus facultades y con fundamento en la normativa aplicable, "
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-005",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " en el municipio de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "municipio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", departamento de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "departamento"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "municipio",
+                    "departamento"
+                  ]
+                },
+                {
+                  "id": "PAR-006",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": false,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-007",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Notificar la presente resolución a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " para los efectos legales correspondientes (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-009",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Nombre del firmante (prueba)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Cargo del firmante (prueba)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            }
+          ]
+        },
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:00:00+00:00",
+        "fechaModificacion": "2026-10-15T14:00:00+00:00"
+      },
+      {
+        "id": "PRO-0003",
+        "version": 2,
+        "consolidadoId": "CON-0002",
+        "operacion": "Modificar",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-004",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Certificación (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+        "plantillaId": "PLA-004",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-030",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CERTIFICACIÓN DE PRUEBA No. ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-031",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que mediante certificación se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", con número de solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y correspondiente al beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "operador",
+                    "numero_solicitud",
+                    "beneficiario"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "Y",
+                    "reglas": [
+                      {
+                        "campoId": "estado_solicitud",
+                        "operador": "IgualA",
+                        "valor": "En Curso"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-N002",
+                  "orden": 2,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " acreditó estar al día en sus obligaciones tributarias, según constancia vigente."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "PAR-032",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-033",
+                  "orden": 4,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el "
+                          },
+                          {
+                            "type": "text",
+                            "text": "monto de exoneración",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " solicitado asciende a"
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "y requiere revisión adicional (texto de prueba)."
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "fecha_resolucion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "monto_exoneracion",
+                    "fecha_resolucion"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "monto_exoneracion",
+                        "operador": "MayorQue",
+                        "valor": "100000"
+                      },
+                      {
+                        "campoId": "tipo_beneficio",
+                        "operador": "Contiene",
+                        "valor": "Importación"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-036",
+                  "orden": 5,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "esta es una prueba para el beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y se requiere hacer el "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "  ejercicio correspondiente"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "beneficiario",
+                        "operador": "IgualA",
+                        "valor": "Beneficiario Ficticio Dos (prueba)"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-038",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Esta Dirección, en uso de las facultades que le confiere la ley y con fundamento en los considerandos anteriores (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-034",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " en el municipio de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "municipio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", departamento de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "departamento"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "municipio",
+                    "departamento"
+                  ]
+                },
+                {
+                  "id": "PAR-035",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": false,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-037",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Notificar la presente certificación a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " para los efectos legales correspondientes (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-039",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Nombre del firmante (prueba)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Cargo del firmante (prueba)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            }
+          ]
+        },
+        "derivadaDePropuestaId": "PRO-0002",
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:00:00+00:00",
+        "fechaModificacion": "2026-10-12T15:00:00+00:00"
+      },
+      {
+        "id": "PRO-0004",
+        "version": 1,
+        "consolidadoId": "CON-0002",
+        "operacion": "Crear",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-003",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Constancia de Obligados Tributarios (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N010",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONSTANCIA DE OBLIGADOS TRIBUTARIOS (PRUEBA)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "textAlign": "center"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N011",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " presentó la solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y figura en el registro de obligados tributarios."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": []
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N012",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Hacer constar que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " se encuentra registrado como obligado tributario. Dato de prueba."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N013",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          }
+                        ],
+                        "attrs": {
+                          "textAlign": "center"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:20:00+00:00",
+        "fechaModificacion": "2026-10-12T15:20:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "PRE-0003",
+    "version": 1,
+    "consolidadoId": "CON-0002",
+    "numero": 2,
+    "usuario": "a.perez",
+    "fecha": "2026-10-15T15:00:00+00:00",
+    "cantidadPlantillas": 3,
+    "huellaIntegridad": "",
+    "propuestas": [
+      {
+        "id": "PRO-0002",
+        "version": 3,
+        "consolidadoId": "CON-0002",
+        "operacion": "Modificar",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-001",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Aprobación – cooperación bilateral (prueba)",
+        "plantillaId": "PLA-001",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-001",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "RESOLUCIÓN DE PRUEBA No. ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-002",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que mediante resolución se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", con número de solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y correspondiente al beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "operador",
+                    "numero_solicitud",
+                    "beneficiario"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "Y",
+                    "reglas": [
+                      {
+                        "campoId": "estado_solicitud",
+                        "operador": "IgualA",
+                        "valor": "En Curso"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-N001",
+                  "orden": 2,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " acreditó estar al día en sus obligaciones tributarias, según constancia vigente."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "PAR-003",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-004",
+                  "orden": 4,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el "
+                          },
+                          {
+                            "type": "text",
+                            "text": "monto de exoneración",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " solicitado asciende a"
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "y requiere revisión adicional (texto de prueba)."
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "fecha_resolucion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "monto_exoneracion",
+                    "fecha_resolucion"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "monto_exoneracion",
+                        "operador": "MayorQue",
+                        "valor": "100000"
+                      },
+                      {
+                        "campoId": "tipo_beneficio",
+                        "operador": "Contiene",
+                        "valor": "Importación"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-1E01245CC6",
+                  "orden": 5,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "esta es una prueba para el beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y se requiere hacer el "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "  ejercicio correspondiente"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "beneficiario",
+                        "operador": "IgualA",
+                        "valor": "Beneficiario Ficticio Dos (prueba)"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-008",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Esta Dirección, en uso de sus facultades y con fundamento en la normativa aplicable, "
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-005",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " en el municipio de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "municipio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", departamento de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "departamento"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "municipio",
+                    "departamento"
+                  ]
+                },
+                {
+                  "id": "PAR-006",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": false,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-007",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Notificar la presente resolución a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " para los efectos legales correspondientes (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-009",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Nombre del firmante (prueba)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Cargo del firmante (prueba)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            }
+          ]
+        },
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:00:00+00:00",
+        "fechaModificacion": "2026-10-15T14:00:00+00:00"
+      },
+      {
+        "id": "PRO-0003",
+        "version": 2,
+        "consolidadoId": "CON-0002",
+        "operacion": "Modificar",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-004",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Certificación (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+        "plantillaId": "PLA-004",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-030",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CERTIFICACIÓN DE PRUEBA No. ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Documento de prueba generado con datos simulados. Sin validez oficial."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "numero_solicitud"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-031",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que mediante certificación se autoriza el beneficio de exoneración fiscal, de conformidad con lo establecido en la legislación vigente, para el operador "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "operador"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", con número de solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y correspondiente al beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "operador",
+                    "numero_solicitud",
+                    "beneficiario"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "Y",
+                    "reglas": [
+                      {
+                        "campoId": "estado_solicitud",
+                        "operador": "IgualA",
+                        "valor": "En Curso"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-N002",
+                  "orden": 2,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " acreditó estar al día en sus obligaciones tributarias, según constancia vigente."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "PAR-032",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que la solicitud cumple con los requisitos establecidos en la normativa aplicable (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-033",
+                  "orden": 4,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que el "
+                          },
+                          {
+                            "type": "text",
+                            "text": "monto de exoneración",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " solicitado asciende a"
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "monto_exoneracion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "y requiere revisión adicional (texto de prueba)."
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "fecha_resolucion"
+                            },
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "monto_exoneracion",
+                    "fecha_resolucion"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "monto_exoneracion",
+                        "operador": "MayorQue",
+                        "valor": "100000"
+                      },
+                      {
+                        "campoId": "tipo_beneficio",
+                        "operador": "Contiene",
+                        "valor": "Importación"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                },
+                {
+                  "id": "PAR-036",
+                  "orden": 5,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "esta es una prueba para el beneficiario "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y se requiere hacer el "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "  ejercicio correspondiente"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": true,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "condicion": {
+                    "operadorLogico": "O",
+                    "reglas": [
+                      {
+                        "campoId": "beneficiario",
+                        "operador": "IgualA",
+                        "valor": "Beneficiario Ficticio Dos (prueba)"
+                      }
+                    ],
+                    "grupos": []
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-038",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Esta Dirección, en uso de las facultades que le confiere la ley y con fundamento en los considerandos anteriores (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-034",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Autorizar, en calidad de prueba, el beneficio solicitado por "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " en el municipio de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "municipio"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": ", departamento de "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "departamento"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "municipio",
+                    "departamento"
+                  ]
+                },
+                {
+                  "id": "PAR-035",
+                  "orden": 2,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Párrafo inactivo de prueba: no debe aparecer en el documento."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": false,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                },
+                {
+                  "id": "PAR-037",
+                  "orden": 3,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Notificar la presente certificación a "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " para los efectos legales correspondientes (texto de prueba)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ]
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-039",
+                  "orden": 1,
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "attrs": {
+                          "textAlign": "center"
+                        },
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Nombre del firmante (prueba)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hardBreak"
+                          },
+                          {
+                            "type": "text",
+                            "text": "Cargo del firmante (prueba)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": []
+                }
+              ]
+            }
+          ]
+        },
+        "derivadaDePropuestaId": "PRO-0002",
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:00:00+00:00",
+        "fechaModificacion": "2026-10-12T15:00:00+00:00"
+      },
+      {
+        "id": "PRO-0004",
+        "version": 1,
+        "consolidadoId": "CON-0002",
+        "operacion": "Crear",
+        "rubroId": "1100",
+        "subRubroId": "1107",
+        "tipoDocumentoId": "TDO-003",
+        "claseDocumentoId": "CDO-001",
+        "nombre": "Constancia de Obligados Tributarios (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
+        "contenidoPropuesto": {
+          "diseno": {
+            "alineacionLogo": "Centro",
+            "espacioFirmasCm": 1.2
+          },
+          "bloques": [
+            {
+              "codigo": "CABECERA",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N010",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONSTANCIA DE OBLIGADOS TRIBUTARIOS (PRUEBA)",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "textAlign": "center"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "CONSIDERANDO",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N011",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario",
+                    "numero_solicitud"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " presentó la solicitud "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "numero_solicitud"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " y figura en el registro de obligados tributarios."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "POR_TANTO",
+              "incluido": true,
+              "parrafos": []
+            },
+            {
+              "codigo": "RESUELVE",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N012",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [
+                    "beneficiario"
+                  ],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Hacer constar que "
+                          },
+                          {
+                            "type": "campo",
+                            "attrs": {
+                              "campoId": "beneficiario"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": " se encuentra registrado como obligado tributario. Dato de prueba."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "codigo": "FIRMAS",
+              "incluido": true,
+              "parrafos": [
+                {
+                  "id": "PAR-N013",
+                  "orden": 1,
+                  "activo": true,
+                  "mostrarSoloSiCumple": false,
+                  "camposUsados": [],
+                  "contenido": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "______________________________"
+                          }
+                        ],
+                        "attrs": {
+                          "textAlign": "center"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "retirada": false,
+        "fechaCreacion": "2026-10-12T15:20:00+00:00",
+        "fechaModificacion": "2026-10-12T15:20:00+00:00"
+      }
+    ]
+  }
+]
