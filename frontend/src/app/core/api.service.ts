@@ -31,7 +31,7 @@ import {
 } from './modelos';
 
 /** Datos de un párrafo que se envían al crear o actualizar (el identificador va en la ruta). */
-export type DatosParrafo = Pick<Parrafo, 'bloque' | 'orden' | 'contenido' | 'activo' | 'mostrarSoloSiCumple' | 'condicion'> & {
+export type DatosParrafo = Pick<Parrafo, 'bloque' | 'orden' | 'contenido' | 'activo' | 'mostrarSoloSiCumple' | 'unirConAnterior' | 'condicion'> & {
   version?: number;
 };
 

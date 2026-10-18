@@ -18,7 +18,9 @@ se editan directamente) en [docs/CONSOLIDADO-FASE3.md](docs/CONSOLIDADO-FASE3.md
 documental y comparación palabra por palabra) en [docs/CONSOLIDADO-FASE4.md](docs/CONSOLIDADO-FASE4.md). Fase 5 (envío a
 verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md](docs/CONSOLIDADO-FASE5.md). Fase 6
 (aprobación, publicación transaccional, vigencia y consolidado de plantillas) en
-[docs/CONSOLIDADO-FASE6.md](docs/CONSOLIDADO-FASE6.md).
+[docs/CONSOLIDADO-FASE6.md](docs/CONSOLIDADO-FASE6.md). Fase 7 (auditoría, concurrencia, permisos y cobertura de las reglas 1 a 20) en
+[docs/CONSOLIDADO-FASE7.md](docs/CONSOLIDADO-FASE7.md). Fase 8 (estrategia para la base de datos real, propuesta para aprobación) en
+[docs/CONSOLIDADO-FASE8.md](docs/CONSOLIDADO-FASE8.md).
 
 ## Tecnologías
 

@@ -217,3 +217,16 @@
   margin-right: var(--espacio-1);
   color: var(--primario-oscuro);
 }
+/* Párrafo unido al anterior: se ve pegado a él, como continuación. */
+.continua {
+  margin-top: calc(-1 * var(--espacio-2));
+  margin-left: var(--espacio-4);
+  border-left: 3px solid var(--primario);
+}
+
+.insignia-union {
+  align-self: flex-start;
+  margin-bottom: var(--espacio-1);
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}

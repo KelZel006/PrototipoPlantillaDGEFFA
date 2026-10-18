@@ -123,10 +123,13 @@ public sealed class ArchivosController(ServicioLogos logos) : ControllerBase
     }
 }
 
-/// <summary>Historial de cambios: solo lectura. Filtros: <c>?coleccion=&amp;entidadId=</c>.</summary>
+/// <summary>
+/// Historial técnico de cambios (antes y después de cada registro): solo lectura y solo para el administrador, porque
+/// incluye el contenido de todos los documentos. Filtros: <c>?coleccion=&amp;entidadId=</c>.
+/// </summary>
 [ApiController]
 [Route("api/historial")]
-public sealed class HistorialController(IRepositorio<RegistroHistorial> repositorio) : ControllerBase
+public sealed class HistorialController(IRepositorio<RegistroHistorial> repositorio, ServicioAutorizacion autorizacion) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RegistroHistorial>>> Listar(
@@ -134,6 +137,7 @@ public sealed class HistorialController(IRepositorio<RegistroHistorial> reposito
         [FromQuery] string? entidadId,
         CancellationToken ct)
     {
+        await autorizacion.ExigirAsync(Rol.Administrador, ct);
         IEnumerable<RegistroHistorial> registros = await repositorio.ListarAsync(ct);
         if (!string.IsNullOrEmpty(coleccion))
             registros = registros.Where(r => r.Coleccion == coleccion);

@@ -54,6 +54,7 @@ interface Borrador {
   contenido: NodoContenido;
   condicion: GrupoCondiciones;
   mostrarSoloSiCumple: boolean;
+  unirConAnterior: boolean;
 }
 
 /** Huella de un borrador para saber si cambió respecto de lo guardado. */
@@ -62,6 +63,7 @@ function huella(borrador: Borrador): string {
     contenido: limpiarDocumento(borrador.contenido),
     condicion: normalizarCondicion(borrador.condicion),
     mostrarSoloSiCumple: borrador.mostrarSoloSiCumple,
+    unirConAnterior: borrador.unirConAnterior,
   });
 }
 
@@ -114,6 +116,8 @@ export class EditorSeccion {
   protected readonly contenido = signal<NodoContenido>(documentoVacio());
   protected readonly condicion = signal<GrupoCondiciones>(grupoVacio());
   protected readonly mostrarSoloSiCumple = signal(true);
+  /** El párrafo continúa el anterior: en el documento se ven como uno solo. */
+  protected readonly unirConAnterior = signal(false);
   private readonly huellaGuardada = signal(huella(this.borradorActual()));
 
   protected readonly sucio = computed(() => huella(this.borradorActual()) !== this.huellaGuardada());
@@ -135,6 +139,9 @@ export class EditorSeccion {
     return id ? this.parrafos().findIndex((p) => p.id === id) + 1 : 0;
   });
 
+  /** Solo se une con el anterior si hay un párrafo antes: uno nuevo va al final; uno en edición, si no es el primero. */
+  protected readonly puedeUnir = computed(() => (this.editando() ? this.posicionEditando() > 1 : this.parrafos().length > 0));
+
   /** Motivos por los que todavía no se puede guardar, en lenguaje del usuario. */
   protected readonly problemas = computed(() => {
     const problemas: string[] = [];
@@ -142,7 +149,10 @@ export class EditorSeccion {
       problemas.push(`Escriba el texto del ${this.nombre().elemento.toLowerCase()}.`);
     }
     if (contarCaracteres(this.contenido(), this.catalogo.etiqueta) > MAXIMO_CARACTERES) {
-      problemas.push(`El texto supera los ${MAXIMO_CARACTERES} caracteres.`);
+      problemas.push(
+        `El texto supera los ${MAXIMO_CARACTERES} caracteres. Guarde una parte y escriba el resto en un párrafo nuevo ` +
+          'con «Unir con el párrafo anterior»: en el documento se verán como uno solo.',
+      );
     }
     return [...problemas, ...problemasCondicion(this.condicion())];
   });
@@ -204,6 +214,7 @@ export class EditorSeccion {
       contenido: limpiarDocumento(this.contenido()),
       condicion: normalizarCondicion(this.condicion()),
       mostrarSoloSiCumple: this.mostrarSoloSiCumple(),
+      unirConAnterior: this.unirConAnterior(),
     };
     const editando = this.editando();
     const peticion: Observable<Parrafo> = editando
@@ -354,6 +365,7 @@ export class EditorSeccion {
     this.contenido.set(parrafo ? structuredClone(parrafo.contenido) : documentoVacio());
     this.condicion.set(parrafo?.condicion ? copiarGrupo(parrafo.condicion) : grupoVacio());
     this.mostrarSoloSiCumple.set(parrafo ? parrafo.mostrarSoloSiCumple : true);
+    this.unirConAnterior.set(parrafo?.unirConAnterior ?? false);
     this.huellaGuardada.set(huella(this.borradorActual()));
     this.errorGuardado.set(null);
     this.conflicto.set(false);
@@ -368,6 +380,7 @@ export class EditorSeccion {
       contenido: this.contenido(),
       condicion: this.condicion(),
       mostrarSoloSiCumple: this.mostrarSoloSiCumple(),
+      unirConAnterior: this.unirConAnterior(),
     };
   }
 

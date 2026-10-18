@@ -30,11 +30,13 @@ public sealed record ParrafoPropuesta(
     bool Activo,
     bool MostrarSoloSiCumple,
     GrupoCondiciones? Condicion,
-    List<string> CamposUsados);
+    List<string> CamposUsados,
+    bool UnirConAnterior = false);
 
 /// <summary>
 /// Datos de un párrafo que envía el editor al crear o actualizar. La versión es la que el editor tiene cargada (se
 /// ignora al crear); el identificador va en la ruta. Si no se indica <c>activo</c>, el párrafo queda activo.
+/// <c>unirConAnterior</c> indica que el párrafo continúa el anterior del bloque.
 /// </summary>
 public sealed record DatosParrafo(
     string Bloque,
@@ -43,7 +45,8 @@ public sealed record DatosParrafo(
     bool MostrarSoloSiCumple,
     GrupoCondiciones? Condicion,
     int Version,
-    bool Activo = true);
+    bool Activo = true,
+    bool UnirConAnterior = false);
 
 /// <summary>Datos de diseño que el editor puede cambiar (el logo se carga aparte).</summary>
 public sealed record DatosDiseno(AlineacionLogo AlineacionLogo, string? PiePagina, double EspacioFirmasCm);
@@ -564,7 +567,7 @@ public sealed class ServicioPropuestas(
             .ToList();
 
     private static ParrafoPropuesta Dto(string propuestaId, string bloque, ParrafoContenido p) =>
-        new(p.Id, p.Version, propuestaId, bloque, p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.CamposUsados);
+        new(p.Id, p.Version, propuestaId, bloque, p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.CamposUsados, p.UnirConAnterior);
 
     private static string NuevoIdParrafo() => $"PAR-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}";
 
@@ -599,6 +602,7 @@ public sealed class ServicioPropuestas(
             Contenido = datos.Contenido!,
             Activo = datos.Activo,
             MostrarSoloSiCumple = datos.MostrarSoloSiCumple,
+            UnirConAnterior = datos.UnirConAnterior,
             Condicion = condicion,
             CamposUsados = ContenidoEditor.CamposUsados(datos.Contenido!),
         };
@@ -683,6 +687,7 @@ public sealed class ServicioPropuestas(
             parrafo.Contenido = datos.Contenido;
             parrafo.Activo = datos.Activo;
             parrafo.MostrarSoloSiCumple = datos.MostrarSoloSiCumple;
+            parrafo.UnirConAnterior = datos.UnirConAnterior;
             parrafo.Condicion = datos.Condicion;
             parrafo.CamposUsados = datos.CamposUsados;
             var destino = Bloque(codigo);

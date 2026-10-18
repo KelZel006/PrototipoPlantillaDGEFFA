@@ -209,6 +209,7 @@ public sealed class PlantillasVigentesController(ServicioPropuestas servicio) : 
 [ApiController]
 [Route("api/versiones-plantilla")]
 public sealed class VersionesPlantillaController(
+    ServicioAuditoria auditoria,
     IRepositorio<VersionPlantilla> versiones,
     IRepositorio<Plantilla> plantillas,
     CatalogoBloques catalogoBloques,
@@ -229,6 +230,14 @@ public sealed class VersionesPlantillaController(
             lista = lista.Where(v => v.Vigencia == vigencia);
         return Ok(lista.OrderBy(v => v.PlantillaId).ThenBy(v => v.NumeroVersion).ToList());
     }
+
+    /// <summary>
+    /// Trazabilidad de la versión: texto anterior y publicado, documento que la originó, quién lo preparó, revisó y
+    /// aprobó, presentaciones y devoluciones. Para el administrador y el Oficial Jurídico.
+    /// </summary>
+    [HttpGet("{id}/trazabilidad")]
+    public async Task<ActionResult<Trazabilidad>> Trazabilidad(string id, CancellationToken ct) =>
+        Ok(await auditoria.TrazabilidadAsync(id, ct));
 
     /// <summary>PDF de una versión publicada (vigente o no): consulta de solo lectura (D11).</summary>
     [HttpGet("{id}/pdf")]

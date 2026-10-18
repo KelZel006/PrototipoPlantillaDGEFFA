@@ -46,6 +46,26 @@
           (enTablaCambio)="enTabla.set($event)"
         />
 
+        <label class="union" [class.deshabilitada]="!puedeUnir() && !unirConAnterior()"
+          title="Para textos de más de 2000 caracteres: este párrafo continúa el anterior en el documento">
+          <input
+            type="checkbox"
+            [checked]="unirConAnterior()"
+            [disabled]="!puedeUnir() && !unirConAnterior()"
+            (change)="unirConAnterior.set($any($event.target).checked)"
+          />
+          <span>Unir con el párrafo anterior</span>
+        </label>
+        @if (unirConAnterior()) {
+          <p class="nota-union">
+            @if (puedeUnir()) {
+              En el documento este texto continúa el párrafo anterior, como un solo párrafo y sin numeración propia.
+            } @else {
+              Es el primer párrafo de la sección: no tiene uno anterior con el cual unirse y se mostrará solo.
+            }
+          </p>
+        }
+
         @if (errorGuardado(); as mensaje) {
           <div class="aviso aviso-error" role="alert">
             <span>{{ mensaje }}</span>

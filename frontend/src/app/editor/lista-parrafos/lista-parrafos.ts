@@ -33,7 +33,7 @@ export class ListaParrafos {
   readonly titulo = input.required<string>();
   /**
    * Cómo se numeran los párrafos en el documento (por ejemplo, "CONSIDERANDO(1):" o "PRIMERO:"). Se numeran solo los
-   * activos; al generar, los que no cumplan su condición tampoco consumen número.
+   * activos que no continúan al anterior; al generar, los que no cumplan su condición tampoco consumen número.
    */
   readonly numerar = input<Numerador | null>(null);
   readonly editandoId = input<string | null>(null);
@@ -57,12 +57,18 @@ export class ListaParrafos {
   protected readonly elementos = computed(() => {
     let numero = 0;
     const numerar = this.numerar();
-    return this.parrafos().map((parrafo) => ({
-      numeracion: numerar && parrafo.activo ? numerar(++numero) : null,
-      parrafo,
-      resumen: textoPlano(parrafo.contenido, this.catalogo.etiqueta),
-      estado: estadoCondicion(parrafo),
-      condicion: parrafo.condicion ? describirGrupo(parrafo.condicion, this.catalogo.porId()) : '',
-    }));
+    return this.parrafos().map((parrafo, indice) => {
+      // Un párrafo unido al anterior se agrega a él en el documento: no lleva número propio.
+      const continua = !!parrafo.unirConAnterior && indice > 0;
+      return {
+        numeracion: numerar && parrafo.activo && !continua ? numerar(++numero) : null,
+        continua,
+        unionSinAnterior: !!parrafo.unirConAnterior && indice === 0,
+        parrafo,
+        resumen: textoPlano(parrafo.contenido, this.catalogo.etiqueta),
+        estado: estadoCondicion(parrafo),
+        condicion: parrafo.condicion ? describirGrupo(parrafo.condicion, this.catalogo.porId()) : '',
+      };
+    });
   });
 }

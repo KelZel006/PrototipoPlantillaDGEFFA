@@ -149,6 +149,7 @@ describe('EditorSeccion', () => {
       },
       condicion: null,
       mostrarSoloSiCumple: true,
+      unirConAnterior: false,
     });
     creacion.flush(parrafo('P3', 'Considerando de prueba', { orden: 3 }));
     await refrescar();
@@ -159,6 +160,38 @@ describe('EditorSeccion', () => {
     expect(elemento.querySelectorAll('.tarjeta-parrafo').length).toBe(3);
     expect(interaccion.avisos().map((a) => a.texto)).toContain('Considerando agregado.');
     expect(TestBed.inject(ContextoService).cambiosSinGuardar()).toBe(false);
+  });
+
+  it('agrega un párrafo unido al anterior', async () => {
+    const casilla = elemento.querySelector<HTMLInputElement>('.union input')!;
+    expect(casilla.disabled).toBe(false);
+    casilla.click();
+    await escribir(DOCUMENTO);
+    expect(elemento.querySelector('.nota-union')?.textContent).toContain('continúa el párrafo anterior');
+
+    botonAccion('Agregar a la lista').click();
+    const creacion = http.expectOne((r) => r.method === 'POST' && r.url === '/api/propuestas/PRO-001/parrafos');
+    expect(creacion.request.body.unirConAnterior).toBe(true);
+    creacion.flush(parrafo('P3', 'Considerando de prueba', { orden: 3, unirConAnterior: true }));
+    await refrescar();
+    http.expectOne(parrafosUrl).flush([...lista, parrafo('P3', 'Considerando de prueba', { orden: 3, unirConAnterior: true })]);
+    await refrescar();
+  });
+
+  it('el primer párrafo no se puede unir con uno anterior', async () => {
+    accionLista(0, 'Editar párrafo').click();
+    await refrescar();
+    expect(elemento.querySelector<HTMLInputElement>('.union input')!.disabled).toBe(true);
+
+    accionLista(1, 'Editar párrafo').click();
+    await refrescar();
+    expect(elemento.querySelector<HTMLInputElement>('.union input')!.disabled).toBe(false);
+  });
+
+  it('si el texto supera el límite, sugiere continuar en un párrafo unido', async () => {
+    await escribir({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a'.repeat(2001) }] }] });
+    expect(elemento.querySelector('.problemas')?.textContent).toContain('«Unir con el párrafo anterior»');
+    expect(botonAccion('Agregar a la lista').disabled).toBe(true);
   });
 
   it('ante un conflicto de versión conserva el borrador y permite recargar', async () => {

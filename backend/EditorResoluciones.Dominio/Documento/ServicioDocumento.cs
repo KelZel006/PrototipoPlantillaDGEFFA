@@ -43,6 +43,7 @@ public static class Interlineados
 /// <item>Omite los párrafos inactivos y, con una solicitud de prueba, los que no cumplen su condición.</item>
 /// <item>Sustituye cada campo por su valor. Sin solicitud, lo deja como "{Etiqueta}".</item>
 /// <item>En las tablas, repite cada fila con campos de lista una vez por registro de la solicitud.</item>
+/// <item>Une al anterior los párrafos marcados «Unir con el párrafo anterior»: se muestran como uno solo.</item>
 /// </list>
 /// Si faltan datos para evaluar una condición, el párrafo no se incluye y se registra una advertencia.
 /// </summary>
@@ -120,6 +121,8 @@ public sealed class ServicioDocumento(
             var incluidos = new List<ParrafoDocumento>();
             var omitidos = new List<ParrafoOmitido>();
             var deSeccion = deBloque.OrderBy(p => p.Orden).ToList();
+            // Si el párrafo anterior quedó en el documento; un párrafo que lo continúa sigue su misma suerte.
+            var anteriorIncluido = false;
 
             for (var i = 0; i < deSeccion.Count; i++)
             {
@@ -127,10 +130,19 @@ public sealed class ServicioDocumento(
                 var posicion = i + 1;
                 var resumen = Resumir(parrafo.Contenido, catalogo);
                 var ubicacion = $"{bloque.Nombre} {posicion}";
+                var continua = parrafo.UnirConAnterior && i > 0;
+                var incluidoAntes = anteriorIncluido;
+                anteriorIncluido = false;
 
                 if (!parrafo.Activo)
                 {
                     omitidos.Add(new ParrafoOmitido(parrafo.Id, posicion, resumen, "Párrafo inactivo."));
+                    continue;
+                }
+
+                if (continua && !incluidoAntes)
+                {
+                    omitidos.Add(new ParrafoOmitido(parrafo.Id, posicion, resumen, "Continúa un párrafo que no se incluyó."));
                     continue;
                 }
 
@@ -152,6 +164,15 @@ public sealed class ServicioDocumento(
                 }
 
                 var contenido = contexto.Sustituir(parrafo.Contenido, null, ubicacion);
+                anteriorIncluido = true;
+                if (continua)
+                {
+                    // Se agrega al párrafo anterior: no consume número y se ve como un solo párrafo.
+                    var previo = incluidos[^1];
+                    incluidos[^1] = previo with { Contenido = Unir(previo.Contenido, contenido) };
+                    continue;
+                }
+
                 // Considerando y Resuelve se numeran por su orden en el documento: los omitidos no consumen número.
                 if (Numeracion.Etiqueta(bloque.Numeracion, incluidos.Count + 1) is { } etiqueta)
                     contenido = Numerar(contenido, etiqueta);
@@ -203,6 +224,40 @@ public sealed class ServicioDocumento(
         }
         return new NodoContenido { Tipo = documento.Tipo, Atributos = documento.Atributos, Contenido = bloques };
     }
+
+    /// <summary>
+    /// Agrega el contenido de un párrafo a continuación del anterior. Si el anterior termina en un párrafo de texto y el
+    /// siguiente empieza con uno, se funden en el mismo párrafo, separados por un espacio (conserva la alineación del
+    /// primero). Lo demás (listas, tablas, otros párrafos) se agrega a continuación.
+    /// </summary>
+    public static NodoContenido Unir(NodoContenido anterior, NodoContenido siguiente)
+    {
+        var bloques = anterior.Contenido?.ToList() ?? [];
+        var agregados = siguiente.Contenido?.ToList() ?? [];
+        if (bloques.Count > 0 && bloques[^1] is { Tipo: "paragraph" } ultimo &&
+            agregados.Count > 0 && agregados[0] is { Tipo: "paragraph" } primero)
+        {
+            var izquierda = ultimo.Contenido ?? [];
+            var derecha = primero.Contenido ?? [];
+            var separador = izquierda.Count > 0 && derecha.Count > 0 && !TerminaEnEspacio(izquierda[^1]) && !EmpiezaConEspacio(derecha[0])
+                ? new List<NodoContenido> { new() { Tipo = "text", Texto = " " } }
+                : [];
+            bloques[^1] = new NodoContenido
+            {
+                Tipo = ultimo.Tipo,
+                Atributos = ultimo.Atributos,
+                Contenido = [.. izquierda, .. separador, .. derecha],
+            };
+            agregados.RemoveAt(0);
+        }
+        return new NodoContenido { Tipo = anterior.Tipo, Atributos = anterior.Atributos, Contenido = [.. bloques, .. agregados] };
+    }
+
+    private static bool TerminaEnEspacio(NodoContenido nodo) =>
+        nodo.Tipo == "hardBreak" || (nodo.Tipo == "text" && nodo.Texto is { Length: > 0 } t && char.IsWhiteSpace(t[^1]));
+
+    private static bool EmpiezaConEspacio(NodoContenido nodo) =>
+        nodo.Tipo == "hardBreak" || (nodo.Tipo == "text" && nodo.Texto is { Length: > 0 } t && char.IsWhiteSpace(t[0]));
 
     private static string Resumir(NodoContenido contenido, IReadOnlyDictionary<string, Campo> catalogo)
     {

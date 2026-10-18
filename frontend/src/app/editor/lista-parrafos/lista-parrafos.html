@@ -19,12 +19,22 @@
         class="tarjeta-parrafo"
         [class.editando]="elemento.parrafo.id === editandoId()"
         [class.inactivo]="!elemento.parrafo.activo"
+        [class.continua]="elemento.continua"
       >
         <div class="tarjeta-placeholder" *cdkDragPlaceholder></div>
         <span class="asa" cdkDragHandle title="Arrastre para cambiar el orden" aria-hidden="true">
           <svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4" /><circle cx="15" cy="6" r="1.4" /><circle cx="9" cy="12" r="1.4" /><circle cx="15" cy="12" r="1.4" /><circle cx="9" cy="18" r="1.4" /><circle cx="15" cy="18" r="1.4" /></svg>
         </span>
         <div class="cuerpo" cdkDragHandle>
+          @if (elemento.continua) {
+            <span class="insignia insignia-union" title="En el documento se agrega a continuación del párrafo anterior, como un solo párrafo">
+              ↳ Continúa el párrafo anterior
+            </span>
+          } @else if (elemento.unionSinAnterior) {
+            <span class="insignia insignia-apagada" title="Es el primero de la sección: se muestra solo">
+              Unión sin efecto: no hay párrafo anterior
+            </span>
+          }
           <p class="resumen">
             @if (elemento.numeracion) {
               <strong class="numeracion" title="Así se numerará en el documento si se cumple su condición">{{ elemento.numeracion }}</strong>

@@ -155,3 +155,30 @@
     transform: none;
   }
 }
+.union {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.union input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primario);
+}
+
+.union.deshabilitada {
+  color: var(--texto-secundario);
+  cursor: not-allowed;
+}
+
+.nota-union {
+  margin: 0;
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  background: var(--primario-suave);
+  font-size: var(--texto-pequeno);
+  color: var(--texto-secundario);
+}

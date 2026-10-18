@@ -88,6 +88,35 @@ describe('ListaParrafos', () => {
     expect(tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null)).toEqual(['PRIMERO:', 'SEGUNDO:', null]);
   });
 
+  it('marca el párrafo unido al anterior y no le da número propio', () => {
+    fixture.componentRef.setInput('parrafos', [
+      parrafo('P1', 'Primera parte'),
+      parrafo('P2', 'Segunda parte', { unirConAnterior: true }),
+      parrafo('P3', 'Otro considerando'),
+    ]);
+    fixture.componentRef.setInput('numerar', numerarConsiderando);
+    fixture.detectChanges();
+
+    expect(tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null)).toEqual([
+      'CONSIDERANDO(1):',
+      null,
+      'CONSIDERANDO(2):',
+    ]);
+    expect(tarjetas()[1].classList).toContain('continua');
+    expect(tarjetas()[1].textContent).toContain('Continúa el párrafo anterior');
+    expect(tarjetas()[0].classList).not.toContain('continua');
+  });
+
+  it('avisa que la unión no tiene efecto en el primer párrafo', () => {
+    fixture.componentRef.setInput('parrafos', [parrafo('P1', 'Primero', { unirConAnterior: true }), parrafo('P2', 'Segundo')]);
+    fixture.componentRef.setInput('numerar', numerarConsiderando);
+    fixture.detectChanges();
+
+    expect(tarjetas()[0].classList).not.toContain('continua');
+    expect(tarjetas()[0].textContent).toContain('Unión sin efecto: no hay párrafo anterior');
+    expect(tarjetas()[0].querySelector('.numeracion')?.textContent).toBe('CONSIDERANDO(1):');
+  });
+
   it('no permite subir el primero ni bajar el último', () => {
     expect(boton(tarjetas()[0], 'Subir párrafo').disabled).toBe(true);
     expect(boton(tarjetas()[0], 'Bajar párrafo').disabled).toBe(false);

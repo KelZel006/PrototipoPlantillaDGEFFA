@@ -45,6 +45,13 @@ public class Parrafo : IEntidad, IConMarcaTiempo
     /// </summary>
     public bool MostrarSoloSiCumple { get; set; }
 
+    /// <summary>
+    /// Si es verdadero, el párrafo continúa el anterior del mismo bloque: en el documento se agrega a continuación, en
+    /// el mismo párrafo y sin numeración propia. Sirve para textos de más de <see cref="MaximoCaracteres"/> caracteres.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool UnirConAnterior { get; set; }
+
     /// <summary>Condición de visualización del párrafo; null si no tiene.</summary>
     public GrupoCondiciones? Condicion { get; set; }
 

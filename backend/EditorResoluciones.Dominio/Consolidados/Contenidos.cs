@@ -55,6 +55,7 @@ public static class ConstructorContenido
                     Contenido = p.Contenido,
                     Activo = p.Activo,
                     MostrarSoloSiCumple = p.MostrarSoloSiCumple,
+                    UnirConAnterior = p.UnirConAnterior,
                     Condicion = p.Condicion,
                     CamposUsados = [.. p.CamposUsados],
                     OrigenParrafoId = p.OrigenParrafoId,
@@ -106,6 +107,7 @@ public static class ConstructorContenido
                 Contenido = p.Contenido,
                 Activo = p.Activo,
                 MostrarSoloSiCumple = p.MostrarSoloSiCumple,
+                UnirConAnterior = p.UnirConAnterior,
                 Condicion = p.Condicion,
                 CamposUsados = p.CamposUsados,
             }).ToList()))

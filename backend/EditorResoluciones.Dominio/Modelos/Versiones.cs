@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using EditorResoluciones.Dominio.Comun;
 
 namespace EditorResoluciones.Dominio.Modelos;
@@ -96,6 +97,13 @@ public class ParrafoContenido
     public bool MostrarSoloSiCumple { get; set; }
     public GrupoCondiciones? Condicion { get; set; }
     public List<string> CamposUsados { get; set; } = [];
+
+    /// <summary>
+    /// El párrafo continúa el anterior del bloque: en el documento se muestran como uno solo. Se omite del JSON cuando es
+    /// falso, para que la huella de los contenidos ya publicados no cambie.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool UnirConAnterior { get; set; }
 
     /// <summary>En una Certificación, el párrafo de la Resolución del que se copió (decisión D3).</summary>
     public string? OrigenParrafoId { get; set; }

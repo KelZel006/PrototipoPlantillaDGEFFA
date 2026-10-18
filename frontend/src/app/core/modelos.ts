@@ -115,6 +115,11 @@ export interface Parrafo extends Entidad {
   activo: boolean;
   /** Con condición, el párrafo solo se muestra si se cumple. Sin condición se muestra siempre. */
   mostrarSoloSiCumple: boolean;
+  /**
+   * Continúa el párrafo anterior del bloque: en el documento se muestran como uno solo, sin numeración propia. Sirve
+   * para textos de más de 2000 caracteres.
+   */
+  unirConAnterior?: boolean;
   condicion?: GrupoCondiciones | null;
   /** Lo calcula el servidor a partir del contenido. */
   camposUsados: string[];
