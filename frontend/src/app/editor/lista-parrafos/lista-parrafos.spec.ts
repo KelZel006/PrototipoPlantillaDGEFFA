@@ -117,6 +117,22 @@ describe('ListaParrafos', () => {
     expect(tarjetas()[0].querySelector('.numeracion')?.textContent).toBe('CONSIDERANDO(1):');
   });
 
+  it('marca un título: se ve centrado, sin número y con su botón activo', () => {
+    const titulos: string[] = [];
+    fixture.componentInstance.alternarTitulo.subscribe((p) => titulos.push(p.id));
+    fixture.componentRef.setInput('parrafos', [parrafo('P1', 'Primero'), parrafo('P2', 'CONSIDERACIONES GENERALES', { esTitulo: true }), parrafo('P3', 'Tercero')]);
+    fixture.componentRef.setInput('numerar', numerarConsiderando);
+    fixture.detectChanges();
+
+    expect(tarjetas().map((t) => t.querySelector('.numeracion')?.textContent ?? null)).toEqual(['CONSIDERANDO(1):', null, 'CONSIDERANDO(2):']);
+    expect(tarjetas()[1].classList).toContain('titulo');
+    expect(tarjetas()[1].textContent).toContain('Título · centrado');
+    expect(boton(tarjetas()[1], 'Quitar título').getAttribute('aria-pressed')).toBe('true');
+
+    boton(tarjetas()[0], 'Marcar como título').click();
+    expect(titulos).toEqual(['P1']);
+  });
+
   it('no permite subir el primero ni bajar el último', () => {
     expect(boton(tarjetas()[0], 'Subir párrafo').disabled).toBe(true);
     expect(boton(tarjetas()[0], 'Bajar párrafo').disabled).toBe(false);

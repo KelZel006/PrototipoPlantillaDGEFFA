@@ -3,15 +3,20 @@ using EditorResoluciones.Dominio.Modelos;
 using EditorResoluciones.Dominio.Repositorios;
 using EditorResoluciones.Dominio.Seguridad;
 using EditorResoluciones.Dominio.Servicios;
+using EditorResoluciones.Dominio.Validacion;
 
 namespace EditorResoluciones.Dominio.Consolidados;
 
 /// <summary>Fila del listado de consolidados. Los tipos y las cantidades se calculan de las propuestas, no se escriben.</summary>
+/// <summary>Datos para crear un Documento Consolidado: la unidad a la que pertenece.</summary>
+public sealed record SolicitudCrearConsolidado(string? UnidadId);
+
 public sealed record ResumenConsolidado(
     string Id,
     string Numero,
     int Anio,
     EstadoConsolidado Estado,
+    string UnidadId,
     string AnalistaId,
     DateTimeOffset FechaCreacion,
     DateTimeOffset FechaActualizacion,
@@ -34,7 +39,8 @@ public sealed record DetalleConsolidado(
     IReadOnlyDictionary<string, IReadOnlyList<Ajuste>> Ajustes,
     IReadOnlyList<Presentacion> Presentaciones,
     IReadOnlyList<Devolucion> Devoluciones,
-    IReadOnlyList<Movimiento> Movimientos);
+    IReadOnlyList<Movimiento> Movimientos,
+    IReadOnlyList<AlertaCampo> Alertas);
 
 /// <summary>Creación, numeración y consulta de Documentos Consolidados, con las reglas de visibilidad por bandeja.</summary>
 public sealed class ServicioConsolidados(
@@ -46,17 +52,28 @@ public sealed class ServicioConsolidados(
     IRepositorio<Movimiento> movimientos,
     IRepositorio<TipoDocumento> tipos,
     IRepositorio<VersionPlantilla> versiones,
+    IRepositorio<Campo> campos,
+    IRepositorio<Unidad> unidades,
     ServicioAutorizacion autorizacion,
     ZonaHorariaInstitucional zona,
     TimeProvider reloj)
 {
     /// <summary>
     /// Crea un consolidado EN REGISTRO con el siguiente número PLAN del año. La numeración se calcula dentro de la
-    /// transacción, con la colección bloqueada: dos creaciones simultáneas nunca obtienen el mismo número.
+    /// transacción, con la colección bloqueada: dos creaciones simultáneas nunca obtienen el mismo número. El documento es
+    /// de la unidad indicada; sin indicarla, de la primera unidad activa (Exoneraciones).
     /// </summary>
-    public async Task<DocumentoConsolidado> CrearAsync(CancellationToken ct = default)
+    public async Task<DocumentoConsolidado> CrearAsync(string? unidadId = null, CancellationToken ct = default)
     {
         var analista = await autorizacion.ExigirAsync(Rol.Analista, ct);
+        var activas = (await unidades.ListarAsync(ct)).Where(u => u.Activo).OrderBy(u => u.Orden).ToList();
+        var unidadDocumento = string.IsNullOrWhiteSpace(unidadId) ? activas.FirstOrDefault() : activas.FirstOrDefault(u => u.Id == unidadId);
+        if (unidadDocumento is null)
+        {
+            var resultado = new ResultadoValidacion();
+            resultado.Agregar("unidadId", "La unidad no existe o está inactiva.");
+            resultado.LanzarSiHayErrores();
+        }
         var ahora = reloj.GetUtcNow();
         var anio = zona.Anio(ahora);
 
@@ -73,6 +90,7 @@ public sealed class ServicioConsolidados(
                 Anio = anio,
                 Secuencia = secuencia,
                 Estado = EstadoConsolidado.EnRegistro,
+                UnidadId = unidadDocumento!.Id,
                 AnalistaId = analista.Id,
                 FechaCreacion = ahora,
                 FechaActualizacion = ahora,
@@ -84,7 +102,7 @@ public sealed class ServicioConsolidados(
                 Usuario = analista.Id,
                 Fecha = ahora,
                 EstadoDestino = EstadoConsolidado.EnRegistro,
-                Detalle = $"Se creó el documento consolidado {consolidado.Numero}.",
+                Detalle = $"Se creó el documento consolidado {consolidado.Numero} de {unidadDocumento!.Nombre}.",
             }, ct);
             await tx.CrearAsync(ServicioHistorial.Construir(
                 new CambioHistorial(consolidados.Coleccion, consolidado.Id, AccionHistorial.Creacion, consolidado.Version, null, consolidado),
@@ -109,7 +127,7 @@ public sealed class ServicioConsolidados(
                 // Cada tipo documental una sola vez, aunque tenga varias propuestas o ajustes.
                 var tiposIncluidos = activas.Select(p => p.TipoDocumentoId).Distinct(StringComparer.Ordinal)
                     .Select(id => nombresTipo.GetValueOrDefault(id, id)).Order(StringComparer.CurrentCulture).ToList();
-                return new ResumenConsolidado(c.Id, c.Numero, c.Anio, c.Estado, c.AnalistaId, c.FechaCreacion,
+                return new ResumenConsolidado(c.Id, c.Numero, c.Anio, c.Estado, c.UnidadId, c.AnalistaId, c.FechaCreacion,
                     c.FechaActualizacion, tiposIncluidos, activas.Count);
             })
             .ToList();
@@ -151,7 +169,23 @@ public sealed class ServicioConsolidados(
             ajustes,
             (await presentaciones.ListarAsync(ct)).Where(p => p.ConsolidadoId == id).OrderBy(p => p.Numero).ToList(),
             (await devoluciones.ListarAsync(ct)).Where(d => d.ConsolidadoId == id).OrderBy(d => d.Fecha).ToList(),
-            (await movimientos.ListarAsync(ct)).Where(m => m.ConsolidadoId == id).OrderBy(m => m.Fecha).ToList());
+            (await movimientos.ListarAsync(ct)).Where(m => m.ConsolidadoId == id).OrderBy(m => m.Fecha).ToList(),
+            await AlertasAsync(usuario, activas, porVersion, ct));
+    }
+
+    /// <summary>
+    /// Cambios en los campos vigilados (por ejemplo, Operador). Solo se le muestran al aprobador (Oficial Jurídico).
+    /// </summary>
+    private async Task<IReadOnlyList<AlertaCampo>> AlertasAsync(
+        Usuario usuario, IReadOnlyList<Propuesta> activas, IReadOnlyDictionary<string, VersionPlantilla> porVersion, CancellationToken ct)
+    {
+        if (!usuario.Tiene(Rol.OficialJuridico))
+            return [];
+        var vigilados = (await campos.ListarAsync(ct)).Where(c => c.AlertarCambios).ToList();
+        return activas
+            .SelectMany(p => AlertasCampos.Detectar(p,
+                p.VersionOrigenId is { } origen && porVersion.TryGetValue(origen, out var v) ? v.Contenido : new ContenidoPlantilla(), vigilados))
+            .ToList();
     }
 
     /// <summary>

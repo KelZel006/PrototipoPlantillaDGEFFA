@@ -6,7 +6,8 @@ namespace EditorResoluciones.Dominio.Documento;
 /// Presentación de texto corrido (por ejemplo, la Certificación): el texto de todas las secciones se transcribe
 /// seguido, en un solo párrafo, sin saltos ni espacios entre párrafos. Solo las tablas conservan su forma: cortan el
 /// texto, se presentan como cuadro y el texto continúa después. Los títulos (POR TANTO:, RESUELVE:) quedan en negrita
-/// dentro del texto. Las firmas no se pasan por aquí: conservan su presentación.
+/// dentro del texto. Los párrafos marcados como título también cortan el texto y van centrados. Las firmas no se pasan
+/// por aquí: conservan su presentación.
 /// </summary>
 public static class TextoCorrido
 {
@@ -69,7 +70,15 @@ public static class TextoCorrido
             if (parte.Bloque.Titulo is { } titulo)
                 Agregar([Texto(titulo, negrita: true)]);
             foreach (var parrafo in parte.Parrafos)
+            {
+                if (parrafo.EsTitulo)
+                {
+                    Cerrar();
+                    bloques.AddRange(parrafo.Contenido.Contenido ?? []);
+                    continue;
+                }
                 Recorrer(parrafo.Contenido.Contenido ?? []);
+            }
         }
         Cerrar();
         return bloques;

@@ -1,4 +1,4 @@
-<a class="volver" routerLink="/consolidados">← Documentos consolidados</a>
+<a class="volver" routerLink="/consolidados">← Documentos Plantillas</a>
 
 @if (error(); as mensaje) {
   <div class="aviso aviso-error" role="alert">
@@ -23,6 +23,10 @@
       }
     </dl>
   </section>
+
+  @if (d.consolidado.estado !== 'Aprobado') {
+    <app-aviso-campos [alertas]="d.alertas ?? []" />
+  }
 
   @if (d.consolidado.estado === 'Aprobado') {
     <section class="aviso aviso-aprobado" role="status">
@@ -220,6 +224,7 @@
 
   <app-seleccion-plantilla
     [consolidadoId]="d.consolidado.id"
+    [unidadId]="d.consolidado.unidadId"
     [operacion]="seleccion()"
     (cerrar)="seleccion.set(null)"
     (agregado)="alAgregar($event)"

@@ -44,6 +44,8 @@ export class ListaParrafos {
   readonly eliminar = output<Parrafo>();
   readonly duplicar = output<Parrafo>();
   readonly alternarActivo = output<Parrafo>();
+  /** Marca o quita la marca de título (centrado y en negrita, sin numeración). */
+  readonly alternarTitulo = output<Parrafo>();
   readonly mover = output<{ parrafo: Parrafo; desplazamiento: -1 | 1 }>();
   /** Nuevo orden tras arrastrar una tarjeta: posición de origen y de destino. */
   readonly reordenar = output<{ desde: number; hasta: number }>();
@@ -57,11 +59,12 @@ export class ListaParrafos {
   protected readonly elementos = computed(() => {
     let numero = 0;
     const numerar = this.numerar();
-    return this.parrafos().map((parrafo, indice) => {
-      // Un párrafo unido al anterior se agrega a él en el documento: no lleva número propio.
-      const continua = !!parrafo.unirConAnterior && indice > 0;
+    const lista = this.parrafos();
+    return lista.map((parrafo, indice) => {
+      // Un párrafo unido al anterior se agrega a él en el documento: no lleva número propio. No se une a un título.
+      const continua = !!parrafo.unirConAnterior && !parrafo.esTitulo && indice > 0 && !lista[indice - 1].esTitulo;
       return {
-        numeracion: numerar && parrafo.activo && !continua ? numerar(++numero) : null,
+        numeracion: numerar && parrafo.activo && !continua && !parrafo.esTitulo ? numerar(++numero) : null,
         continua,
         unionSinAnterior: !!parrafo.unirConAnterior && indice === 0,
         parrafo,

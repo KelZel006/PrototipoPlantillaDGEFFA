@@ -84,3 +84,11 @@
   background: var(--prueba-suave);
   color: var(--texto);
 }
+
+/* Sin solicitud el PDF no lleva datos ni aplica condiciones: se avisa para no confundirlo con un error. */
+.nota-sin-datos {
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  background: var(--prueba-suave);
+  color: var(--prueba);
+}

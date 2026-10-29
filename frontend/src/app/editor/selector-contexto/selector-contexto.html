@@ -1,13 +1,13 @@
-<section class="tarjeta selector" aria-label="Contexto de la plantilla">
+<section class="tarjeta selector" [attr.aria-label]="etiqueta()">
   <div class="lista">
-    <label class="etiqueta" for="lista-rubro">
+    <label class="etiqueta" [for]="prefijo() + '-rubro'">
       <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3" />
       </svg>
       Rubro
     </label>
     <select
-      id="lista-rubro"
+      [id]="prefijo() + '-rubro'"
       class="control"
       [value]="contexto.rubro()?.id ?? ''"
       (change)="alCambiarRubro($event)"
@@ -20,14 +20,14 @@
   </div>
 
   <div class="lista">
-    <label class="etiqueta" for="lista-subrubro">
+    <label class="etiqueta" [for]="prefijo() + '-subrubro'">
       <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
         <path d="m12 3 9 5-9 5-9-5 9-5ZM3 13l9 5 9-5" />
       </svg>
       Sub Rubro
     </label>
     <select
-      id="lista-subrubro"
+      [id]="prefijo() + '-subrubro'"
       class="control"
       [disabled]="!contexto.rubro() || cargandoSubRubros()"
       [value]="contexto.subRubro()?.id ?? ''"
@@ -49,14 +49,14 @@
   </div>
 
   <div class="lista">
-    <label class="etiqueta" for="lista-tipo">
+    <label class="etiqueta" [for]="prefijo() + '-tipo'">
       <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h6" />
       </svg>
       Tipo Documento
     </label>
     <select
-      id="lista-tipo"
+      [id]="prefijo() + '-tipo'"
       class="control"
       [value]="contexto.tipoDocumento()?.id ?? ''"
       (change)="alCambiarTipoDocumento($event)"
@@ -69,14 +69,14 @@
   </div>
 
   <div class="lista">
-    <label class="etiqueta" for="lista-documento">
+    <label class="etiqueta" [for]="prefijo() + '-documento'">
       <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M8 3h8l4 4v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM15 3v5h5M4 7v12a4 4 0 0 0 4 4" />
       </svg>
       Documento
     </label>
     <select
-      id="lista-documento"
+      [id]="prefijo() + '-documento'"
       class="control"
       [value]="contexto.claseDocumento()?.id ?? ''"
       (change)="alCambiarClaseDocumento($event)"

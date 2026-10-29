@@ -15,7 +15,8 @@
       "resuelve",
       "portanto",
       "firmas"
-    ]
+    ],
+    "alertarCambios": true
   },
   {
     "id": "beneficiario",

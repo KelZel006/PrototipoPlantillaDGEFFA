@@ -1,7 +1,8 @@
 <section class="tarjeta" aria-labelledby="titulo-consolidados">
   <header class="encabezado-tarjeta">
     <div>
-      <h2 id="titulo-consolidados">Documentos consolidados</h2>
+      <p class="unidad-actual">{{ unidades.nombre(unidadMostrada()) }}</p>
+      <h2 id="titulo-consolidados">Documentos Plantillas</h2>
       <p class="texto-secundario sin-margen">
         @if (usuario.tiene('Administrador')) {
           Consulta de todos los documentos{{ usuario.tiene('Analista') ? '; como analista, puede crear los suyos' : '' }}.
@@ -16,7 +17,7 @@
     </div>
     @if (usuario.tiene('Analista')) {
       <button type="button" class="boton boton-primario" [disabled]="creando()" (click)="crear()">
-        {{ creando() ? 'Creando…' : '+ Nuevo consolidado' }}
+        {{ creando() ? 'Creando…' : '+ Nueva Plantilla' }}
       </button>
     }
   </header>
@@ -85,7 +86,7 @@
       @if (hayFiltros()) {
         Ningún documento coincide con los filtros.
       } @else if (usuario.tiene('Analista')) {
-        No tiene documentos consolidados. Cree uno para empezar a registrar cambios en las plantillas.
+        No tiene documentos. Pulse «+ Nueva Plantilla» para empezar a registrar cambios en las plantillas.
       } @else {
         No hay documentos en su bandeja.
       }

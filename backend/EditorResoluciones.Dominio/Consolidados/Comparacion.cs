@@ -171,6 +171,8 @@ public static partial class ComparadorContenido
                 configuracion.Add("Cambió «mostrar solo si cumple»");
             if (viejo.UnirConAnterior != nuevo.UnirConAnterior)
                 configuracion.Add(nuevo.UnirConAnterior ? "Se unió con el párrafo anterior" : "Se separó del párrafo anterior");
+            if (viejo.EsTitulo != nuevo.EsTitulo)
+                configuracion.Add(nuevo.EsTitulo ? "Se marcó como título" : "Dejó de ser título");
 
             var estado = cambioContenido || configuracion.Count > 0 ? EstadoParrafo.Modificado : EstadoParrafo.SinCambios;
             resultado.Add(new ParrafoComparado(id, estado, movidos.Contains(id), posVieja[id], posNueva[id], segViejo, segNuevo,

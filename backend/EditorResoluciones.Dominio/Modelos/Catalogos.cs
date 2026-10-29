@@ -31,6 +31,25 @@ public class SubRubro : IEntidad
 }
 
 /// <summary>Lista 4 del selector de contexto, "Documento": Original, Modificación o Aclaratoria.</summary>
+/// <summary>
+/// Unidad que elabora sus propias plantillas: Exoneraciones, Dispensas, Registro Exonerados, Notas de Crédito y
+/// Devoluciones. Cada unidad tiene su menú, sus Documentos PLAN y sus plantillas.
+/// </summary>
+public class Unidad : IEntidad
+{
+    public string Id { get; set; } = "";
+    public int Version { get; set; }
+
+    [Required(ErrorMessage = "El nombre es obligatorio."), StringLength(150, ErrorMessage = "El nombre admite hasta 150 caracteres.")]
+    public string Nombre { get; set; } = "";
+
+    /// <summary>Posición en el menú.</summary>
+    [Range(1, 100, ErrorMessage = "El orden debe estar entre 1 y 100.")]
+    public int Orden { get; set; } = 1;
+
+    public bool Activo { get; set; } = true;
+}
+
 public class ClaseDocumento : IEntidad
 {
     public string Id { get; set; } = "";

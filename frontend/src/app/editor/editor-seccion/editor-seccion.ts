@@ -140,7 +140,9 @@ export class EditorSeccion {
   });
 
   /** Solo se une con el anterior si hay un párrafo antes: uno nuevo va al final; uno en edición, si no es el primero. */
-  protected readonly puedeUnir = computed(() => (this.editando() ? this.posicionEditando() > 1 : this.parrafos().length > 0));
+  protected readonly puedeUnir = computed(
+    () => !this.editando()?.esTitulo && (this.editando() ? this.posicionEditando() > 1 : this.parrafos().length > 0),
+  );
 
   /** Motivos por los que todavía no se puede guardar, en lenguaje del usuario. */
   protected readonly problemas = computed(() => {
@@ -283,6 +285,18 @@ export class EditorSeccion {
     this.ejecutar(
       this.api.actualizarParrafo({ ...parrafo, activo }),
       activo ? 'Párrafo activado.' : 'Párrafo desactivado: no aparecerá en el documento.',
+    );
+  }
+
+  /** Marca o quita la marca de título. Un título no se une con el anterior: si estaba unido, se separa. */
+  protected alternarTitulo(parrafo: Parrafo): void {
+    const esTitulo = !parrafo.esTitulo;
+    const separado = esTitulo && !!parrafo.unirConAnterior;
+    this.ejecutar(
+      this.api.actualizarParrafo({ ...parrafo, esTitulo, unirConAnterior: separado ? false : parrafo.unirConAnterior }),
+      esTitulo
+        ? `Marcado como título: irá centrado y en negrita, sin numeración.${separado ? ' Ya no se une con el párrafo anterior.' : ''}`
+        : 'Ya no es título.',
     );
   }
 

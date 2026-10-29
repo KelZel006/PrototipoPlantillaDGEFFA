@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { UnidadService } from '../../core/unidad.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { PlantillaConVersiones, VersionResumen } from '../../core/modelos';
@@ -20,6 +21,15 @@ import { InsigniaVigencia } from '../insignia-vigencia';
   styleUrl: './plantillas-vigentes.css',
 })
 export class PlantillasVigentes {
+  protected readonly unidades = inject(UnidadService);
+  /** Unidad de la ruta (/unidades/:unidad/vigentes). */
+  readonly unidad = input<string>();
+  protected readonly unidadMostrada = computed(() => this.unidad() ?? this.unidades.actual());
+
+  constructor() {
+    effect(() => this.unidades.seleccionar(this.unidad()));
+  }
+
   private readonly api = inject(ApiService);
   private readonly interaccion = inject(InteraccionService);
   private readonly usuario = inject(UsuarioPruebaService);
@@ -28,7 +38,10 @@ export class PlantillasVigentes {
 
   protected readonly cargando = this.recurso.isLoading;
   protected readonly error = computed(() => (this.recurso.error() ? mensajeError(this.recurso.error()) : null));
-  private readonly todas = computed(() => (this.recurso.hasValue() ? this.recurso.value() : []));
+  // Solo las plantillas de la unidad.
+  private readonly todas = computed(() =>
+    (this.recurso.hasValue() ? this.recurso.value() : []).filter((p) => p.unidadId === this.unidadMostrada()),
+  );
 
   protected readonly busqueda = signal('');
   protected readonly tipo = signal('');

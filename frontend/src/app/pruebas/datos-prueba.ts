@@ -93,3 +93,17 @@ export function parrafo(id: string, texto: string, cambios: Partial<Parrafo> = {
     ...cambios,
   };
 }
+
+/** Unidades del menú, en su orden. */
+export const UNIDADES = [
+  { id: 'exoneraciones', version: 1, nombre: 'Exoneraciones', orden: 1, activo: true },
+  { id: 'dispensas', version: 1, nombre: 'Dispensas', orden: 2, activo: true },
+  { id: 'registro-exonerados', version: 1, nombre: 'Registro Exonerados', orden: 3, activo: true },
+  { id: 'notas-credito-devoluciones', version: 1, nombre: 'Notas de Crédito y Devoluciones', orden: 4, activo: true },
+];
+
+/** Responde la consulta de unidades que hacen el menú y las pantallas de cada unidad. */
+export function responderUnidades(http: { match(url: string): { flush(cuerpo: unknown): void }[] }): void {
+  http.match('/api/unidades').forEach((p) => p.flush(UNIDADES));
+}
+

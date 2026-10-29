@@ -81,6 +81,8 @@ public static partial class ComparadorContenido
                     configuracion.Add("cambió «mostrar solo si cumple»");
                 if (viejo.UnirConAnterior != nuevo.UnirConAnterior)
                     configuracion.Add(nuevo.UnirConAnterior ? "se unió con el párrafo anterior" : "se separó del párrafo anterior");
+                if (viejo.EsTitulo != nuevo.EsTitulo)
+                    configuracion.Add(nuevo.EsTitulo ? "se marcó como título" : "dejó de ser título");
                 if (configuracion.Count > 0)
                     ajustes.Add(new Ajuste(TipoAjuste.ConfiguracionModificada, codigo, nuevo.Id, $"{nombre} {posicion}: {string.Join(", ", configuracion)}"));
             }
@@ -206,6 +208,8 @@ public static class FusionDerivada
                     parrafo.MostrarSoloSiCumple = actual.MostrarSoloSiCumple;
                 if (anterior is null || anterior.UnirConAnterior != actual.UnirConAnterior)
                     parrafo.UnirConAnterior = actual.UnirConAnterior;
+                if (anterior is null || anterior.EsTitulo != actual.EsTitulo)
+                    parrafo.EsTitulo = actual.EsTitulo;
                 if (anterior is null || !ComparadorContenido.MismoJson(anterior.Condicion, actual.Condicion))
                     parrafo.Condicion = actual.Condicion is null ? null : Clonar(actual.Condicion);
                 if (anterior is null || cambio.BloqueAnterior != cambio.BloqueActual || anterior.Orden != actual.Orden)
@@ -312,7 +316,7 @@ public static class FusionDerivada
     private static string Huella(ContenidoPlantilla contenido, ParrafoContenido p) => JsonSerializer.Serialize(new
     {
         Bloque = contenido.Bloques.First(b => b.Parrafos.Contains(p)).Codigo,
-        p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.UnirConAnterior,
+        p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.UnirConAnterior, p.EsTitulo,
     }, OpcionesJson.Predeterminadas);
 
     internal static T Clonar<T>(T valor) =>

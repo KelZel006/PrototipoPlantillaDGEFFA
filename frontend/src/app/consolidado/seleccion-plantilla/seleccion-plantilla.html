@@ -27,7 +27,29 @@
     <p class="texto-secundario">
       Para una plantilla que todavía no existe. Queda en el consolidado: no será vigente hasta que se apruebe el documento.
     </p>
+    <fieldset class="modo">
+      <legend>¿Cómo empieza la plantilla?</legend>
+      <label>
+        <input type="radio" name="modo-crear" value="Cero" [checked]="modo() === 'Cero'" (change)="modo.set('Cero')" />
+        <span><strong>Desde cero</strong> · vacía, con los bloques de su tipo de documento</span>
+      </label>
+      <label>
+        <input type="radio" name="modo-crear" value="Clonar" [checked]="modo() === 'Clonar'" (change)="modo.set('Clonar')" />
+        <span><strong>Clonar una plantilla existente</strong> · copia su texto, condiciones, tablas y diseño</span>
+      </label>
+    </fieldset>
+
+    @if (modo() === 'Clonar' && operacion()) {
+      <h3 class="subtitulo">Plantilla a clonar</h3>
+      @if (cargandoVigentes() && todasVigentes().length === 0) {
+        <p class="texto-secundario" aria-live="polite">Cargando plantillas vigentes…</p>
+      } @else {
+        <app-selector-origen [vigentes]="todasVigentes()" [unidadInicial]="unidadId()" (cambio)="origen.set($event)" />
+      }
+    }
+
     @if (operacion()) {
+      <h3 class="subtitulo">Plantilla nueva</h3>
       <app-selector-contexto />
     }
     <label class="campo-nombre">
@@ -44,8 +66,8 @@
       <p class="nota">También se agregará su {{ otro }}: van juntas en el documento y se publican juntas.</p>
     }
     <div class="acciones">
-      <button type="button" class="boton boton-primario" [disabled]="!contexto.completo() || enviando()" (click)="crear()">
-        {{ enviando() ? 'Agregando…' : 'Crear plantilla' }}
+      <button type="button" class="boton boton-primario" [disabled]="!puedeCrear()" (click)="crear()">
+        {{ enviando() ? 'Agregando…' : modo() === 'Clonar' ? 'Crear como copia' : 'Crear plantilla' }}
       </button>
     </div>
   } @else {

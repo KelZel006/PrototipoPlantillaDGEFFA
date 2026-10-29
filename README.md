@@ -20,7 +20,8 @@ verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md
 (aprobación, publicación transaccional, vigencia y consolidado de plantillas) en
 [docs/CONSOLIDADO-FASE6.md](docs/CONSOLIDADO-FASE6.md). Fase 7 (auditoría, concurrencia, permisos y cobertura de las reglas 1 a 20) en
 [docs/CONSOLIDADO-FASE7.md](docs/CONSOLIDADO-FASE7.md). Fase 8 (estrategia para la base de datos real, propuesta para aprobación) en
-[docs/CONSOLIDADO-FASE8.md](docs/CONSOLIDADO-FASE8.md).
+[docs/CONSOLIDADO-FASE8.md](docs/CONSOLIDADO-FASE8.md). Scripts de las tablas para SQL Server 2019 y PostgreSQL en
+[database/README.md](database/README.md).
 
 ## Tecnologías
 

@@ -47,11 +47,16 @@ public sealed class ConsolidadosController(
     public async Task<ActionResult<DetalleConsolidado>> Obtener(string id, CancellationToken ct) =>
         Ok(await servicio.ObtenerAsync(id, ct));
 
-    /// <summary>Crea un consolidado EN REGISTRO. No recibe datos: número, año, analista y fechas los asigna el servidor.</summary>
+    /// <summary>
+    /// Crea un consolidado EN REGISTRO de la unidad indicada (<c>{ unidadId }</c>; sin cuerpo, la primera unidad activa).
+    /// Número, año, analista y fechas los asigna el servidor.
+    /// </summary>
     [HttpPost]
-    public async Task<ActionResult<DocumentoConsolidado>> Crear(CancellationToken ct)
+    public async Task<ActionResult<DocumentoConsolidado>> Crear(
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] SolicitudCrearConsolidado? solicitud,
+        CancellationToken ct)
     {
-        var creado = await servicio.CrearAsync(ct);
+        var creado = await servicio.CrearAsync(solicitud?.UnidadId, ct);
         return CreatedAtAction(nameof(Obtener), new { id = creado.Id }, creado);
     }
 

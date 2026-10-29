@@ -3,8 +3,11 @@ using EditorResoluciones.Dominio.Modelos;
 
 namespace EditorResoluciones.Dominio.Documento;
 
-/// <summary>Párrafo incluido en el documento, con los campos ya sustituidos por sus valores.</summary>
-public sealed record ParrafoDocumento(string Id, int Posicion, NodoContenido Contenido);
+/// <summary>
+/// Párrafo incluido en el documento, con los campos ya sustituidos por sus valores. Un título ya viene centrado y en
+/// negrita.
+/// </summary>
+public sealed record ParrafoDocumento(string Id, int Posicion, NodoContenido Contenido, bool EsTitulo = false);
 
 /// <summary>Párrafo que no se incluyó y el motivo, para el resumen de la generación.</summary>
 public sealed record ParrafoOmitido(string Id, int Posicion, string Resumen, string Motivo);

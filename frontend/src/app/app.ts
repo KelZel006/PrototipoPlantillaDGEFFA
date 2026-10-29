@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Avisos } from './compartido/avisos';
 import { DialogoConfirmacion } from './compartido/dialogo-confirmacion';
 import { Rol } from './core/modelos';
+import { UnidadService } from './core/unidad.service';
 import { UsuarioPruebaService } from './core/usuario-prueba.service';
 import { EstadoDatos } from './editor/estado-datos/estado-datos';
 
@@ -20,6 +21,7 @@ const NOMBRE_ROL: Record<Rol, string> = {
 })
 export class App {
   protected readonly usuario = inject(UsuarioPruebaService);
+  protected readonly unidades = inject(UnidadService);
 
   protected nombresRoles(roles: Rol[]): string {
     return roles.map((r) => NOMBRE_ROL[r]).join(', ');

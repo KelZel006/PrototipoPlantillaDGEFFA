@@ -43,22 +43,22 @@
     "activo": true,
     "bloques": [
       {
-        "bloqueId": "CABECERA",
+        "bloqueId": "ENCABEZADO_VISTO",
         "orden": 1,
         "obligatorio": true
       },
       {
-        "bloqueId": "CONSIDERANDO",
+        "bloqueId": "FUNDAMENTO_HECHO",
         "orden": 2,
         "obligatorio": false
       },
       {
-        "bloqueId": "POR_TANTO",
+        "bloqueId": "FUNDAMENTO_LEGAL",
         "orden": 3,
         "obligatorio": false
       },
       {
-        "bloqueId": "RESUELVE",
+        "bloqueId": "DICTAMINA",
         "orden": 4,
         "obligatorio": false
       },

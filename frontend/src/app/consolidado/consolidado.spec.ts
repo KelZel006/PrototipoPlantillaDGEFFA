@@ -10,6 +10,8 @@ import { UsuarioPruebaService } from '../core/usuario-prueba.service';
 import { DetalleConsolidado } from './detalle-consolidado/detalle-consolidado';
 import { ListaConsolidados } from './lista-consolidados/lista-consolidados';
 import { SeleccionPlantilla } from './seleccion-plantilla/seleccion-plantilla';
+import { responderUnidades } from '../pruebas/datos-prueba';
+import { UnidadService } from '../core/unidad.service';
 
 registerLocaleData(localeEs);
 
@@ -23,12 +25,12 @@ const USUARIOS: Usuario[] = [
 
 const LISTA: ResumenConsolidado[] = [
   {
-    id: 'CON-2', numero: 'PLAN-20260002', anio: 2026, estado: 'EnRegistro', analistaId: 'a.perez',
+    id: 'CON-2', numero: 'PLAN-20260002', anio: 2026, estado: 'EnRegistro', unidadId: 'exoneraciones', analistaId: 'a.perez',
     fechaCreacion: '2026-10-12T15:00:00Z', fechaActualizacion: '2026-10-15T15:00:00Z',
     tiposDocumento: ['Certificación', 'Resolución'], totalPlantillas: 2,
   },
   {
-    id: 'CON-1', numero: 'PLAN-20260001', anio: 2026, estado: 'Aprobado', analistaId: 'a.perez',
+    id: 'CON-1', numero: 'PLAN-20260001', anio: 2026, estado: 'Aprobado', unidadId: 'exoneraciones', analistaId: 'a.perez',
     fechaCreacion: '2026-10-05T15:00:00Z', fechaActualizacion: '2026-10-07T15:00:00Z',
     tiposDocumento: ['Dictamen'], totalPlantillas: 1,
   },
@@ -36,7 +38,7 @@ const LISTA: ResumenConsolidado[] = [
 
 function propuesta(id: string, cambios: Partial<Propuesta> = {}): Propuesta {
   return {
-    id, version: 1, consolidadoId: 'CON-2', operacion: 'Modificar', rubroId: '1100', subRubroId: '1107',
+    id, version: 1, consolidadoId: 'CON-2', unidadId: 'exoneraciones', operacion: 'Modificar', rubroId: '1100', subRubroId: '1107',
     tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-001', nombre: `Plantilla ${id}`, plantillaId: 'PLA-001',
     retirada: false, fechaCreacion: '2026-10-12T15:00:00Z', fechaModificacion: '2026-10-12T15:00:00Z', ...cambios,
   };
@@ -44,7 +46,7 @@ function propuesta(id: string, cambios: Partial<Propuesta> = {}): Propuesta {
 
 const DETALLE: Detalle = {
   consolidado: {
-    id: 'CON-2', version: 3, numero: 'PLAN-20260002', anio: 2026, secuencia: 2, estado: 'EnRegistro', analistaId: 'a.perez',
+    id: 'CON-2', version: 3, numero: 'PLAN-20260002', anio: 2026, secuencia: 2, estado: 'EnRegistro', unidadId: 'exoneraciones', analistaId: 'a.perez',
     fechaCreacion: '2026-10-12T15:00:00Z', fechaActualizacion: '2026-10-15T15:00:00Z', numeroPresentacion: 1,
   },
   tiposIncluidos: [
@@ -101,21 +103,38 @@ describe('Documento Consolidado', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    responderUnidades(http);
+    http.verify();
+  });
 
   const comoUsuario = (id: string) => TestBed.inject(UsuarioPruebaService).seleccionar(id);
 
   describe('Pantalla A: listado', () => {
-    const abrir = async (usuario: string) => {
+    const abrir = async (usuario: string, unidad?: string, lista = LISTA) => {
       comoUsuario(usuario);
       const fixture = TestBed.createComponent(ListaConsolidados);
+      fixture.componentRef.setInput('unidad', unidad);
       fixture.detectChanges();
       await estabilizar(fixture);
       http.expectOne('/api/usuarios').flush(USUARIOS);
-      http.expectOne('/api/consolidados').flush(LISTA);
+      http.expectOne('/api/consolidados').flush(lista);
+      responderUnidades(http);
       await estabilizar(fixture);
       return fixture;
     };
+
+    it('cada unidad muestra solo sus documentos y queda abierta en el menú', async () => {
+      const otra = { ...LISTA[0], id: 'CON-7', numero: 'PLAN-20260007', unidadId: 'dispensas' };
+      const fixture = await abrir('a.perez', 'dispensas', [...LISTA, otra]);
+      const elemento: HTMLElement = fixture.nativeElement;
+
+      const filas = Array.from(elemento.querySelectorAll('tbody tr')).map((f) => f.textContent ?? '');
+      expect(filas).toHaveLength(1);
+      expect(filas[0]).toContain('PLAN-20260007');
+      expect(elemento.querySelector('.unidad-actual')?.textContent).toBe('Dispensas');
+      expect(TestBed.inject(UnidadService).actual()).toBe('dispensas');
+    });
 
     it('lista los documentos con sus tipos y filtra por estado', async () => {
       const fixture = await abrir('a.perez');
@@ -135,32 +154,35 @@ describe('Documento Consolidado', () => {
       expect(filas()[0]).toContain('PLAN-20260001');
     });
 
-    it('el analista crea un consolidado sin escribir el número', async () => {
+    it('el analista crea un documento con «+ Nueva Plantilla» y se abre la creación de la plantilla', async () => {
       const fixture = await abrir('a.perez');
       const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
 
-      botones(fixture.nativeElement, 'Nuevo consolidado')[0].click();
+      expect(fixture.nativeElement.querySelector('h2')?.textContent).toBe('Documentos Plantillas');
+      botones(fixture.nativeElement, 'Nueva Plantilla')[0].click();
       const creacion = http.expectOne('/api/consolidados');
       expect(creacion.request.method).toBe('POST');
-      expect(creacion.request.body).toBeNull();
+      // El documento se crea en la unidad abierta.
+      expect(creacion.request.body).toEqual({ unidadId: 'exoneraciones' });
       creacion.flush({ ...DETALLE.consolidado, id: 'CON-9', numero: 'PLAN-20260009' });
 
-      expect(navegar).toHaveBeenCalledWith(['/consolidados', 'CON-9']);
+      expect(navegar).toHaveBeenCalledWith(['/consolidados', 'CON-9'], { queryParams: { agregar: 'crear' } });
     });
 
     it('el Oficial Jurídico no crea consolidados', async () => {
       const fixture = await abrir('j.ramos');
 
-      expect(botones(fixture.nativeElement, 'Nuevo consolidado')).toHaveLength(0);
+      expect(botones(fixture.nativeElement, 'Nueva Plantilla')).toHaveLength(0);
       expect(fixture.nativeElement.textContent).toContain('pendientes de revisión jurídica');
     });
   });
 
   describe('Pantalla B: registro del consolidado', () => {
-    const abrir = async (usuario: string, detalle: Detalle = DETALLE) => {
+    const abrir = async (usuario: string, detalle: Detalle = DETALLE, agregar?: string) => {
       comoUsuario(usuario);
       const fixture = TestBed.createComponent(DetalleConsolidado);
       fixture.componentRef.setInput('id', 'CON-2');
+      fixture.componentRef.setInput('agregar', agregar);
       fixture.detectChanges();
       await estabilizar(fixture);
       http.expectOne('/api/usuarios').flush(USUARIOS);
@@ -176,6 +198,35 @@ describe('Documento Consolidado', () => {
       await estabilizar(fixture);
       return fixture;
     };
+
+    it('desde «+ Nueva Plantilla» abre la creación de la plantilla una sola vez', async () => {
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
+      const fixture = await abrir('a.perez', DETALLE, 'crear');
+      for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/tipos-documento']) {
+        http.match(url).forEach((p) => p.flush([]));
+      }
+      await estabilizar(fixture);
+
+      expect(fixture.nativeElement.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+      expect(fixture.nativeElement.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('CREAR');
+      expect(navegar).toHaveBeenCalledWith([], { queryParams: { agregar: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
+
+    it('al Oficial Jurídico se le avisa que se modificó el campo Operador', async () => {
+      const fixture = await abrir('j.ramos', {
+        ...DETALLE,
+        consolidado: { ...DETALLE.consolidado, estado: 'Verificado' },
+        alertas: [
+          { propuestaId: 'PRO-1', plantilla: 'Resolución de prueba', campoId: 'operador', campo: 'Operador',
+            ubicacion: 'CONSIDERANDO 1', detalle: 'cambió el texto alrededor de {Operador}' },
+        ],
+      });
+      const aviso = fixture.nativeElement.querySelector('.aviso-campos') as HTMLElement;
+
+      expect(aviso.getAttribute('role')).toBe('alert');
+      expect(aviso.textContent).toContain('Se modificó el campo Operador');
+      expect(aviso.textContent).toContain('Resolución de prueba · CONSIDERANDO 1: cambió el texto alrededor de {Operador}');
+    });
 
     it('muestra cada tipo una vez, sus ajustes, la devolución y las acciones del analista', async () => {
       const fixture = await abrir('a.perez');
@@ -272,6 +323,97 @@ describe('Documento Consolidado', () => {
       http.expectOne('/api/plantillas-vigentes').flush([]);
 
       expect(agregadas[0].map((p) => p.id)).toEqual(['PRO-1', 'PRO-2']);
+    });
+    describe('CREAR desde cero o clonando', () => {
+      const VIGENTE = {
+        plantillaId: 'PLA-001', nombre: 'Resolución vigente', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
+        tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', versionId: 'VER-1', numeroVersion: 3, fechaPublicacion: '2026-10-01T00:00:00Z',
+      };
+      const responder = () => {
+        http.match('/api/tipos-documento').forEach((p) => p.flush([{ id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true }]));
+        http.match('/api/plantillas-vigentes').forEach((p) => p.flush([VIGENTE]));
+        http.match('/api/rubros').forEach((p) => p.flush([{ id: '1100', version: 1, nombre: 'Rubro 1100', activo: true }]));
+        http.match('/api/clases-documento').forEach((p) =>
+          p.flush([
+            { id: 'CDO-001', version: 1, nombre: 'Original', activo: true },
+            { id: 'CDO-002', version: 1, nombre: 'Modificación', activo: true },
+          ]),
+        );
+        http.match((r) => r.url === '/api/subrubros').forEach((p) =>
+          p.flush([{ id: '1107', version: 1, rubroId: '1100', nombre: 'Sub rubro 1107', activo: true }]),
+        );
+      };
+      const abrirCrear = async () => {
+        const fixture = TestBed.createComponent(SeleccionPlantilla);
+        fixture.componentRef.setInput('consolidadoId', 'CON-2');
+        fixture.componentRef.setInput('operacion', 'Crear');
+        fixture.detectChanges();
+        await estabilizar(fixture);
+        responder();
+        await estabilizar(fixture);
+        return fixture;
+      };
+      const elegir = async (fixture: ComponentFixture<SeleccionPlantilla>, id: string, valor: string) => {
+        const lista = fixture.nativeElement.querySelector(`#${id}`) as HTMLSelectElement;
+        lista.value = valor;
+        lista.dispatchEvent(new Event('change'));
+        await estabilizar(fixture);
+        responder();
+        await estabilizar(fixture);
+      };
+      const combinacion = async (fixture: ComponentFixture<SeleccionPlantilla>, prefijo: string, clase: string) => {
+        await elegir(fixture, `${prefijo}-rubro`, '1100');
+        await elegir(fixture, `${prefijo}-subrubro`, '1107');
+        await elegir(fixture, `${prefijo}-tipo`, 'TDO-001');
+        await elegir(fixture, `${prefijo}-documento`, clase);
+      };
+
+      it('desde cero envía la combinación sin plantilla de origen', async () => {
+        const fixture = await abrirCrear();
+        expect(fixture.nativeElement.querySelector('app-selector-origen')).toBeNull();
+
+        await combinacion(fixture, 'lista', 'CDO-002');
+        botones(fixture.nativeElement, 'Crear plantilla')[0].click();
+
+        const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
+        expect(crear.request.body).toEqual({
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', nombre: null, plantillaOrigenId: null,
+        });
+        crear.flush([propuesta('PRO-9')]);
+        await estabilizar(fixture);
+        responder();
+      });
+
+      it('al clonar elige la plantilla de origen con las mismas cuatro listas', async () => {
+        const fixture = await abrirCrear();
+        const elemento: HTMLElement = fixture.nativeElement;
+        elemento.querySelector<HTMLInputElement>('input[value="Clonar"]')!.click();
+        await estabilizar(fixture);
+        responder();
+        await estabilizar(fixture);
+
+        expect(elemento.querySelector('app-selector-origen')).not.toBeNull();
+        await combinacion(fixture, 'lista', 'CDO-002');
+        // Sin plantilla de origen todavía no se puede crear.
+        expect(botones(elemento, 'Crear como copia')[0].disabled).toBe(true);
+
+        await combinacion(fixture, 'origen', 'CDO-002');
+        expect(elemento.textContent).toContain('No hay una plantilla vigente con esa combinación');
+        expect(botones(elemento, 'Crear como copia')[0].disabled).toBe(true);
+
+        await elegir(fixture, 'origen-documento', 'CDO-001');
+        expect(elemento.textContent).toContain('Se copiará Resolución vigente');
+        expect(elemento.textContent).toContain('versión vigente 3');
+        botones(elemento, 'Crear como copia')[0].click();
+
+        const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
+        expect(crear.request.body).toEqual({
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', nombre: null, plantillaOrigenId: 'PLA-001',
+        });
+        crear.flush([propuesta('PRO-9')]);
+        await estabilizar(fixture);
+        responder();
+      });
     });
   });
 });

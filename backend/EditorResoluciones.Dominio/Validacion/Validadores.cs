@@ -86,6 +86,17 @@ public sealed partial class ValidadorBloqueDocumental(IRepositorio<TipoDocumento
     }
 }
 
+public sealed class ValidadorUnidad(IRepositorio<Plantilla> plantillas, IRepositorio<DocumentoConsolidado> consolidados)
+    : ValidadorEntidad<Unidad>
+{
+    public override async Task ValidarEliminacionAsync(Unidad unidad, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        if ((await plantillas.ListarAsync(ct)).Any(p => p.UnidadId == unidad.Id) ||
+            (await consolidados.ListarAsync(ct)).Any(c => c.UnidadId == unidad.Id))
+            resultado.Agregar("id", "No se puede eliminar la unidad porque tiene plantillas o documentos. Desactívela.");
+    }
+}
+
 public sealed class ValidadorClaseDocumento(IRepositorio<Plantilla> plantillas) : ValidadorEntidad<ClaseDocumento>
 {
     public override async Task ValidarEliminacionAsync(ClaseDocumento clase, ResultadoValidacion resultado, CancellationToken ct)
@@ -96,6 +107,7 @@ public sealed class ValidadorClaseDocumento(IRepositorio<Plantilla> plantillas) 
 }
 
 public sealed class ValidadorPlantilla(
+    IRepositorio<Unidad> unidades,
     IRepositorio<Rubro> rubros,
     IRepositorio<SubRubro> subRubros,
     IRepositorio<TipoDocumento> tiposDocumento,
@@ -112,6 +124,9 @@ public sealed class ValidadorPlantilla(
             resultado.Agregar("alineacionLogo", "La alineación del logo no es válida.");
         if (!string.IsNullOrEmpty(plantilla.LogoId) && await archivos.ObtenerAsync(plantilla.LogoId, ct) is null)
             resultado.Agregar("logoId", "El logo indicado no existe. Use la opción de cargar logo.");
+
+        if (await unidades.ObtenerAsync(plantilla.UnidadId, ct) is null)
+            resultado.Agregar("unidadId", $"La unidad '{plantilla.UnidadId}' no existe.");
 
         if (await rubros.ObtenerAsync(plantilla.RubroId, ct) is null)
             resultado.Agregar("rubroId", $"El rubro '{plantilla.RubroId}' no existe.");
@@ -130,12 +145,13 @@ public sealed class ValidadorPlantilla(
 
         var repetida = (await plantillas.ListarAsync(ct)).Any(p =>
             p.Id != plantilla.Id &&
+            p.UnidadId == plantilla.UnidadId &&
             p.RubroId == plantilla.RubroId &&
             p.SubRubroId == plantilla.SubRubroId &&
             p.TipoDocumentoId == plantilla.TipoDocumentoId &&
             p.ClaseDocumentoId == plantilla.ClaseDocumentoId);
         if (repetida)
-            resultado.Agregar("claseDocumentoId", "Ya existe una plantilla para esta combinación de Rubro, Sub Rubro, Tipo Documento y Documento.");
+            resultado.Agregar("claseDocumentoId", "Ya existe una plantilla de esta unidad para esta combinación de Rubro, Sub Rubro, Tipo Documento y Documento.");
     }
 
     public override async Task ValidarEliminacionAsync(Plantilla plantilla, ResultadoValidacion resultado, CancellationToken ct)

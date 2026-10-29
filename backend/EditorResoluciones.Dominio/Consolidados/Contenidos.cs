@@ -56,6 +56,7 @@ public static class ConstructorContenido
                     Activo = p.Activo,
                     MostrarSoloSiCumple = p.MostrarSoloSiCumple,
                     UnirConAnterior = p.UnirConAnterior,
+                    EsTitulo = p.EsTitulo,
                     Condicion = p.Condicion,
                     CamposUsados = [.. p.CamposUsados],
                     OrigenParrafoId = p.OrigenParrafoId,
@@ -108,11 +109,82 @@ public static class ConstructorContenido
                 Activo = p.Activo,
                 MostrarSoloSiCumple = p.MostrarSoloSiCumple,
                 UnirConAnterior = p.UnirConAnterior,
+                EsTitulo = p.EsTitulo,
                 Condicion = p.Condicion,
                 CamposUsados = p.CamposUsados,
             }).ToList()))
             .ToList();
         return (plantilla, bloques);
+    }
+
+    /// <summary>
+    /// CREAR clonando otra plantilla: su diseño y sus párrafos, con identificadores nuevos y sin vínculo con el origen.
+    /// Los bloques quedan en el orden del tipo documental de la nueva plantilla; un bloque del origen que ese tipo no
+    /// tiene se conserva al final, para no perder texto.
+    /// </summary>
+    public static ContenidoPlantilla CopiaDe(ContenidoPlantilla origen, IReadOnlyList<BloqueConfigurado>? configurados, Func<string> nuevoId)
+    {
+        var copia = FusionDerivada.Clonar(origen);
+        foreach (var parrafo in copia.Bloques.SelectMany(b => b.Parrafos))
+        {
+            parrafo.Id = nuevoId();
+            parrafo.Version = 1;
+            parrafo.OrigenParrafoId = null;
+        }
+
+        var resultado = Vacio(configurados);
+        resultado.Diseno = copia.Diseno;
+        foreach (var bloque in copia.Bloques)
+        {
+            if (resultado.Bloques.FirstOrDefault(b => b.Codigo == bloque.Codigo) is { } destino)
+            {
+                destino.Parrafos = bloque.Parrafos;
+                destino.Incluido = bloque.Incluido;
+            }
+            else if (bloque.Parrafos.Count > 0)
+            {
+                resultado.Bloques.Add(bloque);
+            }
+        }
+        AdaptarABloques(resultado, configurados ?? CatalogoBloques.Predeterminados);
+        return resultado;
+    }
+
+    /// <summary>
+    /// Lleva el contenido de los bloques que el tipo documental ya no usa a los bloques que los reemplazan
+    /// (<see cref="BloqueDocumental.Reemplaza"/>). Los párrafos conservan su identificador y su orden, y quedan después
+    /// de los que ya tenga el bloque nuevo. Devuelve cuántos bloques se adaptaron.
+    /// </summary>
+    public static int AdaptarABloques(ContenidoPlantilla contenido, IReadOnlyList<BloqueConfigurado> configurados)
+    {
+        var adaptados = 0;
+        foreach (var destino in configurados)
+        {
+            foreach (var codigo in destino.Reemplaza ?? [])
+            {
+                // Si el tipo todavía usa el bloque anterior, no se toca.
+                if (configurados.Any(c => c.Codigo == codigo) || contenido.Bloques.FirstOrDefault(b => b.Codigo == codigo) is not { } anterior)
+                    continue;
+                if (contenido.Bloques.FirstOrDefault(b => b.Codigo == destino.Codigo) is not { } nuevo)
+                {
+                    nuevo = new BloqueContenido { Codigo = destino.Codigo };
+                    contenido.Bloques.Add(nuevo);
+                }
+                var orden = nuevo.Parrafos.Select(p => p.Orden).DefaultIfEmpty(0).Max();
+                foreach (var parrafo in anterior.Parrafos.OrderBy(p => p.Orden))
+                {
+                    parrafo.Orden = ++orden;
+                    nuevo.Parrafos.Add(parrafo);
+                }
+                contenido.Bloques.Remove(anterior);
+                adaptados++;
+            }
+        }
+        // Los bloques quedan en el orden del tipo documental; los que no usa, al final.
+        contenido.Bloques = contenido.Bloques
+            .OrderBy(b => configurados.FirstOrDefault(c => c.Codigo == b.Codigo)?.Orden ?? int.MaxValue)
+            .ToList();
+        return adaptados;
     }
 
     /// <summary>

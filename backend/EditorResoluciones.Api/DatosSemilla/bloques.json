@@ -107,5 +107,57 @@
     "contextoCampos": "firmas",
     "descripcion": "Sellos y anotaciones al pie de las firmas.",
     "activo": true
+  },
+  {
+    "id": "ENCABEZADO_VISTO",
+    "version": 1,
+    "nombre": "Encabezado / Visto",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "cabecera",
+    "descripcion": "Encabezado del dictamen y visto del expediente.",
+    "activo": true,
+    "reemplaza": [
+      "CABECERA"
+    ]
+  },
+  {
+    "id": "FUNDAMENTO_HECHO",
+    "version": 1,
+    "nombre": "Fundamento de Hecho / Bases Legales",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "descripcion": "Hechos del expediente y bases legales que los sustentan.",
+    "activo": true,
+    "reemplaza": [
+      "CONSIDERANDO"
+    ]
+  },
+  {
+    "id": "FUNDAMENTO_LEGAL",
+    "version": 1,
+    "nombre": "Fundamento Legal",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "considerando",
+    "descripcion": "Normas en que se fundamenta el dictamen.",
+    "activo": true,
+    "reemplaza": [
+      "POR_TANTO"
+    ]
+  },
+  {
+    "id": "DICTAMINA",
+    "version": 1,
+    "nombre": "Dictamina",
+    "numeracion": "Ninguna",
+    "esFirmas": false,
+    "contextoCampos": "resuelve",
+    "descripcion": "Conclusiones del dictamen, redactadas por el analista.",
+    "activo": true,
+    "reemplaza": [
+      "RESUELVE"
+    ]
   }
 ]

@@ -22,11 +22,11 @@ describe('ApiService', () => {
     peticion.flush([]);
   });
 
-  it('crea consolidados con POST sin datos: el número lo asigna el servidor', () => {
-    api.crearConsolidado().subscribe();
+  it('crea consolidados con POST indicando solo la unidad: el número lo asigna el servidor', () => {
+    api.crearConsolidado('dispensas').subscribe();
     const peticion = http.expectOne('/api/consolidados');
     expect(peticion.request.method).toBe('POST');
-    expect(peticion.request.body).toBeNull();
+    expect(peticion.request.body).toEqual({ unidadId: 'dispensas' });
     peticion.flush({});
   });
 

@@ -7,7 +7,12 @@ using EditorResoluciones.Dominio.Validacion;
 
 namespace EditorResoluciones.Dominio.Consolidados;
 
-public sealed record SolicitudCrearPlantilla(string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string? Nombre);
+/// <summary>
+/// CREAR una plantilla nueva. Con <c>plantillaOrigenId</c>, empieza como copia de la versión vigente de esa plantilla
+/// (clonar); sin él, empieza vacía.
+/// </summary>
+public sealed record SolicitudCrearPlantilla(
+    string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string? Nombre, string? PlantillaOrigenId = null);
 
 public sealed record SolicitudModificarPlantilla(string PlantillaId);
 
@@ -31,12 +36,14 @@ public sealed record ParrafoPropuesta(
     bool MostrarSoloSiCumple,
     GrupoCondiciones? Condicion,
     List<string> CamposUsados,
-    bool UnirConAnterior = false);
+    bool UnirConAnterior = false,
+    bool EsTitulo = false);
 
 /// <summary>
 /// Datos de un párrafo que envía el editor al crear o actualizar. La versión es la que el editor tiene cargada (se
 /// ignora al crear); el identificador va en la ruta. Si no se indica <c>activo</c>, el párrafo queda activo.
-/// <c>unirConAnterior</c> indica que el párrafo continúa el anterior del bloque.
+/// <c>unirConAnterior</c> indica que el párrafo continúa el anterior del bloque; <c>esTitulo</c>, que es un título
+/// (centrado y en negrita). Un título no se une con el anterior.
 /// </summary>
 public sealed record DatosParrafo(
     string Bloque,
@@ -46,7 +53,8 @@ public sealed record DatosParrafo(
     GrupoCondiciones? Condicion,
     int Version,
     bool Activo = true,
-    bool UnirConAnterior = false);
+    bool UnirConAnterior = false,
+    bool EsTitulo = false);
 
 /// <summary>Datos de diseño que el editor puede cambiar (el logo se carga aparte).</summary>
 public sealed record DatosDiseno(AlineacionLogo AlineacionLogo, string? PiePagina, double EspacioFirmasCm);
@@ -80,6 +88,7 @@ public sealed record PlantillaEdicion(
 public sealed record PlantillaVigente(
     string PlantillaId,
     string Nombre,
+    string UnidadId,
     string RubroId,
     string SubRubroId,
     string TipoDocumentoId,
@@ -139,23 +148,37 @@ public sealed class ServicioPropuestas(
         return await unidad.EjecutarAsync(async tx =>
         {
             var consolidado = await EditableAsync(tx, consolidadoId, analista, ct);
-            var identidad = new Identidad(solicitud.RubroId!, solicitud.SubRubroId!, solicitud.TipoDocumentoId!, solicitud.ClaseDocumentoId!);
+            var identidad = new Identidad(consolidado.UnidadId, solicitud.RubroId!, solicitud.SubRubroId!, solicitud.TipoDocumentoId!, solicitud.ClaseDocumentoId!);
             await ExigirIdentidadLibreAsync(tx, identidad, ct);
+
+            // Clonar: la nueva plantilla parte del contenido vigente de otra, que no cambia.
+            var contenido = ConstructorContenido.Vacio(bloquesTipo);
+            string? nota = null;
+            if (!string.IsNullOrWhiteSpace(solicitud.PlantillaOrigenId))
+            {
+                var origen = (await tx.ListarAsync<Plantilla>(ct)).FirstOrDefault(p => p.Id == solicitud.PlantillaOrigenId)
+                    ?? throw new EntidadNoEncontradaException(plantillas.Coleccion, solicitud.PlantillaOrigenId);
+                var vigente = (await tx.ListarAsync<VersionPlantilla>(ct)).FirstOrDefault(v => v.PlantillaId == origen.Id && v.Vigencia == Vigencia.Vigente)
+                    ?? throw new ConflictoException($"«{origen.Nombre}» no tiene una versión vigente para clonar.");
+                contenido = ConstructorContenido.CopiaDe(vigente.Contenido, bloquesTipo, NuevoIdParrafo);
+                nota = $"copia de «{origen.Nombre}», versión {vigente.NumeroVersion}";
+            }
 
             var principal = await tx.CrearAsync(new Propuesta
             {
                 ConsolidadoId = consolidado.Id,
                 Operacion = OperacionPropuesta.Crear,
+                UnidadId = identidad.UnidadId,
                 RubroId = identidad.RubroId,
                 SubRubroId = identidad.SubRubroId,
                 TipoDocumentoId = identidad.TipoDocumentoId,
                 ClaseDocumentoId = identidad.ClaseDocumentoId,
                 Nombre = string.IsNullOrWhiteSpace(solicitud.Nombre) ? NombrePredeterminado(tipo!, clase!, subRubro!) : solicitud.Nombre.Trim(),
-                ContenidoPropuesto = ConstructorContenido.Vacio(bloquesTipo),
+                ContenidoPropuesto = contenido,
                 FechaCreacion = ahora,
                 FechaModificacion = ahora,
             }, ct);
-            return await DespuesDeAgregarAsync(tx, consolidado, principal, catalogo, analista, ahora, ct);
+            return await DespuesDeAgregarAsync(tx, consolidado, principal, catalogo, analista, ahora, ct, nota);
         }, ct);
     }
 
@@ -291,7 +314,7 @@ public sealed class ServicioPropuestas(
             {
                 var v = vigentes[p.Id];
                 var bloqueo = abiertas.FirstOrDefault(a => a.Propuesta.PlantillaId == p.Id);
-                return new PlantillaVigente(p.Id, p.Nombre, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
+                return new PlantillaVigente(p.Id, p.Nombre, p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
                     nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId), p.ClaseDocumentoId, v.Id, v.NumeroVersion,
                     v.FechaPublicacion, bloqueo.Consolidado?.Numero);
             })
@@ -360,10 +383,11 @@ public sealed class ServicioPropuestas(
 
     // ---------- Internos ----------
 
-    private sealed record Identidad(string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId)
+    /// <summary>Identidad funcional: la unidad y la combinación de Rubro, Sub Rubro, Tipo Documento y Documento.</summary>
+    private sealed record Identidad(string UnidadId, string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId)
     {
-        public static Identidad De(Plantilla p) => new(p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
-        public static Identidad De(Propuesta p) => new(p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
+        public static Identidad De(Plantilla p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
+        public static Identidad De(Propuesta p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
     }
 
     private sealed record Catalogo(
@@ -421,6 +445,8 @@ public sealed class ServicioPropuestas(
 
     private async Task<Propuesta> CrearModificacionAsync(ITransaccion tx, DocumentoConsolidado consolidado, Plantilla plantilla, DateTimeOffset ahora, CancellationToken ct)
     {
+        if (plantilla.UnidadId != consolidado.UnidadId)
+            throw new ConflictoException($"«{plantilla.Nombre}» es de otra unidad: un documento solo contiene plantillas de su unidad.");
         if ((await AbiertasAsync(tx, ct)).FirstOrDefault(a => a.Propuesta.PlantillaId == plantilla.Id) is { Consolidado: { } otro })
         {
             throw new ConflictoException(otro.Id == consolidado.Id
@@ -433,10 +459,13 @@ public sealed class ServicioPropuestas(
         var contenido = FusionDerivada.Clonar(vigente.Contenido);
         foreach (var parrafo in contenido.Bloques.SelectMany(b => b.Parrafos))
             parrafo.Version = 1;
+        // Si el formato del tipo documental cambió (por ejemplo, el Dictamen), el texto pasa a sus bloques nuevos.
+        ConstructorContenido.AdaptarABloques(contenido, await catalogoBloques.DeTipoAsync(plantilla.TipoDocumentoId, ct));
         return await tx.CrearAsync(new Propuesta
         {
             ConsolidadoId = consolidado.Id,
             Operacion = OperacionPropuesta.Modificar,
+            UnidadId = plantilla.UnidadId,
             RubroId = plantilla.RubroId,
             SubRubroId = plantilla.SubRubroId,
             TipoDocumentoId = plantilla.TipoDocumentoId,
@@ -453,7 +482,8 @@ public sealed class ServicioPropuestas(
 
     /// <summary>
     /// Después de agregar una propuesta: la liga con su Resolución si es una Certificación, crea o liga la Certificación
-    /// si es una Resolución (D3), y deja la bitácora y el historial.
+    /// si es una Resolución (D3), y deja la bitácora y el historial. La nota (por ejemplo, de qué plantilla se clonó) va
+    /// en la bitácora junto a la propuesta principal.
     /// </summary>
     private async Task<IReadOnlyList<Propuesta>> DespuesDeAgregarAsync(
         ITransaccion tx,
@@ -462,7 +492,8 @@ public sealed class ServicioPropuestas(
         Catalogo catalogo,
         Usuario analista,
         DateTimeOffset ahora,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? nota = null)
     {
         var agregadas = new List<Propuesta> { principal };
         var delConsolidado = (await tx.ListarAsync<Propuesta>(ct)).Where(p => p.ConsolidadoId == consolidado.Id && !p.Retirada).ToList();
@@ -479,7 +510,7 @@ public sealed class ServicioPropuestas(
         // Es una Resolución: su Certificación va con ella.
         foreach (var tipoCopia in catalogo.Tipos.Values.Where(t => t.CopiaDeTipoDocumentoId == principal.TipoDocumentoId && t.Activo))
         {
-            var identidad = new Identidad(principal.RubroId, principal.SubRubroId, tipoCopia.Id, principal.ClaseDocumentoId);
+            var identidad = new Identidad(principal.UnidadId, principal.RubroId, principal.SubRubroId, tipoCopia.Id, principal.ClaseDocumentoId);
             if (delConsolidado.FirstOrDefault(p => p.Id != principal.Id && Identidad.De(p) == identidad) is { } yaIncluida)
             {
                 yaIncluida.DerivadaDePropuestaId = principal.Id;
@@ -500,6 +531,7 @@ public sealed class ServicioPropuestas(
                 {
                     ConsolidadoId = consolidado.Id,
                     Operacion = OperacionPropuesta.Crear,
+                    UnidadId = identidad.UnidadId,
                     RubroId = identidad.RubroId,
                     SubRubroId = identidad.SubRubroId,
                     TipoDocumentoId = identidad.TipoDocumentoId,
@@ -522,7 +554,9 @@ public sealed class ServicioPropuestas(
             Usuario = analista.Id,
             Fecha = ahora,
             Detalle = string.Join("; ", agregadas.Select(p =>
-                $"{(p.Operacion == OperacionPropuesta.Crear ? "Crear" : "Modificar")}: {p.Nombre}{(p.DerivadaDePropuestaId is null ? "" : " (acompaña a la Resolución)")}")),
+                $"{(p.Operacion == OperacionPropuesta.Crear ? "Crear" : "Modificar")}: {p.Nombre}" +
+                (p == principal && nota is not null ? $" ({nota})" : "") +
+                (p.DerivadaDePropuestaId is null ? "" : " (acompaña a la Resolución)"))),
         }, ct);
         foreach (var p in agregadas)
         {
@@ -533,7 +567,7 @@ public sealed class ServicioPropuestas(
     }
 
     private static bool MismaCombinacion(Propuesta a, Propuesta b) =>
-        a.RubroId == b.RubroId && a.SubRubroId == b.SubRubroId && a.ClaseDocumentoId == b.ClaseDocumentoId;
+        a.UnidadId == b.UnidadId && a.RubroId == b.RubroId && a.SubRubroId == b.SubRubroId && a.ClaseDocumentoId == b.ClaseDocumentoId;
 
     private static async Task TocarAsync(ITransaccion tx, DocumentoConsolidado consolidado, DateTimeOffset ahora, CancellationToken ct)
     {
@@ -567,7 +601,7 @@ public sealed class ServicioPropuestas(
             .ToList();
 
     private static ParrafoPropuesta Dto(string propuestaId, string bloque, ParrafoContenido p) =>
-        new(p.Id, p.Version, propuestaId, bloque, p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.CamposUsados, p.UnirConAnterior);
+        new(p.Id, p.Version, propuestaId, bloque, p.Orden, p.Contenido, p.Activo, p.MostrarSoloSiCumple, p.Condicion, p.CamposUsados, p.UnirConAnterior, p.EsTitulo);
 
     private static string NuevoIdParrafo() => $"PAR-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}";
 
@@ -592,6 +626,8 @@ public sealed class ServicioPropuestas(
         }
         var catalogo = (await campos.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal);
         ContenidoEditor.Validar(datos.Contenido!, bloque!.ContextoCampos, catalogo, resultado);
+        if (datos.EsTitulo && datos.UnirConAnterior)
+            resultado.Agregar("esTitulo", "Un título no se puede unir con el párrafo anterior: quite una de las dos marcas.");
         var condicion = datos.Condicion is { Reglas.Count: 0, Grupos.Count: 0 } ? null : datos.Condicion;
         if (condicion is not null)
             ReglasCondiciones.Validar(condicion, OrigenesDatos.Solicitudes, catalogo, resultado);
@@ -603,6 +639,7 @@ public sealed class ServicioPropuestas(
             Activo = datos.Activo,
             MostrarSoloSiCumple = datos.MostrarSoloSiCumple,
             UnirConAnterior = datos.UnirConAnterior,
+            EsTitulo = datos.EsTitulo,
             Condicion = condicion,
             CamposUsados = ContenidoEditor.CamposUsados(datos.Contenido!),
         };
@@ -688,6 +725,7 @@ public sealed class ServicioPropuestas(
             parrafo.Activo = datos.Activo;
             parrafo.MostrarSoloSiCumple = datos.MostrarSoloSiCumple;
             parrafo.UnirConAnterior = datos.UnirConAnterior;
+            parrafo.EsTitulo = datos.EsTitulo;
             parrafo.Condicion = datos.Condicion;
             parrafo.CamposUsados = datos.CamposUsados;
             var destino = Bloque(codigo);

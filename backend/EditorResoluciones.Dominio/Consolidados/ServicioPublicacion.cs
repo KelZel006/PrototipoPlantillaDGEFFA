@@ -27,6 +27,7 @@ public sealed record VersionResumen(
 public sealed record PlantillaConVersiones(
     string PlantillaId,
     string Nombre,
+    string UnidadId,
     string RubroId,
     string SubRubroId,
     string TipoDocumentoId,
@@ -123,13 +124,15 @@ public sealed class ServicioPublicacion(
             }
             else
             {
-                var repetida = todasPlantillas.FirstOrDefault(p => p.RubroId == propuesta.RubroId && p.SubRubroId == propuesta.SubRubroId &&
+                var repetida = todasPlantillas.FirstOrDefault(p => p.UnidadId == propuesta.UnidadId &&
+                    p.RubroId == propuesta.RubroId && p.SubRubroId == propuesta.SubRubroId &&
                     p.TipoDocumentoId == propuesta.TipoDocumentoId && p.ClaseDocumentoId == propuesta.ClaseDocumentoId);
                 if (repetida is not null)
                     throw new ConflictoException($"Ya existe una plantilla vigente con la identidad de «{propuesta.Nombre}» ({repetida.Id}). No se publicó nada.");
                 plantilla = await tx.CrearAsync(new Plantilla
                 {
                     Nombre = propuesta.Nombre,
+                    UnidadId = propuesta.UnidadId,
                     RubroId = propuesta.RubroId,
                     SubRubroId = propuesta.SubRubroId,
                     TipoDocumentoId = propuesta.TipoDocumentoId,
@@ -245,7 +248,7 @@ public sealed class ServicioPublicacion(
         var porPlantilla = (await versiones.ListarAsync(ct)).ToLookup(v => v.PlantillaId, StringComparer.Ordinal);
         return (await plantillas.ListarAsync(ct))
             .Where(p => porPlantilla[p.Id].Any())
-            .Select(p => new PlantillaConVersiones(p.Id, p.Nombre, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
+            .Select(p => new PlantillaConVersiones(p.Id, p.Nombre, p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
                 nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId), p.ClaseDocumentoId,
                 porPlantilla[p.Id].OrderByDescending(v => v.NumeroVersion).Select(v => new VersionResumen(
                     v.Id, v.NumeroVersion, v.Vigencia, v.CargaInicial, v.PublicadaPor, v.FechaPublicacion, v.InicioVigencia, v.FinVigencia,

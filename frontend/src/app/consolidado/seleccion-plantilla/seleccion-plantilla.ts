@@ -1,18 +1,23 @@
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../core/api.service';
 import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
-import { Propuesta } from '../../core/modelos';
+import { PlantillaVigente, Propuesta } from '../../core/modelos';
 import { SelectorContexto } from '../../editor/selector-contexto/selector-contexto';
+import { SelectorOrigen } from './selector-origen';
 
 export type OperacionSeleccion = 'Crear' | 'Modificar';
+
+/** CREAR desde cero (vacía) o clonando una plantilla vigente. */
+export type ModoCrear = 'Cero' | 'Clonar';
 
 /**
  * Pantalla C: agregar una plantilla al consolidado.
  * <ul>
- * <li>CREAR: Rubro, Sub Rubro, Tipo Documento y Documento de una plantilla que todavía no existe, y su nombre.</li>
+ * <li>CREAR: Rubro, Sub Rubro, Tipo Documento y Documento de una plantilla que todavía no existe, y su nombre. Puede
+ * empezar vacía o como copia de una plantilla vigente, elegida con las mismas cuatro listas.</li>
  * <li>MODIFICAR: el catálogo de plantillas vigentes, con su tipo, código y versión. Las que ya están en otro documento
  * abierto aparecen deshabilitadas (D4).</li>
  * </ul>
@@ -20,7 +25,7 @@ export type OperacionSeleccion = 'Crear' | 'Modificar';
  */
 @Component({
   selector: 'app-seleccion-plantilla',
-  imports: [DatePipe, SelectorContexto],
+  imports: [DatePipe, SelectorContexto, SelectorOrigen],
   templateUrl: './seleccion-plantilla.html',
   styleUrl: './seleccion-plantilla.css',
 })
@@ -29,6 +34,8 @@ export class SeleccionPlantilla {
   protected readonly contexto = inject(ContextoService);
 
   readonly consolidadoId = input.required<string>();
+  /** Unidad del documento: MODIFICAR solo lista las plantillas de esa unidad. */
+  readonly unidadId = input<string>('');
   /** Operación con que se abre el diálogo; null lo cierra. */
   readonly operacion = input<OperacionSeleccion | null>(null);
   readonly cerrar = output<void>();
@@ -38,6 +45,9 @@ export class SeleccionPlantilla {
 
   protected readonly pestana = signal<OperacionSeleccion>('Crear');
   protected readonly nombre = signal('');
+  protected readonly modo = signal<ModoCrear>('Cero');
+  /** Plantilla vigente elegida para clonar. */
+  protected readonly origen = signal<PlantillaVigente | null>(null);
   protected readonly busqueda = signal('');
   protected readonly enviando = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -49,9 +59,16 @@ export class SeleccionPlantilla {
   });
 
   protected readonly cargandoVigentes = this.vigentesRecurso.isLoading;
+  protected readonly todasVigentes = computed(() => (this.vigentesRecurso.hasValue() ? this.vigentesRecurso.value() : []));
+  /** Se puede crear: la combinación nueva está completa y, si se clona, ya se eligió la plantilla de origen. */
+  protected readonly puedeCrear = computed(
+    () => this.contexto.completo() && !this.enviando() && (this.modo() === 'Cero' || !!this.origen()),
+  );
   protected readonly vigentes = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
-    const lista = this.vigentesRecurso.hasValue() ? this.vigentesRecurso.value() : [];
+    const lista = (this.vigentesRecurso.hasValue() ? this.vigentesRecurso.value() : []).filter(
+      (p) => !this.unidadId() || p.unidadId === this.unidadId(),
+    );
     return texto
       ? lista.filter((p) =>
           [p.nombre, p.plantillaId, p.tipoDocumento, p.rubroId, p.subRubroId].some((v) => v.toLowerCase().includes(texto)),
@@ -76,15 +93,8 @@ export class SeleccionPlantilla {
       const operacion = this.operacion();
       const elemento = this.dialogo().nativeElement;
       if (operacion) {
-        this.pestana.set(operacion);
-        this.error.set(null);
-        this.nombre.set('');
-        this.busqueda.set('');
-        // Cada creación empieza con las listas vacías.
-        this.contexto.descartarCambios();
-        this.contexto.seleccionarRubro(null);
-        this.contexto.seleccionarTipoDocumento(null);
-        this.contexto.seleccionarClaseDocumento(null);
+        // Sin seguimiento: elegir un rubro no debe volver a ejecutar esta limpieza (la haría borrar lo elegido).
+        untracked(() => this.reiniciar(operacion));
         if (!elemento.open) {
           // jsdom (pruebas) no implementa showModal.
           if (typeof elemento.showModal === 'function') {
@@ -100,6 +110,20 @@ export class SeleccionPlantilla {
     });
   }
 
+  /** Cada vez que se abre: la pestaña pedida, sin errores y con las listas vacías. */
+  private reiniciar(operacion: OperacionSeleccion): void {
+    this.pestana.set(operacion);
+    this.error.set(null);
+    this.nombre.set('');
+    this.busqueda.set('');
+    this.modo.set('Cero');
+    this.origen.set(null);
+    this.contexto.descartarCambios();
+    this.contexto.seleccionarRubro(null);
+    this.contexto.seleccionarTipoDocumento(null);
+    this.contexto.seleccionarClaseDocumento(null);
+  }
+
   protected cancelar(evento?: Event): void {
     evento?.preventDefault();
     if (!this.enviando()) {
@@ -112,7 +136,7 @@ export class SeleccionPlantilla {
     const subRubro = this.contexto.subRubro();
     const tipo = this.contexto.tipoDocumento();
     const clase = this.contexto.claseDocumento();
-    if (!this.contexto.completo() || !rubro || !subRubro || !tipo || !clase || this.enviando()) {
+    if (!this.puedeCrear() || !rubro || !subRubro || !tipo || !clase) {
       return;
     }
     this.enviar(
@@ -122,6 +146,7 @@ export class SeleccionPlantilla {
         tipoDocumentoId: tipo.id,
         claseDocumentoId: clase.id,
         nombre: this.nombre().trim() || null,
+        plantillaOrigenId: this.modo() === 'Clonar' ? (this.origen()?.plantillaId ?? null) : null,
       }),
     );
   }

@@ -234,8 +234,8 @@ public sealed class ApiPruebas : IDisposable
         using var salud = JsonDocument.Parse(await _cliente.GetStringAsync("/api/salud"));
 
         Assert.Equal("correcto", salud.RootElement.GetProperty("estado").GetString());
-        // 11 colecciones del editor, 7 del Documento Consolidado y el catálogo de bloques.
-        Assert.Equal(19, salud.RootElement.GetProperty("colecciones").GetArrayLength());
+        // 11 colecciones del editor, 7 del Documento Consolidado y los catálogos de bloques y de unidades.
+        Assert.Equal(20, salud.RootElement.GetProperty("colecciones").GetArrayLength());
     }
 
     [Theory]

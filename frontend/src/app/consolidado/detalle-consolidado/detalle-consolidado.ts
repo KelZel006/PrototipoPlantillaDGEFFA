@@ -1,14 +1,16 @@
 import { DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { Propuesta } from '../../core/modelos';
+import { UnidadService } from '../../core/unidad.service';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { HistorialRevisiones } from '../historial-revisiones';
+import { AvisoCampos } from '../aviso-campos';
 import { InsigniaEstado } from '../insignia-estado';
 import { OperacionSeleccion, SeleccionPlantilla } from '../seleccion-plantilla/seleccion-plantilla';
 
@@ -19,7 +21,7 @@ import { OperacionSeleccion, SeleccionPlantilla } from '../seleccion-plantilla/s
  */
 @Component({
   selector: 'app-detalle-consolidado',
-  imports: [DatePipe, RouterLink, InsigniaEstado, SeleccionPlantilla, HistorialRevisiones],
+  imports: [DatePipe, RouterLink, InsigniaEstado, SeleccionPlantilla, HistorialRevisiones, AvisoCampos],
   templateUrl: './detalle-consolidado.html',
   styleUrl: './detalle-consolidado.css',
 })
@@ -28,9 +30,12 @@ export class DetalleConsolidado {
   private readonly router = inject(Router);
   private readonly interaccion = inject(InteraccionService);
   protected readonly usuario = inject(UsuarioPruebaService);
+  protected readonly unidades = inject(UnidadService);
 
   /** Identificador de la ruta (/consolidados/:id). */
   readonly id = input.required<string>();
+  /** Con <c>?agregar=crear</c> (desde «+ Nueva Plantilla») se abre el diálogo para crear la plantilla. */
+  readonly agregar = input<string | undefined>();
 
   private readonly recurso = rxResource({
     params: () => ({ id: this.id(), usuario: this.usuario.id() }),
@@ -100,6 +105,21 @@ export class DetalleConsolidado {
   // ---------- Agregar (pantalla C) ----------
 
   protected readonly seleccion = signal<OperacionSeleccion | null>(null);
+
+  constructor() {
+    // El menú marca la unidad del documento.
+    effect(() => this.unidades.seleccionar(this.detalle()?.consolidado.unidadId));
+    effect(() => {
+      if (this.agregar() !== 'crear' || !this.detalle()) {
+        return;
+      }
+      if (untracked(this.editable)) {
+        this.seleccion.set('Crear');
+      }
+      // Se quita de la dirección para que al recargar no se vuelva a abrir.
+      void this.router.navigate([], { queryParams: { agregar: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
+  }
 
   protected alAgregar(propuestas: Propuesta[]): void {
     this.seleccion.set(null);

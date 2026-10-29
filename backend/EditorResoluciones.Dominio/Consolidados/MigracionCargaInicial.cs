@@ -5,7 +5,8 @@ using EditorResoluciones.Dominio.Servicios;
 namespace EditorResoluciones.Dominio.Consolidados;
 
 /// <summary>Resultado de la migración, para el registro de inicio y las pruebas.</summary>
-public sealed record ResultadoMigracion(int VersionesCreadas, int VersionesActualizadas, int HuellasCompletadas, IReadOnlyList<string> Inconsistencias);
+public sealed record ResultadoMigracion(
+    int VersionesCreadas, int VersionesActualizadas, int HuellasCompletadas, IReadOnlyList<string> Inconsistencias, int UnidadesAsignadas = 0, int PropuestasAdaptadas = 0);
 
 /// <summary>
 /// Se ejecuta al iniciar la API (decisión D5):
@@ -17,6 +18,9 @@ public sealed record ResultadoMigracion(int VersionesCreadas, int VersionesActua
 /// <item>Completa lo que los datos semilla no pueden traer escrito: las huellas y, en las propuestas MODIFICAR sin
 /// versión original, la versión vigente de su plantilla (creada al iniciar).</item>
 /// <item>Informa las inconsistencias de vigencia (más de una versión vigente para una plantilla o identidad).</item>
+/// <item>Plantillas, documentos y propuestas anteriores a las unidades pasan a la primera unidad (Exoneraciones).</item>
+/// <item>Las propuestas EN REGISTRO cuyo tipo documental cambió de bloques (por ejemplo, el Dictamen) pasan su texto a
+/// los bloques nuevos. Las ya enviadas no se tocan: su presentación está congelada.</item>
 /// </list>
 /// Es idempotente: si no hay nada que completar, no escribe.
 /// </summary>
@@ -27,6 +31,8 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
     public Task<ResultadoMigracion> EjecutarAsync(CancellationToken ct = default) => unidad.EjecutarAsync(async tx =>
     {
         var ahora = reloj.GetUtcNow();
+        var unidadesAsignadas = await AsignarUnidadAsync(tx, ct);
+        var propuestasAdaptadas = await AdaptarPropuestasAsync(tx, ct);
         var plantillas = await tx.ListarAsync<Plantilla>(ct);
         var parrafos = await tx.ListarAsync<Parrafo>(ct);
         var versiones = (await tx.ListarAsync<VersionPlantilla>(ct)).ToList();
@@ -128,7 +134,7 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
             huellas++;
         }
 
-        return new ResultadoMigracion(creadas, actualizadas, huellas, Inconsistencias(plantillas, versiones));
+        return new ResultadoMigracion(creadas, actualizadas, huellas, Inconsistencias(plantillas, versiones), unidadesAsignadas, propuestasAdaptadas);
     }, ct);
 
     /// <summary>Como máximo una versión vigente por plantilla y una plantilla por identidad funcional (regla 14).</summary>
@@ -147,5 +153,52 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
         foreach (var version in versiones.Where(v => plantillas.All(p => p.Id != v.PlantillaId)))
             problemas.Add($"La versión {version.Id} pertenece a la plantilla {version.PlantillaId}, que no existe.");
         return problemas;
+    }
+
+    /// <summary>Asigna la primera unidad activa a lo que no tiene unidad (datos anteriores a las unidades).</summary>
+    private static async Task<int> AsignarUnidadAsync(ITransaccion tx, CancellationToken ct)
+    {
+        var predeterminada = (await tx.ListarAsync<Unidad>(ct)).Where(u => u.Activo).OrderBy(u => u.Orden).FirstOrDefault();
+        if (predeterminada is null)
+            return 0;
+        var asignadas = 0;
+        foreach (var plantilla in (await tx.ListarAsync<Plantilla>(ct)).Where(p => string.IsNullOrEmpty(p.UnidadId)).ToList())
+        {
+            plantilla.UnidadId = predeterminada.Id;
+            await tx.ActualizarAsync(plantilla, ct);
+            asignadas++;
+        }
+        foreach (var consolidado in (await tx.ListarAsync<DocumentoConsolidado>(ct)).Where(c => string.IsNullOrEmpty(c.UnidadId)).ToList())
+        {
+            consolidado.UnidadId = predeterminada.Id;
+            await tx.ActualizarAsync(consolidado, ct);
+            asignadas++;
+        }
+        foreach (var propuesta in (await tx.ListarAsync<Propuesta>(ct)).Where(p => string.IsNullOrEmpty(p.UnidadId)).ToList())
+        {
+            propuesta.UnidadId = predeterminada.Id;
+            await tx.ActualizarAsync(propuesta, ct);
+            asignadas++;
+        }
+        return asignadas;
+    }
+
+    /// <summary>Adapta a los bloques de su tipo las propuestas de los documentos EN REGISTRO.</summary>
+    private static async Task<int> AdaptarPropuestasAsync(ITransaccion tx, CancellationToken ct)
+    {
+        var catalogo = await tx.ListarAsync<BloqueDocumental>(ct);
+        var tipos = (await tx.ListarAsync<TipoDocumento>(ct)).ToDictionary(t => t.Id, StringComparer.Ordinal);
+        var enRegistro = (await tx.ListarAsync<DocumentoConsolidado>(ct))
+            .Where(c => c.Estado == EstadoConsolidado.EnRegistro).Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
+        var adaptadas = 0;
+        foreach (var propuesta in (await tx.ListarAsync<Propuesta>(ct)).Where(p => !p.Retirada && enRegistro.Contains(p.ConsolidadoId)).ToList())
+        {
+            var configurados = CatalogoBloques.Resolver(tipos.GetValueOrDefault(propuesta.TipoDocumentoId), catalogo);
+            if (ConstructorContenido.AdaptarABloques(propuesta.ContenidoPropuesto, configurados) == 0)
+                continue;
+            await tx.ActualizarAsync(propuesta, ct);
+            adaptadas++;
+        }
+        return adaptadas;
     }
 }

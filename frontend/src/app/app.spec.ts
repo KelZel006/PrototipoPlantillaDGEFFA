@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { responderUnidades } from './pruebas/datos-prueba';
 import { ApiService } from './core/api.service';
 import { UsuarioPruebaService, usuarioPruebaInterceptor } from './core/usuario-prueba.service';
 
@@ -36,10 +37,18 @@ describe('App', () => {
       { id: 'j.ramos', version: 1, nombreCompleto: 'Julia Ramos', roles: ['OficialJuridico'], activo: true },
     ]);
     http.expectOne('/api/salud').flush({ estado: 'correcto', almacenamiento: 'JSON', colecciones: [] });
+    responderUnidades(http);
     await new Promise((resolver) => setTimeout(resolver));
     TestBed.tick();
     fixture.detectChanges();
     expect(elemento.querySelector('select')?.textContent).toContain('Julia Ramos · Oficial Jurídico');
+    // El menú muestra las cuatro unidades.
+    expect(Array.from(elemento.querySelectorAll('.menu-unidades a')).map((a) => a.textContent?.trim())).toEqual([
+      'Exoneraciones',
+      'Dispensas',
+      'Registro Exonerados',
+      'Notas de Crédito y Devoluciones',
+    ]);
     http.verify();
   });
 

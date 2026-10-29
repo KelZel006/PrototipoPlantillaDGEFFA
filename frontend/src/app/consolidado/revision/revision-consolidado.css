@@ -170,3 +170,9 @@
     position: static;
   }
 }
+
+.marca-alerta {
+  color: var(--prueba);
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+}

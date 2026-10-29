@@ -70,3 +70,11 @@
 .tabla a {
   white-space: nowrap;
 }
+.unidad-actual {
+  margin: 0;
+  color: var(--primario-oscuro);
+  font-size: var(--texto-pequeno);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

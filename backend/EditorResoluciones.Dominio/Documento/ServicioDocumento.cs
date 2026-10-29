@@ -44,6 +44,7 @@ public static class Interlineados
 /// <item>Sustituye cada campo por su valor. Sin solicitud, lo deja como "{Etiqueta}".</item>
 /// <item>En las tablas, repite cada fila con campos de lista una vez por registro de la solicitud.</item>
 /// <item>Une al anterior los párrafos marcados «Unir con el párrafo anterior»: se muestran como uno solo.</item>
+/// <item>Los títulos van centrados y en negrita, y no consumen numeración.</item>
 /// </list>
 /// Si faltan datos para evaluar una condición, el párrafo no se incluye y se registra una advertencia.
 /// </summary>
@@ -130,7 +131,8 @@ public sealed class ServicioDocumento(
                 var posicion = i + 1;
                 var resumen = Resumir(parrafo.Contenido, catalogo);
                 var ubicacion = $"{bloque.Nombre} {posicion}";
-                var continua = parrafo.UnirConAnterior && i > 0;
+                // Un título no se une con el anterior, ni otro párrafo se une a un título.
+                var continua = parrafo.UnirConAnterior && !parrafo.EsTitulo && i > 0 && !deSeccion[i - 1].EsTitulo;
                 var incluidoAntes = anteriorIncluido;
                 anteriorIncluido = false;
 
@@ -173,8 +175,15 @@ public sealed class ServicioDocumento(
                     continue;
                 }
 
-                // Considerando y Resuelve se numeran por su orden en el documento: los omitidos no consumen número.
-                if (Numeracion.Etiqueta(bloque.Numeracion, incluidos.Count + 1) is { } etiqueta)
+                if (parrafo.EsTitulo)
+                {
+                    incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, Titular(contenido), EsTitulo: true));
+                    continue;
+                }
+
+                // Considerando y Resuelve se numeran por su orden en el documento: los omitidos y los títulos no
+                // consumen número.
+                if (Numeracion.Etiqueta(bloque.Numeracion, incluidos.Count(p => !p.EsTitulo) + 1) is { } etiqueta)
                     contenido = Numerar(contenido, etiqueta);
                 incluidos.Add(new ParrafoDocumento(parrafo.Id, posicion, contenido));
             }
@@ -251,6 +260,24 @@ public sealed class ServicioDocumento(
             agregados.RemoveAt(0);
         }
         return new NodoContenido { Tipo = anterior.Tipo, Atributos = anterior.Atributos, Contenido = [.. bloques, .. agregados] };
+    }
+
+    /// <summary>Título: cada párrafo de primer nivel queda centrado y todo su texto en negrita.</summary>
+    public static NodoContenido Titular(NodoContenido documento)
+    {
+        static NodoContenido Negrita(NodoContenido nodo) => nodo.Tipo == "text" && nodo.Marcas?.Any(m => m.Tipo == "bold") != true
+            ? new NodoContenido { Tipo = nodo.Tipo, Texto = nodo.Texto, Atributos = nodo.Atributos, Marcas = [.. nodo.Marcas ?? [], new MarcaContenido { Tipo = "bold" }] }
+            : new NodoContenido { Tipo = nodo.Tipo, Texto = nodo.Texto, Atributos = nodo.Atributos, Marcas = nodo.Marcas, Contenido = nodo.Contenido?.Select(Negrita).ToList() };
+
+        var bloques = (documento.Contenido ?? []).Select(bloque =>
+        {
+            if (bloque.Tipo != "paragraph")
+                return bloque;
+            var atributos = bloque.Atributos is null ? new Dictionary<string, JsonElement>() : new Dictionary<string, JsonElement>(bloque.Atributos);
+            atributos["textAlign"] = JsonSerializer.SerializeToElement("center");
+            return new NodoContenido { Tipo = bloque.Tipo, Atributos = atributos, Contenido = bloque.Contenido?.Select(Negrita).ToList() };
+        }).ToList();
+        return new NodoContenido { Tipo = documento.Tipo, Atributos = documento.Atributos, Contenido = bloques };
     }
 
     private static bool TerminaEnEspacio(NodoContenido nodo) =>

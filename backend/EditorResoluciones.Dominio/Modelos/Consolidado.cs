@@ -29,6 +29,9 @@ public class DocumentoConsolidado : IEntidad
 
     public EstadoConsolidado Estado { get; set; } = EstadoConsolidado.EnRegistro;
 
+    /// <summary>Unidad del documento: solo contiene plantillas de esa unidad.</summary>
+    public string UnidadId { get; set; } = "";
+
     /// <summary>Usuario analista responsable. Solo él lo ve en su bandeja (decisión D10).</summary>
     public string AnalistaId { get; set; } = "";
 
@@ -67,7 +70,8 @@ public class Propuesta : IEntidad
     public string ConsolidadoId { get; set; } = "";
     public OperacionPropuesta Operacion { get; set; }
 
-    // Identidad funcional de la plantilla (Rubro, Sub Rubro, Tipo Documento y Documento).
+    // Identidad funcional de la plantilla (Unidad, Rubro, Sub Rubro, Tipo Documento y Documento).
+    public string UnidadId { get; set; } = "";
     public string RubroId { get; set; } = "";
     public string SubRubroId { get; set; } = "";
     public string TipoDocumentoId { get; set; } = "";

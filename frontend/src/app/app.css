@@ -117,3 +117,35 @@
   background: var(--primario-suave);
   color: var(--primario-oscuro);
 }
+/* Menú de unidades: cada una elabora sus propias plantillas. */
+.menu-unidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  padding: 0 var(--espacio-6);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+
+.menu-unidades a {
+  padding: var(--espacio-3) var(--espacio-4);
+  border-bottom: 3px solid transparent;
+  color: var(--texto-secundario);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.menu-unidades a:hover {
+  color: var(--texto);
+}
+
+.menu-unidades a.activa {
+  border-bottom-color: var(--primario);
+  color: var(--primario-oscuro);
+}
+
+@media (max-width: 760px) {
+  .menu-unidades {
+    padding: 0 var(--espacio-4);
+  }
+}

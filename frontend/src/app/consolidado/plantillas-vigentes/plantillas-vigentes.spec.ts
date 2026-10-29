@@ -7,12 +7,13 @@ import localeEs from '@angular/common/locales/es';
 import { provideRouter } from '@angular/router';
 import { PlantillaConVersiones } from '../../core/modelos';
 import { PlantillasVigentes } from './plantillas-vigentes';
+import { responderUnidades } from '../../pruebas/datos-prueba';
 
 registerLocaleData(localeEs);
 
 const PLANTILLAS: PlantillaConVersiones[] = [
   {
-    plantillaId: 'PLA-001', nombre: 'Aprobación de prueba', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
+    plantillaId: 'PLA-001', nombre: 'Aprobación de prueba', unidadId: 'exoneraciones', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
     tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001',
     versiones: [
       { id: 'VER-2', numeroVersion: 2, vigencia: 'Vigente', cargaInicial: false, publicadaPor: 'j.ramos', fechaPublicacion: '2026-10-17T10:00:00Z',
@@ -22,7 +23,7 @@ const PLANTILLAS: PlantillaConVersiones[] = [
     ],
   },
   {
-    plantillaId: 'PLA-002', nombre: 'Dictamen de prueba', rubroId: '1800', subRubroId: '1801', tipoDocumentoId: 'TDO-002',
+    plantillaId: 'PLA-002', nombre: 'Dictamen de prueba', unidadId: 'exoneraciones', rubroId: '1800', subRubroId: '1801', tipoDocumentoId: 'TDO-002',
     tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-001',
     versiones: [{ id: 'VER-3', numeroVersion: 1, vigencia: 'Vigente', cargaInicial: true, publicadaPor: 'carga.inicial',
       fechaPublicacion: '2026-10-16T10:00:00Z', inicioVigencia: '2026-10-16T10:00:00Z' }],
@@ -63,6 +64,7 @@ describe('PlantillasVigentes', () => {
     expect(versiones[0]).toContain('publicada por PLAN-20260002');
     expect(versiones[1]).toContain('NO VIGENTE');
     expect(versiones[1]).toContain('carga inicial');
+    responderUnidades(http);
     http.verify();
   });
 });

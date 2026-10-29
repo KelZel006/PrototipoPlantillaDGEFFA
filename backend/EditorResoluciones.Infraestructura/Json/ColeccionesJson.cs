@@ -13,6 +13,7 @@ public static class ColeccionesJson
 {
     private static readonly DefinicionColeccion[] Definiciones =
     [
+        new("unidades", "unidades.json", "UNI", typeof(Unidad)),
         new("rubros", "rubros.json", "RUB", typeof(Rubro)),
         new("subRubros", "subRubros.json", "SUB", typeof(SubRubro)),
         new("tiposDocumento", "tiposDocumento.json", "TDO", typeof(TipoDocumento)),

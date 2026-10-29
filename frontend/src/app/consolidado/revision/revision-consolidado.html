@@ -1,4 +1,4 @@
-<a class="volver" routerLink="/consolidados">← Documentos consolidados</a>
+<a class="volver" routerLink="/consolidados">← Documentos Plantillas</a>
 
 @if (error(); as mensaje) {
   <div class="aviso aviso-error" role="alert">
@@ -19,6 +19,8 @@
     </span>
   </section>
 
+  <app-aviso-campos [alertas]="d.alertas ?? []" />
+
   @if (!puedeRevisar()) {
     <div class="aviso aviso-copia" role="status">
       La revisión jurídica la hace el Oficial Jurídico cuando el documento está VERIFICADO.
@@ -34,6 +36,9 @@
               <button type="button" class="plantilla" [class.activa]="seleccionada()?.id === p.id" [attr.aria-current]="seleccionada()?.id === p.id" (click)="seleccionada.set(p)">
                 <span class="insignia" [class.insignia-exito]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
                 <span class="nombre">{{ p.nombre }}</span>
+                @if (tieneAlerta(p.id)) {
+                  <span class="marca-alerta" title="Se modificó un campo vigilado (por ejemplo, Operador)">⚠ Campo vigilado</span>
+                }
                 <span class="texto-secundario">{{ ajustes(p.id).length }} {{ ajustes(p.id).length === 1 ? 'ajuste' : 'ajustes' }}</span>
               </button>
               @if (seleccionada()?.id === p.id && ajustes(p.id).length) {

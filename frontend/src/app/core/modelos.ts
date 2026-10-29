@@ -32,6 +32,14 @@ export interface TipoDocumento extends Entidad {
 }
 
 /** Lista "Documento": Original, Modificación o Aclaratoria. */
+/** Unidad que elabora sus plantillas (Exoneraciones, Dispensas…). Tiene su propio menú. */
+export interface Unidad extends Entidad {
+  nombre: string;
+  /** Posición en el menú. */
+  orden: number;
+  activo: boolean;
+}
+
 export interface ClaseDocumento extends Entidad {
   nombre: string;
   activo: boolean;
@@ -120,6 +128,8 @@ export interface Parrafo extends Entidad {
    * para textos de más de 2000 caracteres.
    */
   unirConAnterior?: boolean;
+  /** Título: en el documento va centrado y en negrita, sin numeración. */
+  esTitulo?: boolean;
   condicion?: GrupoCondiciones | null;
   /** Lo calcula el servidor a partir del contenido. */
   camposUsados: string[];
@@ -245,6 +255,8 @@ export type Vigencia = 'Vigente' | 'NoVigente';
 
 export interface DocumentoConsolidado extends Entidad {
   numero: string;
+  /** Unidad del documento: solo contiene plantillas de esa unidad. */
+  unidadId: string;
   anio: number;
   secuencia: number;
   estado: EstadoConsolidado;
@@ -264,6 +276,7 @@ export interface DocumentoConsolidado extends Entidad {
 export interface ResumenConsolidado {
   id: string;
   numero: string;
+  unidadId: string;
   anio: number;
   estado: EstadoConsolidado;
   analistaId: string;
@@ -275,6 +288,7 @@ export interface ResumenConsolidado {
 
 export interface Propuesta extends Entidad {
   consolidadoId: string;
+  unidadId: string;
   operacion: OperacionPropuesta;
   rubroId: string;
   subRubroId: string;
@@ -363,6 +377,17 @@ export interface Movimiento extends Entidad {
   detalle: string;
 }
 
+/** Cambio en un campo vigilado que se le avisa al aprobador. */
+export interface AlertaCampo {
+  propuestaId: string;
+  plantilla: string;
+  campoId: string;
+  campo: string;
+  /** Por ejemplo, «CONSIDERANDO 2». */
+  ubicacion: string;
+  detalle: string;
+}
+
 export interface DetalleConsolidado {
   consolidado: DocumentoConsolidado;
   tiposIncluidos: ResumenTipo[];
@@ -372,12 +397,15 @@ export interface DetalleConsolidado {
   presentaciones: Presentacion[];
   devoluciones: Devolucion[];
   movimientos: Movimiento[];
+  /** Cambios en campos vigilados (por ejemplo, Operador). Solo llegan al aprobador (Oficial Jurídico). */
+  alertas?: AlertaCampo[];
 }
 
 /** Plantilla vigente que se puede elegir para MODIFICAR. */
 export interface PlantillaVigente {
   plantillaId: string;
   nombre: string;
+  unidadId: string;
   rubroId: string;
   subRubroId: string;
   tipoDocumentoId: string;
@@ -472,6 +500,7 @@ export interface VersionResumen {
 export interface PlantillaConVersiones {
   plantillaId: string;
   nombre: string;
+  unidadId: string;
   rubroId: string;
   subRubroId: string;
   tipoDocumentoId: string;

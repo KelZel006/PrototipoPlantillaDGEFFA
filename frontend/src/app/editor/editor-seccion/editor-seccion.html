@@ -60,6 +60,8 @@
           <p class="nota-union">
             @if (puedeUnir()) {
               En el documento este texto continúa el párrafo anterior, como un solo párrafo y sin numeración propia.
+            } @else if (editando()?.esTitulo) {
+              Un título no se une con el párrafo anterior. Quite la marca de título en el listado para unirlo.
             } @else {
               Es el primer párrafo de la sección: no tiene uno anterior con el cual unirse y se mostrará solo.
             }
@@ -124,6 +126,7 @@
           (eliminar)="eliminar($event)"
           (duplicar)="duplicar($event)"
           (alternarActivo)="alternarActivo($event)"
+          (alternarTitulo)="alternarTitulo($event)"
           (mover)="mover($event)"
           (reordenar)="reordenar($event)"
         />

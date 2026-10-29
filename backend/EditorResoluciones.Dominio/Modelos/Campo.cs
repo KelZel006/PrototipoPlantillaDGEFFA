@@ -35,6 +35,12 @@ public class Campo : IEntidad
 
     public List<string> Contextos { get; set; } = [];
 
+    /// <summary>
+    /// Si es verdadero, al Oficial Jurídico (aprobador) se le avisa cuando un documento cambia un párrafo que usa este
+    /// campo, en su texto o en su condición. Por ejemplo, el campo Operador.
+    /// </summary>
+    public bool AlertarCambios { get; set; }
+
     [StringLength(300, ErrorMessage = "La descripción admite hasta 300 caracteres.")]
     public string? Descripcion { get; set; }
 }

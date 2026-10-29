@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../core/api.service';
 import { ContextoService } from '../../core/contexto.service';
@@ -15,6 +15,11 @@ export class SelectorContexto {
   private readonly api = inject(ApiService);
   protected readonly contexto = inject(ContextoService);
   private readonly interaccion = inject(InteraccionService);
+
+  /** Nombre del grupo para los lectores de pantalla. */
+  readonly etiqueta = input('Contexto de la plantilla');
+  /** Prefijo de los identificadores de las listas, para usar varios selectores en la misma página. */
+  readonly prefijo = input('lista');
 
   private readonly rubrosRecurso = rxResource({ stream: () => this.api.rubros() });
   private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });

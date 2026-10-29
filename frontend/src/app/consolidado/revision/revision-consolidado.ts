@@ -1,12 +1,14 @@
-import { Component, ElementRef, computed, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { DatosObservacion, Propuesta } from '../../core/modelos';
+import { UnidadService } from '../../core/unidad.service';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { ComparacionPropuesta } from '../comparacion/comparacion-propuesta';
+import { AvisoCampos } from '../aviso-campos';
 import { HistorialRevisiones } from '../historial-revisiones';
 import { InsigniaEstado } from '../insignia-estado';
 
@@ -24,7 +26,7 @@ interface ObservacionBorrador {
  */
 @Component({
   selector: 'app-revision-consolidado',
-  imports: [RouterLink, ComparacionPropuesta, HistorialRevisiones, InsigniaEstado],
+  imports: [RouterLink, ComparacionPropuesta, HistorialRevisiones, InsigniaEstado, AvisoCampos],
   templateUrl: './revision-consolidado.html',
   styleUrl: './revision-consolidado.css',
 })
@@ -33,6 +35,7 @@ export class RevisionConsolidado {
   private readonly router = inject(Router);
   private readonly interaccion = inject(InteraccionService);
   protected readonly usuario = inject(UsuarioPruebaService);
+  private readonly unidades = inject(UnidadService);
 
   /** Identificador de la ruta. */
   readonly id = input.required<string>();
@@ -45,6 +48,11 @@ export class RevisionConsolidado {
   protected readonly cargando = this.recurso.isLoading;
   protected readonly error = computed(() => (this.recurso.error() ? mensajeError(this.recurso.error()) : null));
   protected readonly detalle = computed(() => (this.recurso.hasValue() ? this.recurso.value() : null));
+
+  constructor() {
+    // El menú marca la unidad del documento.
+    effect(() => this.unidades.seleccionar(this.detalle()?.consolidado.unidadId));
+  }
   protected readonly activas = computed(() => this.detalle()?.propuestas.filter((p) => !p.retirada) ?? []);
 
   /** La revisión es del Oficial Jurídico y solo con el documento VERIFICADO (el servidor también lo valida). */
@@ -154,6 +162,11 @@ export class RevisionConsolidado {
 
   protected readonly aprobando = signal(false);
 
+  /** Plantillas con cambios en un campo vigilado (por ejemplo, Operador). */
+  protected tieneAlerta(propuestaId: string): boolean {
+    return (this.detalle()?.alertas ?? []).some((a) => a.propuestaId === propuestaId);
+  }
+
   /**
    * VERIFICADO → APROBADO. El servidor publica todas las plantillas en una sola operación: las modificadas quedan con
    * una versión nueva VIGENTE (la anterior pasa a NO VIGENTE) y las nuevas, con su versión 1.
@@ -164,9 +177,11 @@ export class RevisionConsolidado {
       return;
     }
     const plantillas = this.activas().length;
+    const campos = [...new Set((detalle.alertas ?? []).map((a) => a.campo))];
+    const aviso = campos.length ? ` ATENCIÓN: este documento modificó el campo ${campos.join(', ')}.` : '';
     const aceptado = await this.interaccion.confirmar({
       titulo: `Aprobar ${detalle.consolidado.numero}`,
-      mensaje: `Se publicarán ${plantillas} ${plantillas === 1 ? 'plantilla' : 'plantillas'} como VIGENTES. Las versiones que reemplazan pasan a NO VIGENTES y se conservan. El documento quedará APROBADO y no podrá modificarse.`,
+      mensaje: `Se publicarán ${plantillas} ${plantillas === 1 ? 'plantilla' : 'plantillas'} como VIGENTES. Las versiones que reemplazan pasan a NO VIGENTES y se conservan. El documento quedará APROBADO y no podrá modificarse.${aviso}`,
       aceptar: 'Aprobar y publicar',
     });
     if (!aceptado) {

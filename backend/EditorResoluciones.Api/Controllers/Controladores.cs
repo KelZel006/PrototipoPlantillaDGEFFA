@@ -21,6 +21,15 @@ public sealed class SubRubrosController(ServicioEntidades<SubRubro> servicio) : 
         PorParametro(registros, consulta, "rubroId", (s, v) => s.RubroId == v);
 }
 
+/// <summary>Unidades que elaboran plantillas (Exoneraciones, Dispensas…), en el orden del menú.</summary>
+[Route("api/unidades")]
+[CatalogoDeAdministrador]
+public sealed class UnidadesController(ServicioEntidades<Unidad> servicio) : ControladorCrud<Unidad>(servicio)
+{
+    protected override IEnumerable<Unidad> Filtrar(IEnumerable<Unidad> registros, IQueryCollection consulta) =>
+        registros.OrderBy(u => u.Orden);
+}
+
 /// <summary>Lista "Documento": Original, Modificación o Aclaratoria.</summary>
 [Route("api/clases-documento")]
 [CatalogoDeAdministrador]

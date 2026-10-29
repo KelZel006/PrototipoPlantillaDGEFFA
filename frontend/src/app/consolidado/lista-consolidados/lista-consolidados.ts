@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { EstadoConsolidado, NOMBRE_ESTADO } from '../../core/modelos';
+import { UnidadService } from '../../core/unidad.service';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { InsigniaEstado } from '../insignia-estado';
 
@@ -24,6 +25,16 @@ export class ListaConsolidados {
   private readonly router = inject(Router);
   private readonly interaccion = inject(InteraccionService);
   protected readonly usuario = inject(UsuarioPruebaService);
+  protected readonly unidades = inject(UnidadService);
+
+  /** Unidad de la ruta (/unidades/:unidad/consolidados). */
+  readonly unidad = input<string>();
+  /** Unidad mostrada: la de la ruta o, sin ella, la abierta. */
+  protected readonly unidadMostrada = computed(() => this.unidad() ?? this.unidades.actual());
+
+  constructor() {
+    effect(() => this.unidades.seleccionar(this.unidad()));
+  }
 
   // Se vuelve a consultar al cambiar de usuario de prueba: cambia la bandeja.
   private readonly recurso = rxResource({
@@ -33,7 +44,10 @@ export class ListaConsolidados {
 
   protected readonly cargando = this.recurso.isLoading;
   protected readonly error = computed(() => (this.recurso.error() ? mensajeError(this.recurso.error()) : null));
-  private readonly todos = computed(() => (this.recurso.hasValue() ? this.recurso.value() : []));
+  // Solo los documentos de la unidad.
+  private readonly todos = computed(() =>
+    (this.recurso.hasValue() ? this.recurso.value() : []).filter((c) => c.unidadId === this.unidadMostrada()),
+  );
 
   protected readonly estados: { valor: EstadoConsolidado; nombre: string }[] = (
     ['EnRegistro', 'Verificado', 'Aprobado'] as const
@@ -75,11 +89,12 @@ export class ListaConsolidados {
       return;
     }
     this.creando.set(true);
-    this.api.crearConsolidado().subscribe({
+    this.api.crearConsolidado(this.unidadMostrada()).subscribe({
       next: (consolidado) => {
         this.creando.set(false);
-        this.interaccion.avisar('exito', `Se creó el documento ${consolidado.numero}.`);
-        void this.router.navigate(['/consolidados', consolidado.id]);
+        this.interaccion.avisar('exito', `Se creó el documento ${consolidado.numero} de ${this.unidades.nombre(consolidado.unidadId)}.`);
+        // Abre el documento con el diálogo para crear la plantilla (desde cero o clonando otra).
+        void this.router.navigate(['/consolidados', consolidado.id], { queryParams: { agregar: 'crear' } });
       },
       error: (error: unknown) => {
         this.creando.set(false);

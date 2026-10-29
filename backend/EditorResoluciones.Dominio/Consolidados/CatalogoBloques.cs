@@ -49,7 +49,7 @@ public sealed class CatalogoBloques(IRepositorio<BloqueDocumental> bloques, IRep
     public static BloqueConfigurado DelCatalogo(string codigo, IReadOnlyList<BloqueDocumental> catalogo, bool obligatorio, int orden)
     {
         if (catalogo.FirstOrDefault(b => b.Id == codigo) is { } bloque)
-            return new(bloque.Id, bloque.Nombre, bloque.Titulo, bloque.Numeracion, bloque.EsFirmas, bloque.ContextoCampos, obligatorio, orden);
+            return new(bloque.Id, bloque.Nombre, bloque.Titulo, bloque.Numeracion, bloque.EsFirmas, bloque.ContextoCampos, obligatorio, orden, bloque.Reemplaza);
         if (Predeterminados.FirstOrDefault(b => b.Codigo == codigo) is { } predeterminado)
             return predeterminado with { Obligatorio = obligatorio, Orden = orden };
         return new(codigo, CodigosBloque.Nombre(codigo), null, NumeracionBloque.Ninguna, false, "cabecera", obligatorio, orden);

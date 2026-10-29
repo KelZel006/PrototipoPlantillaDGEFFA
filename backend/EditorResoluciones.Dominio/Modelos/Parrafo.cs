@@ -52,6 +52,10 @@ public class Parrafo : IEntidad, IConMarcaTiempo
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool UnirConAnterior { get; set; }
 
+    /// <summary>El párrafo es un título: en el documento va centrado y en negrita, y no lleva numeración.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool EsTitulo { get; set; }
+
     /// <summary>Condición de visualización del párrafo; null si no tiene.</summary>
     public GrupoCondiciones? Condicion { get; set; }
 

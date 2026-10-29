@@ -5,12 +5,12 @@
     </span>
     <div>
       <h1>Editor de Resoluciones</h1>
-      <p>Documentos consolidados de plantillas</p>
+      <p>Documentos de plantillas</p>
     </div>
   </a>
-  <nav class="navegacion" aria-label="Secciones">
-    <a routerLink="/consolidados" routerLinkActive="activo">Documentos consolidados</a>
-    <a routerLink="/vigentes" routerLinkActive="activo">Plantillas vigentes</a>
+  <nav class="navegacion" [attr.aria-label]="'Secciones de ' + unidades.nombreActual()">
+    <a [routerLink]="['/unidades', unidades.actual(), 'consolidados']" routerLinkActive="activo">Documentos Plantillas</a>
+    <a [routerLink]="['/unidades', unidades.actual(), 'vigentes']" routerLinkActive="activo">Plantillas vigentes</a>
   </nav>
   <div class="sesion">
     <label class="usuario">
@@ -26,6 +26,13 @@
     <span class="insignia insignia-prueba">Prototipo · datos de prueba</span>
   </div>
 </header>
+
+<nav class="menu-unidades" aria-label="Unidades">
+  @for (u of unidades.unidades(); track u.id) {
+    <a [routerLink]="['/unidades', u.id, 'consolidados']" [class.activa]="u.id === unidades.actual()"
+      [attr.aria-current]="u.id === unidades.actual() ? 'page' : null">{{ u.nombre }}</a>
+  }
+</nav>
 
 <main class="contenedor">
   <router-outlet />

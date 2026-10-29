@@ -230,3 +230,21 @@
   background: var(--primario-suave);
   color: var(--primario-oscuro);
 }
+/* Párrafo marcado como título: se ve centrado y en negrita, como saldrá en el documento. */
+.titulo .resumen {
+  text-align: center;
+  font-weight: 700;
+}
+
+.insignia-titulo {
+  align-self: center;
+  margin-bottom: var(--espacio-1);
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}
+
+.accion-activa {
+  border-color: var(--primario);
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}

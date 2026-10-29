@@ -27,11 +27,12 @@ import {
   Solicitud,
   SubRubro,
   TipoDocumento,
+  Unidad,
   Usuario,
 } from './modelos';
 
 /** Datos de un párrafo que se envían al crear o actualizar (el identificador va en la ruta). */
-export type DatosParrafo = Pick<Parrafo, 'bloque' | 'orden' | 'contenido' | 'activo' | 'mostrarSoloSiCumple' | 'unirConAnterior' | 'condicion'> & {
+export type DatosParrafo = Pick<Parrafo, 'bloque' | 'orden' | 'contenido' | 'activo' | 'mostrarSoloSiCumple' | 'unirConAnterior' | 'esTitulo' | 'condicion'> & {
   version?: number;
 };
 
@@ -42,6 +43,8 @@ export interface SolicitudCrear {
   tipoDocumentoId: string;
   claseDocumentoId: string;
   nombre?: string | null;
+  /** Plantilla vigente que se clona; sin ella, la plantilla nueva empieza vacía. */
+  plantillaOrigenId?: string | null;
 }
 
 /**
@@ -86,8 +89,14 @@ export class ApiService {
   }
 
   /** El número PLAN, el analista y las fechas los asigna el servidor. */
-  crearConsolidado(): Observable<DocumentoConsolidado> {
-    return this.http.post<DocumentoConsolidado>(`${this.base}/consolidados`, null);
+  /** Crea un Documento Consolidado de la unidad indicada. */
+  crearConsolidado(unidadId: string): Observable<DocumentoConsolidado> {
+    return this.http.post<DocumentoConsolidado>(`${this.base}/consolidados`, { unidadId });
+  }
+
+  /** Unidades, en el orden del menú. */
+  unidades(): Observable<Unidad[]> {
+    return this.http.get<Unidad[]>(`${this.base}/unidades`);
   }
 
   /** Operación CREAR. Si es una Resolución, el servidor agrega también su Certificación. */

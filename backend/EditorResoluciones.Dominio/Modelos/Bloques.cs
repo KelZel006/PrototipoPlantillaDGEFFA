@@ -47,6 +47,13 @@ public class BloqueDocumental : IEntidad
     public string? Descripcion { get; set; }
 
     public bool Activo { get; set; } = true;
+
+    /// <summary>
+    /// Bloques anteriores cuyo contenido pasa a este cuando un tipo documental los deja de usar. Por ejemplo, en el
+    /// Dictamen, «Dictamina» reemplaza a «Resuelve»: al modificar o clonar un Dictamen hecho con el formato anterior, sus
+    /// párrafos de Resuelve pasan a Dictamina.
+    /// </summary>
+    public List<string> Reemplaza { get; set; } = [];
 }
 
 /// <summary>Bloque que usa un tipo documental, en su orden, y si es obligatorio.</summary>
@@ -66,4 +73,5 @@ public sealed record BloqueConfigurado(
     bool EsFirmas,
     string ContextoCampos,
     bool Obligatorio,
-    int Orden);
+    int Orden,
+    IReadOnlyList<string>? Reemplaza = null);

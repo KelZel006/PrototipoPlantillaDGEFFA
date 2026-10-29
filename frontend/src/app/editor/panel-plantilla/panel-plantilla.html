@@ -62,6 +62,12 @@
         Vista previa de la plantilla en el consolidado (la versión vigente no cambia hasta que se apruebe el documento). Orden: Cabecera,
         Considerando, Por Tanto, Resuelve y Firmas. Con una solicitud se reemplazan los campos y se aplican las condiciones.
       </span>
+      @if (solicitudElegida() === '') {
+        <span class="nota-pdf nota-sin-datos" role="status">
+          Sin solicitud de prueba: los campos salen como {{ '{' }}Etiqueta{{ '}' }}, las tablas no se llenan y no se aplican las condiciones
+          (se incluyen todos los párrafos activos). Elija una solicitud para ver el documento con datos.
+        </span>
+      }
       @if (tipo()?.textoCorrido) {
         <span class="texto-secundario sin-margen nota-pdf nota-corrido">
           {{ tipo()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y las firmas

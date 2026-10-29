@@ -105,6 +105,13 @@ public class ParrafoContenido
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool UnirConAnterior { get; set; }
 
+    /// <summary>
+    /// Título: en el documento va centrado y en negrita, sin numeración. Se omite del JSON cuando es falso, para que la
+    /// huella de los contenidos ya publicados no cambie.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool EsTitulo { get; set; }
+
     /// <summary>En una Certificación, el párrafo de la Resolución del que se copió (decisión D3).</summary>
     public string? OrigenParrafoId { get; set; }
 }

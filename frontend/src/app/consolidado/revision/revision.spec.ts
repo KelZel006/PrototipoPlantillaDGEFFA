@@ -10,6 +10,7 @@ import { DetalleConsolidado as Detalle, Usuario } from '../../core/modelos';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { DetalleConsolidado } from '../detalle-consolidado/detalle-consolidado';
 import { RevisionConsolidado } from './revision-consolidado';
+import { responderUnidades } from '../../pruebas/datos-prueba';
 
 registerLocaleData(localeEs);
 
@@ -24,13 +25,13 @@ const USUARIOS: Usuario[] = [
 function detalle(estado: 'EnRegistro' | 'Verificado'): Detalle {
   return {
     consolidado: {
-      id: 'CON-2', version: 3, numero: 'PLAN-20260002', anio: 2026, secuencia: 2, estado, analistaId: 'a.perez',
+      id: 'CON-2', version: 3, numero: 'PLAN-20260002', anio: 2026, secuencia: 2, estado, unidadId: 'exoneraciones', analistaId: 'a.perez',
       fechaCreacion: '2026-10-12T15:00:00Z', fechaActualizacion: '2026-10-15T15:00:00Z', numeroPresentacion: 1,
     },
     tiposIncluidos: [{ tipoDocumentoId: 'TDO-001', tipoDocumento: 'Resolución', operacion: 'Modificar', plantillas: 1, ajustes: 1 }],
     propuestas: [
       {
-        id: 'PRO-1', version: 1, consolidadoId: 'CON-2', operacion: 'Modificar', rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'TDO-001',
+        id: 'PRO-1', version: 1, consolidadoId: 'CON-2', unidadId: 'exoneraciones', operacion: 'Modificar', rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'TDO-001',
         claseDocumentoId: 'C', nombre: 'Resolución de prueba', plantillaId: 'PLA-001', retirada: false,
         fechaCreacion: '2026-10-12T15:00:00Z', fechaModificacion: '2026-10-12T15:00:00Z',
         contenidoPropuesto: { bloques: [{ codigo: 'CABECERA' }, { codigo: 'CONSIDERANDO' }] },
@@ -64,7 +65,10 @@ describe('Revisión del Documento Consolidado', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    responderUnidades(http);
+    http.verify();
+  });
 
   it('el analista envía a verificación tras confirmar, y el documento sale de su bandeja', async () => {
     TestBed.inject(UsuarioPruebaService).seleccionar('a.perez');
