@@ -2,7 +2,8 @@ import { Component, ElementRef, computed, effect, inject, input, linkedSignal, s
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { mensajeError } from '../../core/errores';
+import { abrirPdf } from '../../compartido/abrir-pdf';
+import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 import { DatosObservacion, Propuesta } from '../../core/modelos';
 import { UnidadService } from '../../core/unidad.service';
@@ -61,6 +62,44 @@ export class RevisionConsolidado {
   );
 
   protected readonly seleccionada = linkedSignal<Propuesta | null>(() => this.activas()[0] ?? null);
+
+  private readonly solicitudesRecurso = rxResource({ stream: () => this.api.solicitudes() });
+  private readonly bienesRecurso = rxResource({ stream: () => this.api.detallesBienes() });
+
+  /** Solicitudes de prueba para la vista previa, como las ve el analista: primero las de la combinación de la plantilla. */
+  protected readonly solicitudes = computed(() => {
+    const plantilla = this.seleccionada();
+    const bienes = new Map<string, number>();
+    for (const bien of this.bienesRecurso.hasValue() ? this.bienesRecurso.value() : []) {
+      bienes.set(bien.solicitudId, (bienes.get(bien.solicitudId) ?? 0) + 1);
+    }
+    return (this.solicitudesRecurso.hasValue() ? this.solicitudesRecurso.value() : [])
+      .map((s) => ({
+        ...s,
+        mismaCombinacion: !!plantilla && s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId,
+        bienes: bienes.get(s.id) ?? 0,
+      }))
+      .sort((a, b) => Number(b.mismaCombinacion) - Number(a.mismaCombinacion));
+  });
+
+  /** Por defecto, la primera solicitud de la misma combinación; '' significa «sin datos». */
+  protected readonly solicitudElegida = linkedSignal(() => this.solicitudes().find((s) => s.mismaCombinacion)?.id ?? '');
+
+  /** Plantilla de la que se está generando la vista previa en PDF. */
+  protected readonly generando = signal<string | null>(null);
+
+  /** Vista previa en PDF de la plantilla tal como quedaría con el documento aprobado, con los datos de la solicitud elegida. */
+  protected async vistaPrevia(propuesta: Propuesta): Promise<void> {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(propuesta.id);
+    const error = await abrirPdf(this.api.generarPdf(propuesta.id, this.solicitudElegida() || null), propuesta.nombre);
+    this.generando.set(null);
+    if (error) {
+      this.interaccion.avisar('error', `No se pudo generar el PDF. ${await mensajeErrorArchivo(error)}`, 8000);
+    }
+  }
 
   protected ajustes(propuestaId: string) {
     return this.detalle()?.ajustes[propuestaId] ?? [];
@@ -196,7 +235,7 @@ export class RevisionConsolidado {
           `${resultado.consolidado.numero} aprobado: ${resultado.publicadas.length} ${resultado.publicadas.length === 1 ? 'plantilla publicada' : 'plantillas publicadas'}.`,
           6000,
         );
-        void this.router.navigate(['/consolidados', detalle.consolidado.id]);
+        void this.router.navigate(['/consolidados']);
       },
       error: (error: unknown) => {
         this.aprobando.set(false);

@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
-import { EstadoBloqueComparado, Segmento } from '../../core/modelos';
+import { BloqueComparado, EstadoBloqueComparado, ParrafoComparado, Segmento } from '../../core/modelos';
 
 type Vista = 'Ambos' | 'Original' | 'Consolidado';
 
@@ -42,6 +42,23 @@ export class ComparacionPropuesta {
   /** En pantallas angostas conviene ver una sola columna. */
   protected readonly vista = signal<Vista>('Ambos');
   protected readonly vistas: Vista[] = ['Ambos', 'Original', 'Consolidado'];
+
+  /** Oculta los párrafos y bloques sin cambios, que solo se muestran como contexto. */
+  protected readonly soloCambios = signal(false);
+
+  /** Un párrafo cambió si se agregó, eliminó, modificó (texto, formato o configuración) o cambió de posición. */
+  protected esCambio(parrafo: ParrafoComparado): boolean {
+    return parrafo.estado !== 'SinCambios' || parrafo.movido;
+  }
+
+  protected parrafosVisibles(bloque: BloqueComparado): ParrafoComparado[] {
+    return this.soloCambios() ? bloque.parrafos.filter((p) => this.esCambio(p)) : bloque.parrafos;
+  }
+
+  /** Párrafos sin cambios que «Solo cambios» oculta en el bloque. */
+  protected ocultos(bloque: BloqueComparado): number {
+    return this.soloCambios() ? bloque.parrafos.filter((p) => !this.esCambio(p)).length : 0;
+  }
 
   protected readonly conCambios = computed(
     () => this.comparacion()?.bloques.filter((b) => b.estado !== 'SinCambios').length ?? 0,

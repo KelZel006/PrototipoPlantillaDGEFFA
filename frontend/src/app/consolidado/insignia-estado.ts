@@ -51,6 +51,10 @@ import { DETALLE_ESTADO, EstadoConsolidado, NOMBRE_ESTADO } from '../core/modelo
       background: var(--exito-suave);
       color: var(--exito);
     }
+    .estado-Eliminado {
+      background: var(--error-suave);
+      color: var(--error);
+    }
     .detalle {
       font-size: var(--texto-pequeno);
       color: var(--texto-secundario);

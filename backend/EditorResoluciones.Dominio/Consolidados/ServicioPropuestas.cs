@@ -9,12 +9,14 @@ namespace EditorResoluciones.Dominio.Consolidados;
 
 /// <summary>
 /// CREAR una plantilla nueva. Con <c>plantillaOrigenId</c>, empieza como copia de la versión vigente de esa plantilla
-/// (clonar); sin él, empieza vacía.
+/// (clonar); sin él, empieza vacía. <c>NombreReferencia</c> es el «Nombre Plantilla» que escribe el analista.
 /// </summary>
 public sealed record SolicitudCrearPlantilla(
-    string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string? Nombre, string? PlantillaOrigenId = null);
+    string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string? Nombre, string? PlantillaOrigenId = null,
+    string? NombreReferencia = null);
 
-public sealed record SolicitudModificarPlantilla(string PlantillaId);
+/// <summary>MODIFICAR una plantilla vigente. Sin «Nombre Plantilla», conserva el que ya tenía la plantilla.</summary>
+public sealed record SolicitudModificarPlantilla(string PlantillaId, string? NombreReferencia = null);
 
 public sealed record SolicitudRetiro(string Motivo);
 
@@ -82,7 +84,8 @@ public sealed record PlantillaEdicion(
     string? DerivadaDePropuestaId,
     string? PlantillaId,
     IReadOnlyList<BloqueConfigurado> Bloques,
-    IReadOnlyList<string> ObligatoriosVacios);
+    IReadOnlyList<string> ObligatoriosVacios,
+    string? NombreReferencia = null);
 
 /// <summary>Plantilla vigente que se puede elegir para MODIFICAR. Si ya está en un consolidado abierto, se indica cuál (D4).</summary>
 public sealed record PlantillaVigente(
@@ -141,6 +144,7 @@ public sealed class ServicioPropuestas(
             resultado.Agregar("claseDocumentoId", "El documento (Original, Modificación o Aclaratoria) no existe o está inactivo.");
         if (solicitud.Nombre is { Length: > 200 })
             resultado.Agregar("nombre", "El nombre admite hasta 200 caracteres.");
+        var nombreReferencia = NombreReferencia(solicitud.NombreReferencia, resultado);
         resultado.LanzarSiHayErrores();
 
         var ahora = reloj.GetUtcNow();
@@ -174,6 +178,7 @@ public sealed class ServicioPropuestas(
                 TipoDocumentoId = identidad.TipoDocumentoId,
                 ClaseDocumentoId = identidad.ClaseDocumentoId,
                 Nombre = string.IsNullOrWhiteSpace(solicitud.Nombre) ? NombrePredeterminado(tipo!, clase!, subRubro!) : solicitud.Nombre.Trim(),
+                NombreReferencia = nombreReferencia,
                 ContenidoPropuesto = contenido,
                 FechaCreacion = ahora,
                 FechaModificacion = ahora,
@@ -184,6 +189,9 @@ public sealed class ServicioPropuestas(
 
     public async Task<IReadOnlyList<Propuesta>> AgregarModificarAsync(string consolidadoId, SolicitudModificarPlantilla solicitud, CancellationToken ct = default)
     {
+        var resultado = new ResultadoValidacion();
+        var nombreReferencia = NombreReferencia(solicitud.NombreReferencia, resultado);
+        resultado.LanzarSiHayErrores();
         var analista = await autorizacion.ExigirAsync(Rol.Analista, ct);
         var catalogo = await CatalogoAsync(ct);
         var ahora = reloj.GetUtcNow();
@@ -192,7 +200,7 @@ public sealed class ServicioPropuestas(
             var consolidado = await EditableAsync(tx, consolidadoId, analista, ct);
             var plantilla = (await tx.ListarAsync<Plantilla>(ct)).FirstOrDefault(p => p.Id == solicitud.PlantillaId)
                 ?? throw new EntidadNoEncontradaException(plantillas.Coleccion, solicitud.PlantillaId);
-            var principal = await CrearModificacionAsync(tx, consolidado, plantilla, ahora, ct);
+            var principal = await CrearModificacionAsync(tx, consolidado, plantilla, ahora, ct, nombreReferencia);
             return await DespuesDeAgregarAsync(tx, consolidado, principal, catalogo, analista, ahora, ct);
         }, ct);
     }
@@ -420,13 +428,14 @@ public sealed class ServicioPropuestas(
         return consolidado;
     }
 
-    /// <summary>Propuestas no retiradas de consolidados que todavía no se aprobaron.</summary>
+    /// <summary>Propuestas no retiradas de consolidados que todavía no se aprobaron ni se eliminaron.</summary>
     private static Task<List<(Propuesta Propuesta, DocumentoConsolidado Consolidado)>> AbiertasAsync(
         IReadOnlyList<Propuesta> todas, IReadOnlyList<DocumentoConsolidado> todos)
     {
         var porId = todos.ToDictionary(c => c.Id, StringComparer.Ordinal);
         return Task.FromResult(todas
-            .Where(p => !p.Retirada && porId.TryGetValue(p.ConsolidadoId, out var c) && c.Estado != EstadoConsolidado.Aprobado)
+            .Where(p => !p.Retirada && porId.TryGetValue(p.ConsolidadoId, out var c) &&
+                        c.Estado is not (EstadoConsolidado.Aprobado or EstadoConsolidado.Eliminado))
             .Select(p => (p, porId[p.ConsolidadoId]))
             .ToList());
     }
@@ -443,7 +452,17 @@ public sealed class ServicioPropuestas(
             throw new ConflictoException($"Esa plantilla ya se está creando en el documento {otro.Numero}.");
     }
 
-    private async Task<Propuesta> CrearModificacionAsync(ITransaccion tx, DocumentoConsolidado consolidado, Plantilla plantilla, DateTimeOffset ahora, CancellationToken ct)
+    /// <summary>«Nombre Plantilla» sin espacios sobrantes; vacío es null. Admite hasta 200 caracteres.</summary>
+    private static string? NombreReferencia(string? valor, ResultadoValidacion resultado)
+    {
+        var nombre = string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        if (nombre is { Length: > 200 })
+            resultado.Agregar("nombreReferencia", "El nombre de la plantilla admite hasta 200 caracteres.");
+        return nombre;
+    }
+
+    private async Task<Propuesta> CrearModificacionAsync(ITransaccion tx, DocumentoConsolidado consolidado, Plantilla plantilla, DateTimeOffset ahora,
+        CancellationToken ct, string? nombreReferencia = null)
     {
         if (plantilla.UnidadId != consolidado.UnidadId)
             throw new ConflictoException($"«{plantilla.Nombre}» es de otra unidad: un documento solo contiene plantillas de su unidad.");
@@ -471,6 +490,7 @@ public sealed class ServicioPropuestas(
             TipoDocumentoId = plantilla.TipoDocumentoId,
             ClaseDocumentoId = plantilla.ClaseDocumentoId,
             Nombre = plantilla.Nombre,
+            NombreReferencia = nombreReferencia ?? plantilla.NombreReferencia,
             PlantillaId = plantilla.Id,
             VersionOrigenId = vigente.Id,
             HuellaOrigen = vigente.Huella,
@@ -591,7 +611,8 @@ public sealed class ServicioPropuestas(
         p.ContenidoPropuesto.Diseno.EspacioFirmasCm, p.FechaModificacion, p.Operacion, c.Id, c.Numero, c.Estado,
         Editable: c.Estado == EstadoConsolidado.EnRegistro && c.AnalistaId == usuario.Id && usuario.Tiene(Rol.Analista) && !p.Retirada,
         p.Retirada, p.DerivadaDePropuestaId, p.PlantillaId, bloques,
-        CatalogoBloques.ObligatoriosVacios(bloques, p.ContenidoPropuesto));
+        CatalogoBloques.ObligatoriosVacios(bloques, p.ContenidoPropuesto),
+        p.NombreReferencia);
 
     private static List<ParrafoPropuesta> Parrafos(Propuesta propuesta, string? bloque, IReadOnlyList<BloqueConfigurado> configurados) =>
         propuesta.ContenidoPropuesto.Bloques

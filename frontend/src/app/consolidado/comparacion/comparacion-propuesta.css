@@ -18,7 +18,20 @@
 
 .vistas {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--espacio-1);
+}
+
+/* «Solo cambios» se separa de las vistas de columnas. */
+.solo-cambios {
+  margin-left: var(--espacio-2);
+}
+
+.ocultos {
+  margin: var(--espacio-2) var(--espacio-3) 0;
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  font-style: italic;
 }
 
 .leyenda {

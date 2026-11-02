@@ -133,6 +133,29 @@ describe('ListaParrafos', () => {
     expect(titulos).toEqual(['P1']);
   });
 
+  it('indica cuántos textos condicionados tiene el párrafo', () => {
+    const condicion = { operadorLogico: 'Y' as const, reglas: [{ campoId: 'operador', operador: 'EsNulo' as const }], grupos: [] };
+    fixture.componentRef.setInput('parrafos', [
+      parrafo('P1', '', {
+        contenido: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'Base ' },
+                { type: 'text', text: 'opcional', marks: [{ type: 'condicion', attrs: { condicion } }] },
+              ],
+            },
+          ],
+        },
+      }),
+    ]);
+    fixture.detectChanges();
+
+    expect(tarjetas()[0].textContent).toContain('1 texto condicionado');
+  });
+
   it('no permite subir el primero ni bajar el último', () => {
     expect(boton(tarjetas()[0], 'Subir párrafo').disabled).toBe(true);
     expect(boton(tarjetas()[0], 'Bajar párrafo').disabled).toBe(false);

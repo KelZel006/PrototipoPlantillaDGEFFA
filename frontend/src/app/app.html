@@ -1,46 +1,97 @@
-<header class="barra-superior">
-  <a class="marca" routerLink="/consolidados">
-    <span class="logotipo" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4" /></svg>
-    </span>
-    <div>
+<div class="aplicacion" [class.menu-alternado]="menuAlternado()">
+  <header class="barra-superior">
+    <a class="marca" routerLink="/consolidados">
+      <span class="logotipo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4" /></svg>
+      </span>
       <h1>Editor de Resoluciones</h1>
-      <p>Documentos de plantillas</p>
-    </div>
-  </a>
-  <nav class="navegacion" [attr.aria-label]="'Secciones de ' + unidades.nombreActual()">
-    <a [routerLink]="['/unidades', unidades.actual(), 'consolidados']" routerLinkActive="activo">Documentos Plantillas</a>
-    <a [routerLink]="['/unidades', unidades.actual(), 'vigentes']" routerLinkActive="activo">Plantillas vigentes</a>
-  </nav>
-  <div class="sesion">
-    <label class="usuario">
-      <span>Usuario de prueba</span>
-      <select class="control control-compacto" (change)="usuario.seleccionar($any($event.target).value)">
-        @for (u of usuario.usuarios(); track u.id) {
-          <option [value]="u.id" [selected]="u.id === usuario.id()">{{ u.nombreCompleto }} · {{ nombresRoles(u.roles) }}</option>
-        } @empty {
-          <option [value]="usuario.id()" selected>{{ usuario.id() }}</option>
-        }
-      </select>
-    </label>
+    </a>
+    <button
+      type="button"
+      class="alternar-menu"
+      aria-label="Mostrar u ocultar el menú"
+      [attr.aria-expanded]="!menuAlternado()"
+      aria-controls="menu-lateral"
+      (click)="menuAlternado.set(!menuAlternado())"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+    </button>
+    <span class="espaciador"></span>
     <span class="insignia insignia-prueba">Prototipo · datos de prueba</span>
-  </div>
-</header>
+    <span class="usuario-actual" [title]="'Perfil conectado: ' + (usuario.actual()?.nombreCompleto ?? usuario.id())">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+      <span>{{ usuario.actual()?.nombreCompleto ?? usuario.id() }}</span>
+    </span>
+  </header>
 
-<nav class="menu-unidades" aria-label="Unidades">
-  @for (u of unidades.unidades(); track u.id) {
-    <a [routerLink]="['/unidades', u.id, 'consolidados']" [class.activa]="u.id === unidades.actual()"
-      [attr.aria-current]="u.id === unidades.actual() ? 'page' : null">{{ u.nombre }}</a>
-  }
-</nav>
+  <nav id="menu-lateral" class="menu-lateral" aria-label="Menú principal">
+    <div class="seccion-menu">
+      <p class="titulo-seccion">Perfil conectado</p>
+      <div class="perfil">
+        <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+        <div class="datos-perfil">
+          <strong>{{ usuario.actual()?.nombreCompleto ?? usuario.id() }}</strong>
+          <span>{{ nombresRoles(usuario.actual()?.roles ?? []) }}</span>
+        </div>
+      </div>
+      <label class="cambiar-perfil">
+        <span>Usuario de prueba</span>
+        <select class="control control-compacto" (change)="usuario.seleccionar($any($event.target).value)">
+          @for (u of usuario.usuarios(); track u.id) {
+            <option [value]="u.id" [selected]="u.id === usuario.id()">{{ u.nombreCompleto }} · {{ nombresRoles(u.roles) }}</option>
+          } @empty {
+            <option [value]="usuario.id()" selected>{{ usuario.id() }}</option>
+          }
+        </select>
+      </label>
+    </div>
 
-<main class="contenedor">
-  <router-outlet />
-  <details class="diagnostico">
-    <summary>Estado de los datos de prueba</summary>
-    <app-estado-datos />
-  </details>
-</main>
+    <div class="seccion-menu">
+      <p class="titulo-seccion">Unidades</p>
+      <ul class="menu-unidades">
+        @for (u of unidades.unidades(); track u.id) {
+          <li [class.activa]="u.id === unidades.actual()">
+            <button
+              type="button"
+              class="unidad"
+              [attr.aria-expanded]="u.id === abierta()"
+              [attr.aria-controls]="'secciones-' + u.id"
+              (click)="abierta.set(abierta() === u.id ? null : u.id)"
+            >
+              <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6M3 21h18" /></svg>
+              <span>{{ u.nombre }}</span>
+              <svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+            </button>
+            @if (u.id === abierta()) {
+              <ul class="secciones" [id]="'secciones-' + u.id">
+                <li>
+                  <a [routerLink]="['/unidades', u.id, 'consolidados']" routerLinkActive="activo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M3 15h18M9 4v16" /></svg>
+                    Documentos Plantillas
+                  </a>
+                </li>
+                <li>
+                  <a [routerLink]="['/unidades', u.id, 'vigentes']" routerLinkActive="activo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>
+                    Consolidado de Plantillas
+                  </a>
+                </li>
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  </nav>
+
+  <main class="contenedor">
+    <router-outlet />
+    <details class="diagnostico">
+      <summary>Estado de los datos de prueba</summary>
+      <app-estado-datos />
+    </details>
+  </main>
+</div>
 
 <app-dialogo-confirmacion />
 <app-avisos />

@@ -43,7 +43,9 @@ describe('App', () => {
     fixture.detectChanges();
     expect(elemento.querySelector('select')?.textContent).toContain('Julia Ramos · Oficial Jurídico');
     // El menú muestra las cuatro unidades.
-    expect(Array.from(elemento.querySelectorAll('.menu-unidades a')).map((a) => a.textContent?.trim())).toEqual([
+    // En el menú lateral: el perfil conectado y las unidades.
+    expect(elemento.querySelector('.perfil')?.textContent).toContain('Usuario de prueba');
+    expect(Array.from(elemento.querySelectorAll('.menu-unidades .unidad')).map((a) => a.textContent?.trim())).toEqual([
       'Exoneraciones',
       'Dispensas',
       'Registro Exonerados',

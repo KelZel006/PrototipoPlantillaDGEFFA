@@ -116,6 +116,16 @@ public sealed class ServicioPublicacion(
                 if (anterior is null || anterior.Id != propuesta.VersionOrigenId || anterior.Huella != propuesta.HuellaOrigen)
                     throw new ConflictoException($"La versión vigente de «{plantilla.Nombre}» cambió desde que se preparó la propuesta. No se publicó nada.");
 
+                // El «Nombre Plantilla» del analista queda en la plantilla publicada.
+                if (plantilla.NombreReferencia != propuesta.NombreReferencia)
+                {
+                    var plantillaAntes = FusionDerivada.Clonar(plantilla);
+                    plantilla.NombreReferencia = propuesta.NombreReferencia;
+                    plantilla.FechaModificacion = ahora;
+                    await tx.ActualizarAsync(plantilla, ct);
+                    registro.Add(new CambioHistorial("plantillas", plantilla.Id, AccionHistorial.Actualizacion, plantilla.Version, plantillaAntes, plantilla));
+                }
+
                 var antes = FusionDerivada.Clonar(anterior);
                 anterior.Vigencia = Vigencia.NoVigente;
                 anterior.FinVigencia = ahora;
@@ -132,6 +142,7 @@ public sealed class ServicioPublicacion(
                 plantilla = await tx.CrearAsync(new Plantilla
                 {
                     Nombre = propuesta.Nombre,
+                    NombreReferencia = propuesta.NombreReferencia,
                     UnidadId = propuesta.UnidadId,
                     RubroId = propuesta.RubroId,
                     SubRubroId = propuesta.SubRubroId,

@@ -10,20 +10,37 @@
     <div class="resumen">
       <div class="nombre">
         <span class="insignia" [class.insignia-exito]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
-        <h2 id="titulo-plantilla">{{ p.nombre }}</h2>
+        <div class="nombres">
+          <h2 id="titulo-plantilla">{{ p.nombreReferencia || p.nombre }}</h2>
+          @if (p.nombreReferencia) {
+            <span class="nombre-tecnico">{{ p.nombre }}</span>
+          }
+        </div>
       </div>
+      @if (usuario.tiene('Analista')) {
+        <button type="button" class="boton boton-secundario boton-compacto" [disabled]="generando()" (click)="vistaPrevia()">
+          {{ generando() ? 'Generando…' : 'Vista previa en PDF' }}
+        </button>
+      }
       <span class="texto-secundario sin-margen">
-        <a [routerLink]="['/consolidados', p.consolidadoId]">{{ p.consolidadoNumero }}</a> ·
+        <strong>{{ p.consolidadoNumero }}</strong> ·
         <span class="estado-consolidado">{{ nombreEstado[p.estadoConsolidado] }}</span> · modificada
         {{ p.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
       </span>
+      @if (p.editable) {
+        <div class="acciones-documento">
+          <button
+            type="button"
+            class="boton boton-primario boton-compacto enviar"
+            title="Envía el documento al Oficial Jurídico para su revisión"
+            [disabled]="enviando()"
+            (click)="enviar()"
+          >
+            {{ enviando() ? 'Enviando…' : 'Enviar a verificación' }}
+          </button>
+        </div>
+      }
     </div>
-
-    @if (p.obligatoriosVacios.length && p.editable) {
-      <div class="aviso aviso-obligatorio" role="status">
-        Bloques obligatorios sin párrafos activos: {{ p.obligatoriosVacios.join(', ') }}. Se exigirán al enviar a verificación.
-      </div>
-    }
 
     @if (p.retirada) {
       <div class="aviso aviso-error" role="status">Esta plantilla fue retirada del consolidado. Se muestra solo para consulta.</div>
@@ -33,48 +50,12 @@
       </div>
     }
 
-    <div class="generar">
-      <label class="solicitud">
-        <span>Solicitud de prueba</span>
-        <select class="control control-compacto" (change)="solicitudElegida.set($any($event.target).value)">
-          <option value="" [selected]="solicitudElegida() === ''">Sin datos (mostrar los campos)</option>
-          @for (s of solicitudes(); track s.id) {
-            <option [value]="s.id" [selected]="s.id === solicitudElegida()">
-              {{ s.numeroSolicitud }} – {{ s.beneficiario ?? 'sin beneficiario' }} ·
-              {{ s.bienes === 0 ? 'sin bienes' : s.bienes === 1 ? '1 bien' : s.bienes + ' bienes' }}{{ s.mismaCombinacion ? '' : ' (otro rubro)' }}
-            </option>
-          }
-        </select>
-      </label>
-      <label class="selector-generar interlineado">
-        <span>Interlineado</span>
-        <select class="control control-compacto" (change)="interlineado.set($any($event.target).value)">
-          @for (opcion of interlineados; track opcion.valor) {
-            <option [value]="opcion.valor" [selected]="opcion.valor === interlineado()">{{ opcion.nombre }}</option>
-          }
-        </select>
-      </label>
-      <button type="button" class="boton boton-primario" [disabled]="generando()" (click)="generarPdf()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M12 11v6M9 14l3 3 3-3" /></svg>
-        {{ generando() ? 'Generando…' : 'Vista previa en PDF' }}
-      </button>
-      <span class="texto-secundario sin-margen nota-pdf">
-        Vista previa de la plantilla en el consolidado (la versión vigente no cambia hasta que se apruebe el documento). Orden: Cabecera,
-        Considerando, Por Tanto, Resuelve y Firmas. Con una solicitud se reemplazan los campos y se aplican las condiciones.
+    @if (tipo()?.textoCorrido) {
+      <span class="texto-secundario sin-margen nota-corrido">
+        {{ tipo()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y las firmas
+        conservan su forma.
       </span>
-      @if (solicitudElegida() === '') {
-        <span class="nota-pdf nota-sin-datos" role="status">
-          Sin solicitud de prueba: los campos salen como {{ '{' }}Etiqueta{{ '}' }}, las tablas no se llenan y no se aplican las condiciones
-          (se incluyen todos los párrafos activos). Elija una solicitud para ver el documento con datos.
-        </span>
-      }
-      @if (tipo()?.textoCorrido) {
-        <span class="texto-secundario sin-margen nota-pdf nota-corrido">
-          {{ tipo()?.nombre }}: el texto se genera corrido, todo seguido y sin separar párrafos. Solo los cuadros y las firmas
-          conservan su forma.
-        </span>
-      }
-    </div>
+    }
 
     @if (p.derivadaDePropuestaId) {
       <div class="aviso aviso-copia" role="status">

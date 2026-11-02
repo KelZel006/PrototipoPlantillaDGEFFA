@@ -59,6 +59,10 @@ public static class AlertasCampos
                     }
                     if (!ComparadorContenido.MismoJson(viejo.Parrafo.Condicion, nuevo.Parrafo.Condicion) && (condicionVieja || condicionNueva))
                         cambios.Add($"cambió la condición sobre «{campo.Etiqueta}»");
+                    var enTextoViejo = CondicionesDeTexto(viejo.Parrafo, campo.Id);
+                    var enTextoNuevo = CondicionesDeTexto(nuevo.Parrafo, campo.Id);
+                    if ((enTextoViejo.Count > 0 || enTextoNuevo.Count > 0) && !ComparadorContenido.MismoJson(enTextoViejo, enTextoNuevo))
+                        cambios.Add($"cambió una condición dentro del texto sobre «{campo.Etiqueta}»");
                     if (viejo.Parrafo.Activo != nuevo.Parrafo.Activo)
                         cambios.Add(nuevo.Parrafo.Activo ? "se activó el párrafo" : "se desactivó el párrafo");
                     if (viejo.Parrafo.MostrarSoloSiCumple != nuevo.Parrafo.MostrarSoloSiCumple && (condicionVieja || condicionNueva))
@@ -83,9 +87,16 @@ public static class AlertasCampos
             .GroupBy(u => u.Parrafo.Id, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
-    /// <summary>Si el párrafo usa el campo en su texto y si lo usa en su condición.</summary>
+    /// <summary>
+    /// Si el párrafo usa el campo en su texto y si lo usa en una condición (la del párrafo o la de un texto condicionado).
+    /// </summary>
     private static (bool Texto, bool Condicion) Usos(ParrafoContenido? parrafo, string campoId) => parrafo is null
         ? (false, false)
         : (ContenidoEditor.CamposUsados(parrafo.Contenido).Contains(campoId),
-           parrafo.Condicion is not null && ReglasCondiciones.Reglas(parrafo.Condicion).Any(r => r.CampoId == campoId));
+           (parrafo.Condicion is not null && ReglasCondiciones.Reglas(parrafo.Condicion).Any(r => r.CampoId == campoId)) ||
+           CondicionesDeTexto(parrafo, campoId).Count > 0);
+
+    /// <summary>Condiciones de los textos condicionados del párrafo que usan el campo.</summary>
+    private static IReadOnlyList<GrupoCondiciones> CondicionesDeTexto(ParrafoContenido parrafo, string campoId) =>
+        ContenidoEditor.CondicionesDeTexto(parrafo.Contenido).Where(c => ReglasCondiciones.Reglas(c).Any(r => r.CampoId == campoId)).ToList();
 }

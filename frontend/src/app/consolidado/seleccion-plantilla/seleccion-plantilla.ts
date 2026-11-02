@@ -145,15 +145,15 @@ export class SeleccionPlantilla {
         subRubroId: subRubro.id,
         tipoDocumentoId: tipo.id,
         claseDocumentoId: clase.id,
-        nombre: this.nombre().trim() || null,
         plantillaOrigenId: this.modo() === 'Clonar' ? (this.origen()?.plantillaId ?? null) : null,
+        nombreReferencia: this.nombre().trim() || null,
       }),
     );
   }
 
   protected modificar(plantillaId: string): void {
     if (!this.enviando()) {
-      this.enviar(this.api.agregarModificar(this.consolidadoId(), plantillaId));
+      this.enviar(this.api.agregarModificar(this.consolidadoId(), plantillaId, this.nombre().trim() || null));
     }
   }
 

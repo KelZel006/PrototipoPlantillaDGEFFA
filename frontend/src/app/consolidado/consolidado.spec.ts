@@ -5,9 +5,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import { Router, provideRouter } from '@angular/router';
-import { DetalleConsolidado as Detalle, Propuesta, ResumenConsolidado, Usuario } from '../core/modelos';
+import { DetalleConsolidado as Detalle, PlantillaDelResumen, Propuesta, ResumenConsolidado, Usuario } from '../core/modelos';
+import { InteraccionService } from '../core/interaccion.service';
 import { UsuarioPruebaService } from '../core/usuario-prueba.service';
-import { DetalleConsolidado } from './detalle-consolidado/detalle-consolidado';
 import { ListaConsolidados } from './lista-consolidados/lista-consolidados';
 import { SeleccionPlantilla } from './seleccion-plantilla/seleccion-plantilla';
 import { responderUnidades } from '../pruebas/datos-prueba';
@@ -23,16 +23,34 @@ const USUARIOS: Usuario[] = [
   { id: 'j.ramos', version: 1, nombreCompleto: 'Julia Ramos', roles: ['OficialJuridico'], activo: true },
 ];
 
+function plantillaResumen(propuestaId: string, cambios: Partial<PlantillaDelResumen> = {}): PlantillaDelResumen {
+  return {
+    propuestaId, nombre: `Plantilla ${propuestaId}`, operacion: 'Modificar',
+    rubroId: '1100', rubro: 'POR TRATADOS Y CONVENIOS', subRubroId: '1107', subRubro: 'FONDOS BILATERALES',
+    tipoDocumentoId: 'TDO-001', tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', claseDocumento: 'Original', ...cambios,
+  };
+}
+
 const LISTA: ResumenConsolidado[] = [
   {
     id: 'CON-2', numero: 'PLAN-20260002', anio: 2026, estado: 'EnRegistro', unidadId: 'exoneraciones', analistaId: 'a.perez',
     fechaCreacion: '2026-10-12T15:00:00Z', fechaActualizacion: '2026-10-15T15:00:00Z',
     tiposDocumento: ['Certificación', 'Resolución'], totalPlantillas: 2,
+    plantillas: [
+      plantillaResumen('PRO-1'),
+      plantillaResumen('PRO-2', { tipoDocumentoId: 'TDO-004', tipoDocumento: 'Certificación', operacion: 'Crear' }),
+    ],
   },
   {
     id: 'CON-1', numero: 'PLAN-20260001', anio: 2026, estado: 'Aprobado', unidadId: 'exoneraciones', analistaId: 'a.perez',
     fechaCreacion: '2026-10-05T15:00:00Z', fechaActualizacion: '2026-10-07T15:00:00Z',
     tiposDocumento: ['Dictamen'], totalPlantillas: 1,
+    plantillas: [
+      plantillaResumen('PRO-3', {
+        rubroId: '1800', rubro: 'ASOCIACIONES', subRubroId: '1801', subRubro: 'ONGS',
+        tipoDocumentoId: 'TDO-002', tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-002', claseDocumento: 'Modificación',
+      }),
+    ],
   },
 ];
 
@@ -125,7 +143,7 @@ describe('Documento Consolidado', () => {
     };
 
     it('cada unidad muestra solo sus documentos y queda abierta en el menú', async () => {
-      const otra = { ...LISTA[0], id: 'CON-7', numero: 'PLAN-20260007', unidadId: 'dispensas' };
+      const otra = { ...LISTA[0], id: 'CON-7', numero: 'PLAN-20260007', unidadId: 'dispensas', plantillas: [plantillaResumen('PRO-7')] };
       const fixture = await abrir('a.perez', 'dispensas', [...LISTA, otra]);
       const elemento: HTMLElement = fixture.nativeElement;
 
@@ -136,25 +154,86 @@ describe('Documento Consolidado', () => {
       expect(TestBed.inject(UnidadService).actual()).toBe('dispensas');
     });
 
-    it('lista los documentos con sus tipos y filtra por estado', async () => {
+    it('muestra una fila por plantilla con su identidad y el botón para modificarla a la izquierda', async () => {
       const fixture = await abrir('a.perez');
       const elemento: HTMLElement = fixture.nativeElement;
 
-      const filas = () => Array.from(elemento.querySelectorAll('tbody tr')).map((f) => f.textContent?.replace(/\s+/g, ' '));
-      expect(filas()).toHaveLength(2);
-      expect(filas()[0]).toContain('PLAN-20260002');
-      expect(filas()[0]).toContain('Certificación, Resolución');
-      expect(filas()[0]).toContain('EN REGISTRO');
-
-      const estado = elemento.querySelectorAll<HTMLSelectElement>('.filtros select')[1];
-      estado.value = 'Aprobado';
-      estado.dispatchEvent(new Event('change'));
-      fixture.detectChanges();
-      expect(filas()).toHaveLength(1);
-      expect(filas()[0]).toContain('PLAN-20260001');
+      expect(Array.from(elemento.querySelectorAll('thead th')).map((t) => t.textContent?.trim())).toEqual([
+        'Acción', 'Nro Documento', 'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento', 'Estado',
+      ]);
+      const filas = Array.from(elemento.querySelectorAll('tbody tr'));
+      expect(filas).toHaveLength(3);
+      const primera = filas[0].textContent?.replace(/\s+/g, ' ') ?? '';
+      expect(primera).toContain('PLAN-20260002');
+      expect(primera).toContain('POR TRATADOS Y CONVENIOS');
+      expect(primera).toContain('FONDOS BILATERALES');
+      expect(primera).toContain('Resolución');
+      expect(primera).toContain('Original');
+      // El analista modifica sus plantillas EN REGISTRO; las aprobadas solo se consultan.
+      const accion = (fila: Element) => fila.querySelector('.celda-accion a')!;
+      expect(accion(filas[0]).textContent?.trim()).toBe('Modificar');
+      expect(accion(filas[0]).getAttribute('href')).toBe('/consolidados/CON-2/propuestas/PRO-1');
+      expect(accion(filas[2]).textContent?.trim()).toBe('Ver');
     });
 
-    it('el analista crea un documento con «+ Nueva Plantilla» y se abre la creación de la plantilla', async () => {
+    it('filtra por Rubro, Sub Rubro, Tipo Plantilla y Tipo Documento', async () => {
+      const fixture = await abrir('a.perez');
+      const elemento: HTMLElement = fixture.nativeElement;
+      const filas = () => Array.from(elemento.querySelectorAll('tbody tr')).map((f) => f.textContent?.replace(/\s+/g, ' ') ?? '');
+      const filtro = (indice: number, valor: string) => {
+        const lista = elemento.querySelectorAll<HTMLSelectElement>('.filtros select')[indice];
+        lista.value = valor;
+        lista.dispatchEvent(new Event('change'));
+        fixture.detectChanges();
+      };
+
+      expect(Array.from(elemento.querySelectorAll('.filtros label > span')).map((s) => s.textContent)).toEqual([
+        'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento',
+      ]);
+      // El sub rubro espera al rubro.
+      expect(elemento.querySelectorAll<HTMLSelectElement>('.filtros select')[1].disabled).toBe(true);
+
+      filtro(2, 'TDO-004');
+      expect(filas()).toHaveLength(1);
+      expect(filas()[0]).toContain('Certificación');
+
+      filtro(2, '');
+      filtro(0, '1800');
+      filtro(1, '1801');
+      filtro(3, 'CDO-002');
+      expect(filas()).toHaveLength(1);
+      expect(filas()[0]).toContain('PLAN-20260001');
+
+      botones(elemento, 'Limpiar filtros')[0].click();
+      fixture.detectChanges();
+      expect(filas()).toHaveLength(3);
+    });
+
+    it('pagina las filas y permite elegir cuántas mostrar', async () => {
+      const muchas = Array.from({ length: 12 }, (_, i) => ({
+        ...LISTA[1], id: `CON-${10 + i}`, numero: `PLAN-202600${10 + i}`, plantillas: [plantillaResumen(`PRO-${10 + i}`)],
+      }));
+      const fixture = await abrir('a.perez', undefined, muchas);
+      const elemento: HTMLElement = fixture.nativeElement;
+      const filas = () => elemento.querySelectorAll('tbody tr').length;
+
+      expect(filas()).toBe(10);
+      expect(Array.from(elemento.querySelectorAll('.paginacion button')).map((b) => b.textContent?.trim())).toEqual(['«', '1', '2', '»']);
+      expect(elemento.querySelector('.rango')?.textContent).toBe('1–10 de 12');
+
+      botones(elemento, '2')[0].click();
+      fixture.detectChanges();
+      expect(filas()).toBe(2);
+      expect(elemento.querySelector('.rango')?.textContent).toBe('11–12 de 12');
+
+      const porPagina = elemento.querySelector<HTMLSelectElement>('.por-pagina select')!;
+      porPagina.value = '25';
+      porPagina.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      expect(filas()).toBe(12);
+    });
+
+    it('el analista crea un documento con «+ Nueva Plantilla» y se abre ahí mismo la creación de la plantilla', async () => {
       const fixture = await abrir('a.perez');
       const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
 
@@ -165,8 +244,70 @@ describe('Documento Consolidado', () => {
       // El documento se crea en la unidad abierta.
       expect(creacion.request.body).toEqual({ unidadId: 'exoneraciones' });
       creacion.flush({ ...DETALLE.consolidado, id: 'CON-9', numero: 'PLAN-20260009' });
+      await estabilizar(fixture);
+      // La lista se vuelve a consultar: el documento nuevo aparece (con «Agregar» mientras no tenga plantillas).
+      http.expectOne('/api/consolidados').flush([
+        ...LISTA, { ...LISTA[0], id: 'CON-9', numero: 'PLAN-20260009', plantillas: [], totalPlantillas: 0, tiposDocumento: [] },
+      ]);
+      for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/tipos-documento']) {
+        http.match(url).forEach((p) => p.flush([]));
+      }
+      await estabilizar(fixture);
 
-      expect(navegar).toHaveBeenCalledWith(['/consolidados', 'CON-9'], { queryParams: { agregar: 'crear' } });
+      // No se abre otra pantalla: el diálogo de crear (desde cero o clonando) se abre sobre la lista.
+      expect(navegar).not.toHaveBeenCalled();
+      const dialogo = fixture.nativeElement.querySelector('app-seleccion-plantilla dialog') as HTMLDialogElement;
+      expect(dialogo.hasAttribute('open')).toBe(true);
+      expect(dialogo.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('CREAR');
+      const vacia = Array.from(fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLElement>).find((f) =>
+        f.textContent?.includes('PLAN-20260009'),
+      )!;
+      expect(vacia.querySelector('.celda-accion button')?.textContent?.trim()).toBe('Agregar');
+      // El número del documento ya no abre otra pantalla.
+      expect(vacia.querySelector('.numero-plan')?.tagName).toBe('SPAN');
+    });
+
+    it('el analista elimina su documento EN REGISTRO tras confirmar: pasa a ELIMINADO y se vuelve a consultar la lista', async () => {
+      const fixture = await abrir('a.perez');
+      const elemento: HTMLElement = fixture.nativeElement;
+      const filas = Array.from(elemento.querySelectorAll('tbody tr'));
+      const eliminar = (fila: Element) => fila.querySelector<HTMLButtonElement>('.celda-accion .boton-eliminar');
+
+      // Solo EN REGISTRO: el aprobado no se elimina.
+      expect(eliminar(filas[0])?.textContent?.trim()).toBe('Eliminar');
+      expect(eliminar(filas[2])).toBeNull();
+
+      eliminar(filas[0])!.click();
+      await estabilizar(fixture);
+      const interaccion = TestBed.inject(InteraccionService);
+      expect(interaccion.confirmacion()?.titulo).toBe('Eliminar PLAN-20260002');
+      expect(interaccion.confirmacion()?.mensaje).toContain('con sus 2 plantillas pasará al estado ELIMINADO');
+      interaccion.responder(true);
+      await estabilizar(fixture);
+
+      const peticion = http.expectOne('/api/consolidados/CON-2/eliminar');
+      expect(peticion.request.method).toBe('POST');
+      peticion.flush({ ...DETALLE.consolidado, estado: 'Eliminado' });
+      await estabilizar(fixture);
+      http.expectOne('/api/consolidados').flush([LISTA[1]]);
+      await estabilizar(fixture);
+      expect(elemento.querySelectorAll('tbody tr')).toHaveLength(1);
+      expect(interaccion.avisos().map((x) => x.texto)).toContain('PLAN-20260002 quedó ELIMINADO.');
+    });
+
+    it('sin confirmar no se elimina', async () => {
+      const fixture = await abrir('a.perez');
+      const elemento: HTMLElement = fixture.nativeElement;
+      elemento.querySelector<HTMLButtonElement>('.boton-eliminar')!.click();
+      await estabilizar(fixture);
+      TestBed.inject(InteraccionService).responder(false);
+      await estabilizar(fixture);
+      http.expectNone('/api/consolidados/CON-2/eliminar');
+    });
+
+    it('el Oficial Jurídico no elimina documentos', async () => {
+      const fixture = await abrir('j.ramos');
+      expect(fixture.nativeElement.querySelector('.boton-eliminar')).toBeNull();
     });
 
     it('el Oficial Jurídico no crea consolidados', async () => {
@@ -174,111 +315,6 @@ describe('Documento Consolidado', () => {
 
       expect(botones(fixture.nativeElement, 'Nueva Plantilla')).toHaveLength(0);
       expect(fixture.nativeElement.textContent).toContain('pendientes de revisión jurídica');
-    });
-  });
-
-  describe('Pantalla B: registro del consolidado', () => {
-    const abrir = async (usuario: string, detalle: Detalle = DETALLE, agregar?: string) => {
-      comoUsuario(usuario);
-      const fixture = TestBed.createComponent(DetalleConsolidado);
-      fixture.componentRef.setInput('id', 'CON-2');
-      fixture.componentRef.setInput('agregar', agregar);
-      fixture.detectChanges();
-      await estabilizar(fixture);
-      http.expectOne('/api/usuarios').flush(USUARIOS);
-      http.match('/api/tipos-documento').forEach((p) =>
-        p.flush([
-          { id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true },
-          { id: 'TDO-004', version: 1, nombre: 'Certificación', copiaDeTipoDocumentoId: 'TDO-001', activo: true },
-        ]),
-      );
-      http.expectOne('/api/consolidados/CON-2').flush(detalle);
-      await estabilizar(fixture);
-      http.match('/api/tipos-documento').forEach((p) => p.flush([]));
-      await estabilizar(fixture);
-      return fixture;
-    };
-
-    it('desde «+ Nueva Plantilla» abre la creación de la plantilla una sola vez', async () => {
-      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
-      const fixture = await abrir('a.perez', DETALLE, 'crear');
-      for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/tipos-documento']) {
-        http.match(url).forEach((p) => p.flush([]));
-      }
-      await estabilizar(fixture);
-
-      expect(fixture.nativeElement.querySelector('dialog')?.hasAttribute('open')).toBe(true);
-      expect(fixture.nativeElement.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('CREAR');
-      expect(navegar).toHaveBeenCalledWith([], { queryParams: { agregar: null }, queryParamsHandling: 'merge', replaceUrl: true });
-    });
-
-    it('al Oficial Jurídico se le avisa que se modificó el campo Operador', async () => {
-      const fixture = await abrir('j.ramos', {
-        ...DETALLE,
-        consolidado: { ...DETALLE.consolidado, estado: 'Verificado' },
-        alertas: [
-          { propuestaId: 'PRO-1', plantilla: 'Resolución de prueba', campoId: 'operador', campo: 'Operador',
-            ubicacion: 'CONSIDERANDO 1', detalle: 'cambió el texto alrededor de {Operador}' },
-        ],
-      });
-      const aviso = fixture.nativeElement.querySelector('.aviso-campos') as HTMLElement;
-
-      expect(aviso.getAttribute('role')).toBe('alert');
-      expect(aviso.textContent).toContain('Se modificó el campo Operador');
-      expect(aviso.textContent).toContain('Resolución de prueba · CONSIDERANDO 1: cambió el texto alrededor de {Operador}');
-    });
-
-    it('muestra cada tipo una vez, sus ajustes, la devolución y las acciones del analista', async () => {
-      const fixture = await abrir('a.perez');
-      const elemento: HTMLElement = fixture.nativeElement;
-
-      const tipos = Array.from(elemento.querySelectorAll('tbody th')).map((t) => t.textContent?.trim());
-      expect(tipos).toEqual(['Certificación', 'Resolución']);
-      expect(elemento.querySelector('.aviso-devolucion')?.textContent).toContain('Falta citar la constancia.');
-      expect(elemento.querySelector('.aviso-devolucion')?.textContent).toContain('Resolución de prueba · CONSIDERANDO');
-
-      botones(elemento, 'Ver ajustes')[1].click();
-      fixture.detectChanges();
-      expect(Array.from(elemento.querySelectorAll('.ajuste')).map((a) => a.textContent?.trim())).toEqual([
-        'NUEVO CONSIDERANDO (posición 2)',
-        'POR TANTO 1 modificado',
-      ]);
-
-      expect(botones(elemento, 'CREAR PLANTILLA')).toHaveLength(1);
-      expect(botones(elemento, 'MODIFICAR PLANTILLA')).toHaveLength(1);
-      // La Certificación que acompaña a la Resolución no se retira sola.
-      expect(botones(elemento, 'Retirar')).toHaveLength(1);
-      expect(elemento.textContent).toContain('Acompaña a «Resolución de prueba»');
-    });
-
-    it('retira una propuesta con su motivo', async () => {
-      const fixture = await abrir('a.perez');
-      const elemento: HTMLElement = fixture.nativeElement;
-
-      botones(elemento, 'Retirar')[0].click();
-      fixture.detectChanges();
-      expect(elemento.querySelector('dialog[aria-labelledby="titulo-retiro"]')?.textContent).toContain('También se retira «Certificación de prueba»');
-      const motivo = elemento.querySelector<HTMLTextAreaElement>('dialog[aria-labelledby="titulo-retiro"] textarea')!;
-      motivo.value = 'Se hará en otro documento';
-      motivo.dispatchEvent(new Event('input'));
-      fixture.detectChanges();
-      botones(elemento, 'Retirar').at(-1)!.click();
-
-      const retiro = http.expectOne('/api/propuestas/PRO-1/retirar');
-      expect(retiro.request.body).toEqual({ motivo: 'Se hará en otro documento' });
-      retiro.flush([propuesta('PRO-1', { retirada: true }), propuesta('PRO-2', { retirada: true })]);
-      await estabilizar(fixture);
-      http.expectOne('/api/consolidados/CON-2').flush(DETALLE);
-    });
-
-    it('otro usuario solo consulta', async () => {
-      const fixture = await abrir('j.ramos', { ...DETALLE, consolidado: { ...DETALLE.consolidado, estado: 'Verificado' } });
-      const elemento: HTMLElement = fixture.nativeElement;
-
-      expect(botones(elemento, 'CREAR PLANTILLA')).toHaveLength(0);
-      expect(botones(elemento, 'Retirar')).toHaveLength(0);
-      expect(elemento.textContent).toContain('pendiente de revisión jurídica');
-      expect(elemento.querySelector('.aviso-devolucion')).toBeNull();
     });
   });
 
@@ -317,7 +353,7 @@ describe('Documento Consolidado', () => {
 
       items[0].querySelector('button')!.click();
       const modificar = http.expectOne('/api/consolidados/CON-2/propuestas/modificar');
-      expect(modificar.request.body).toEqual({ plantillaId: 'PLA-001' });
+      expect(modificar.request.body).toEqual({ plantillaId: 'PLA-001', nombreReferencia: null });
       modificar.flush([propuesta('PRO-1'), propuesta('PRO-2')]);
       await estabilizar(fixture);
       http.expectOne('/api/plantillas-vigentes').flush([]);
@@ -373,11 +409,17 @@ describe('Documento Consolidado', () => {
         expect(fixture.nativeElement.querySelector('app-selector-origen')).toBeNull();
 
         await combinacion(fixture, 'lista', 'CDO-002');
+        // El «Nombre Plantilla» se escribe aquí, al crearla.
+        const nombre = fixture.nativeElement.querySelector('.campo-nombre input') as HTMLInputElement;
+        expect(fixture.nativeElement.querySelector('.campo-nombre span')?.textContent).toBe('Nombre Plantilla');
+        nombre.value = '  Exoneración a docentes 2026 ';
+        nombre.dispatchEvent(new Event('input'));
         botones(fixture.nativeElement, 'Crear plantilla')[0].click();
 
         const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
         expect(crear.request.body).toEqual({
-          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', nombre: null, plantillaOrigenId: null,
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', plantillaOrigenId: null,
+          nombreReferencia: 'Exoneración a docentes 2026',
         });
         crear.flush([propuesta('PRO-9')]);
         await estabilizar(fixture);
@@ -408,7 +450,8 @@ describe('Documento Consolidado', () => {
 
         const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
         expect(crear.request.body).toEqual({
-          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', nombre: null, plantillaOrigenId: 'PLA-001',
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', plantillaOrigenId: 'PLA-001',
+          nombreReferencia: null,
         });
         crear.flush([propuesta('PRO-9')]);
         await estabilizar(fixture);

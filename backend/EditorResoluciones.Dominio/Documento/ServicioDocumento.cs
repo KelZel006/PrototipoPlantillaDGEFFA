@@ -45,6 +45,7 @@ public static class Interlineados
 /// <item>En las tablas, repite cada fila con campos de lista una vez por registro de la solicitud.</item>
 /// <item>Une al anterior los párrafos marcados «Unir con el párrafo anterior»: se muestran como uno solo.</item>
 /// <item>Los títulos van centrados y en negrita, y no consumen numeración.</item>
+/// <item>Un texto condicionado dentro de un párrafo solo aparece si se cumple su condición. Sin solicitud, aparece.</item>
 /// </list>
 /// Si faltan datos para evaluar una condición, el párrafo no se incluye y se registra una advertencia.
 /// </summary>
@@ -326,8 +327,56 @@ public sealed class ServicioDocumento(
                 Texto = nodo.Texto,
                 Atributos = nodo.Atributos is null ? null : new Dictionary<string, JsonElement>(nodo.Atributos),
                 Marcas = nodo.Marcas?.ToList(),
-                Contenido = nodo.Contenido?.Select(h => Sustituir(h, registro, ubicacion)).ToList(),
+                Contenido = nodo.Contenido is null ? null : SustituirHijos(nodo.Contenido, registro, ubicacion),
             };
+        }
+
+        /// <summary>
+        /// Sustituye los hijos de un nodo. Un texto condicionado cuya condición no se cumple (o no se puede evaluar por
+        /// falta de datos) se omite, y no deja un espacio doble en su lugar. Sin solicitud, se incluye.
+        /// </summary>
+        private List<NodoContenido> SustituirHijos(List<NodoContenido> hijos, DetalleBien? registro, string ubicacion)
+        {
+            var resultado = new List<NodoContenido>();
+            var omitido = false;
+            foreach (var hijo in hijos)
+            {
+                var nodo = hijo;
+                if (ContenidoEditor.CondicionDeTexto(hijo) is { } condicion)
+                {
+                    if (solicitud is not null)
+                    {
+                        var cumple = EvaluadorCondiciones.Evaluar(condicion, id => Valor(id, registro));
+                        if (cumple != ResultadoCondicion.Verdadero)
+                        {
+                            if (cumple == ResultadoCondicion.Indeterminado)
+                                advertencias.Add($"{ubicacion}: un texto condicionado no se incluyó porque faltan datos para evaluar su condición.");
+                            omitido = true;
+                            continue;
+                        }
+                    }
+                    nodo = new NodoContenido
+                    {
+                        Tipo = hijo.Tipo,
+                        Texto = hijo.Texto,
+                        Atributos = hijo.Atributos,
+                        Marcas = hijo.Marcas!.Where(m => m.Tipo != ContenidoEditor.MarcaCondicion).ToList() is { Count: > 0 } resto ? resto : null,
+                        Contenido = hijo.Contenido,
+                    };
+                }
+
+                var sustituido = Sustituir(nodo, registro, ubicacion);
+                if (omitido && resultado.Count > 0 && resultado[^1] is { Tipo: "text", Texto: { } antes } && antes.EndsWith(' ') &&
+                    sustituido is { Tipo: "text", Texto: { } despues } && despues.StartsWith(' '))
+                {
+                    sustituido.Texto = despues.TrimStart(' ');
+                    if (sustituido.Texto.Length == 0)
+                        continue;
+                }
+                omitido = false;
+                resultado.Add(sustituido);
+            }
+            return resultado;
         }
 
         /// <summary>

@@ -3,7 +3,7 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { identificadorUnico } from '../../compartido/identificador';
 import { CatalogoService } from '../../core/catalogo.service';
 import { describirGrupo, tieneReglas } from '../../core/condiciones';
-import { textoPlano } from '../../core/contenido';
+import { textoPlano, textosCondicionados } from '../../core/contenido';
 import { Numerador } from '../../core/numeracion';
 import { Parrafo } from '../../core/modelos';
 
@@ -69,6 +69,7 @@ export class ListaParrafos {
         unionSinAnterior: !!parrafo.unirConAnterior && indice === 0,
         parrafo,
         resumen: textoPlano(parrafo.contenido, this.catalogo.etiqueta),
+        textosCondicionados: textosCondicionados(parrafo.contenido, this.catalogo.etiqueta).length,
         estado: estadoCondicion(parrafo),
         condicion: parrafo.condicion ? describirGrupo(parrafo.condicion, this.catalogo.porId()) : '',
       };

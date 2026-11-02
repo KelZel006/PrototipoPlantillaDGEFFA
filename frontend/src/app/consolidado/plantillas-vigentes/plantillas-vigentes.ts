@@ -1,7 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { UnidadService } from '../../core/unidad.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
@@ -16,7 +15,7 @@ import { InsigniaVigencia } from '../insignia-vigencia';
  */
 @Component({
   selector: 'app-plantillas-vigentes',
-  imports: [DatePipe, RouterLink, InsigniaVigencia],
+  imports: [DatePipe, InsigniaVigencia],
   templateUrl: './plantillas-vigentes.html',
   styleUrl: './plantillas-vigentes.css',
 })

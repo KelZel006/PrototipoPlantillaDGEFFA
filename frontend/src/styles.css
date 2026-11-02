@@ -322,3 +322,8 @@ h3 {
 .tabla tbody th {
   font-weight: 600;
 }
+
+/* Un enlace con aspecto de botón no se subraya. */
+a.boton {
+  text-decoration: none;
+}

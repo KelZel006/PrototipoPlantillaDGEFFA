@@ -176,3 +176,29 @@
   font-size: var(--texto-pequeno);
   font-weight: 700;
 }
+
+.encabezado-plantilla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.acciones-plantilla {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.solicitud {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
+}
+
+.solicitud select {
+  max-width: 420px;
+}

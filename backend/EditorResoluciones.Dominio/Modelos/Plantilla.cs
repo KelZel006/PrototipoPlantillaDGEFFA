@@ -28,6 +28,13 @@ public class Plantilla : IEntidad, IConMarcaTiempo
     [Required(ErrorMessage = "El nombre es obligatorio."), StringLength(200, ErrorMessage = "El nombre admite hasta 200 caracteres.")]
     public string Nombre { get; set; } = "";
 
+    /// <summary>
+    /// Nombre de referencia que le da el analista («Nombre Plantilla»), por ejemplo «Exoneración a docentes 2026». Solo
+    /// sirve para reconocerla: no cambia su identidad ni el nombre técnico.
+    /// </summary>
+    [StringLength(200, ErrorMessage = "El nombre de la plantilla admite hasta 200 caracteres.")]
+    public string? NombreReferencia { get; set; }
+
     /// <summary>Unidad que elabora la plantilla. Forma parte de su identidad.</summary>
     public string UnidadId { get; set; } = "";
 

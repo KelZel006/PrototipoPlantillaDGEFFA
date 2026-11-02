@@ -8,7 +8,6 @@ import { Router, provideRouter } from '@angular/router';
 import { InteraccionService } from '../../core/interaccion.service';
 import { DetalleConsolidado as Detalle, Usuario } from '../../core/modelos';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
-import { DetalleConsolidado } from '../detalle-consolidado/detalle-consolidado';
 import { RevisionConsolidado } from './revision-consolidado';
 import { responderUnidades } from '../../pruebas/datos-prueba';
 
@@ -67,38 +66,44 @@ describe('Revisión del Documento Consolidado', () => {
 
   afterEach(() => {
     responderUnidades(http);
+    http.match('/api/solicitudes').forEach((p) => p.flush([]));
+    http.match('/api/detalles-bienes').forEach((p) => p.flush([]));
     http.verify();
   });
 
-  it('el analista envía a verificación tras confirmar, y el documento sale de su bandeja', async () => {
-    TestBed.inject(UsuarioPruebaService).seleccionar('a.perez');
-    const fixture = TestBed.createComponent(DetalleConsolidado);
+  it('el Oficial Jurídico ve la vista previa en PDF con los datos de una solicitud, como el analista', async () => {
+    TestBed.inject(UsuarioPruebaService).seleccionar('j.ramos');
+    const fixture = TestBed.createComponent(RevisionConsolidado);
     fixture.componentRef.setInput('id', 'CON-2');
     fixture.detectChanges();
     await estabilizar(fixture);
     http.expectOne('/api/usuarios').flush(USUARIOS);
-    http.match('/api/tipos-documento').forEach((p) => p.flush([]));
-    http.expectOne('/api/consolidados/CON-2').flush(detalle('EnRegistro'));
+    http.expectOne('/api/consolidados/CON-2').flush(detalle('Verificado'));
     await estabilizar(fixture);
-    http.match('/api/tipos-documento').forEach((p) => p.flush([]));
+    http.expectOne('/api/propuestas/PRO-1/comparacion').flush({ propuestaId: 'PRO-1', operacion: 'Modificar', bloques: [], diseno: [], ajustes: [] });
+    await estabilizar(fixture);
     const elemento: HTMLElement = fixture.nativeElement;
-    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
 
-    // El analista no ve las diferencias: las revisa el Oficial Jurídico.
-    expect(Array.from(elemento.querySelectorAll('a')).some((a) => a.textContent?.includes('Diferencias'))).toBe(false);
-    expect(elemento.textContent).toContain('Primera presentación');
-
-    boton(elemento, 'ENVIAR A VERIFICACIÓN').click();
+    expect(elemento.textContent).not.toContain('Ver plantilla completa');
+    http.expectOne('/api/solicitudes').flush([
+      { id: 'SOL-9', version: 1, numeroSolicitud: 'PRUEBA-9', beneficiario: 'Otro', rubroId: 'X', subRubroId: 'Y', esDatoPrueba: true },
+      { id: 'SOL-1', version: 1, numeroSolicitud: 'PRUEBA-1', beneficiario: 'Beneficiario Uno', rubroId: 'R', subRubroId: 'S', esDatoPrueba: true },
+    ]);
+    http.expectOne('/api/detalles-bienes').flush([{ id: 'B-1', version: 1, solicitudId: 'SOL-1', codigoArancelario: '1', descripcion: 'd', cantidad: 1, esDatoPrueba: true }]);
     await estabilizar(fixture);
-    const interaccion = TestBed.inject(InteraccionService);
-    expect(interaccion.confirmacion()?.titulo).toBe('Enviar PLAN-20260002 a verificación');
-    interaccion.responder(true);
-    await estabilizar(fixture);
+    // Se propone la solicitud de la misma combinación que la plantilla (R / S).
+    const lista = elemento.querySelector<HTMLSelectElement>('.solicitud select')!;
+    expect(lista.options[lista.selectedIndex].textContent).toContain('PRUEBA-1 – Beneficiario Uno · 1 bien');
 
-    const envio = http.expectOne('/api/consolidados/CON-2/enviar');
-    expect(envio.request.method).toBe('POST');
-    envio.flush({ ...detalle('Verificado').consolidado, numeroPresentacion: 2 });
-    expect(navegar).toHaveBeenCalledWith(['/consolidados']);
+    const ventana = { location: { href: '' }, close: vi.fn() } as unknown as Window;
+    vi.spyOn(window, 'open').mockReturnValue(ventana);
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:pdf');
+    boton(elemento, 'Vista previa en PDF').click();
+    const pdf = http.expectOne((r) => r.url === '/api/propuestas/PRO-1/pdf');
+    expect(pdf.request.params.get('solicitudId')).toBe('SOL-1');
+    pdf.flush(new Blob(['%PDF'], { type: 'application/pdf' }));
+    await estabilizar(fixture);
+    expect(ventana.location.href).toBe('blob:pdf');
   });
 
   it('el Oficial Jurídico compara y devuelve con justificación y observaciones', async () => {
@@ -174,8 +179,32 @@ describe('Revisión del Documento Consolidado', () => {
     const aprobacion = http.expectOne('/api/consolidados/CON-2/aprobar');
     expect(aprobacion.request.method).toBe('POST');
     aprobacion.flush({ consolidado: { ...detalle('Verificado').consolidado, estado: 'Aprobado' }, publicadas: [{ id: 'VER-9', plantillaId: 'PLA-001', numeroVersion: 2 }] });
-    expect(navegar).toHaveBeenCalledWith(['/consolidados', 'CON-2']);
+    expect(navegar).toHaveBeenCalledWith(['/consolidados']);
     expect(interaccion.avisos().map((a) => a.texto)).toContain('PLAN-20260002 aprobado: 1 plantilla publicada.');
+  });
+
+  it('al Oficial Jurídico se le avisa que se modificó el campo Operador', async () => {
+    TestBed.inject(UsuarioPruebaService).seleccionar('j.ramos');
+    const fixture = TestBed.createComponent(RevisionConsolidado);
+    fixture.componentRef.setInput('id', 'CON-2');
+    fixture.detectChanges();
+    await estabilizar(fixture);
+    http.expectOne('/api/usuarios').flush(USUARIOS);
+    http.expectOne('/api/consolidados/CON-2').flush({
+      ...detalle('Verificado'),
+      alertas: [
+        { propuestaId: 'PRO-1', plantilla: 'Resolución de prueba', campoId: 'operador', campo: 'Operador',
+          ubicacion: 'CONSIDERANDO 1', detalle: 'cambió el texto alrededor de {Operador}' },
+      ],
+    });
+    await estabilizar(fixture);
+    http.expectOne('/api/propuestas/PRO-1/comparacion').flush({ propuestaId: 'PRO-1', operacion: 'Modificar', bloques: [], diseno: [], ajustes: [] });
+    await estabilizar(fixture);
+    const aviso = fixture.nativeElement.querySelector('.aviso-campos') as HTMLElement;
+
+    expect(aviso.getAttribute('role')).toBe('alert');
+    expect(aviso.textContent).toContain('Se modificó el campo Operador');
+    expect(aviso.textContent).toContain('Resolución de prueba · CONSIDERANDO 1: cambió el texto alrededor de {Operador}');
   });
 
   it('fuera de VERIFICADO no se revisa', async () => {

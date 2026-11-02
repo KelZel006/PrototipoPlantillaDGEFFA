@@ -57,7 +57,41 @@ public static class ContenidoEditor
         ["link"] = ["href", "target", "rel", "class", "title"],
         // Tamaño del texto: solo los valores de la lista (TamanosTexto).
         [MarcaEstiloTexto] = ["fontSize"],
+        // Texto condicionado: el fragmento solo aparece si se cumple la condición.
+        [MarcaCondicion] = ["condicion"],
     };
+
+    /// <summary>
+    /// Marca de un fragmento del texto que solo aparece en el documento si se cumple su condición (atributo
+    /// <c>condicion</c>, con la misma forma que la condición del párrafo).
+    /// </summary>
+    public const string MarcaCondicion = "condicion";
+
+    /// <summary>Condición de una marca de texto condicionado, o null si no lo es o no se puede leer.</summary>
+    public static GrupoCondiciones? CondicionDeMarca(MarcaContenido marca)
+    {
+        if (marca.Tipo != MarcaCondicion || marca.Atributos is null || !marca.Atributos.TryGetValue("condicion", out var valor) ||
+            valor.ValueKind != JsonValueKind.Object)
+            return null;
+        try
+        {
+            return valor.Deserialize<GrupoCondiciones>(Comun.OpcionesJson.Predeterminadas);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Condición del texto condicionado al que pertenece el nodo (texto o campo), o null si no tiene.</summary>
+    public static GrupoCondiciones? CondicionDeTexto(NodoContenido nodo) =>
+        (nodo.Marcas ?? []).Select(CondicionDeMarca).FirstOrDefault(c => c is not null);
+
+    /// <summary>Condiciones de los textos condicionados del contenido, sin repetir (como JSON, para comparar).</summary>
+    public static IReadOnlyList<GrupoCondiciones> CondicionesDeTexto(NodoContenido raiz) =>
+        Recorrer(raiz).Select(CondicionDeTexto).OfType<GrupoCondiciones>()
+            .DistinctBy(c => JsonSerializer.Serialize(c, Comun.OpcionesJson.Predeterminadas))
+            .ToList();
 
     /// <summary>Marca del editor que lleva el tamaño del texto.</summary>
     public const string MarcaEstiloTexto = "textStyle";
@@ -233,6 +267,13 @@ public static class ContenidoEditor
             ValidarAtributos(marca.Tipo, marca.Atributos, atributosMarca, resultado);
             if (marca.Tipo == "link" && !EnlaceSeguro(Texto(marca.Atributos, "href")))
                 resultado.Agregar(clave, "Los enlaces solo pueden usar http, https o mailto.");
+            if (marca.Tipo == MarcaCondicion)
+            {
+                if (CondicionDeMarca(marca) is not { } condicion || !ReglasCondiciones.Reglas(condicion).Any())
+                    resultado.Agregar(clave, "Un texto condicionado no tiene una condición válida.");
+                else
+                    ReglasCondiciones.Validar(condicion, OrigenesDatos.Solicitudes, catalogo, resultado);
+            }
             if (marca.Tipo == MarcaEstiloTexto && marca.Atributos is not null && marca.Atributos.TryGetValue("fontSize", out var tamano) &&
                 tamano.ValueKind != JsonValueKind.Null &&
                 (tamano.ValueKind != JsonValueKind.String || !TamanosTexto.Contains(tamano.GetString())))

@@ -68,6 +68,11 @@
     </div>
 
     <div class="grupo">
+      <button type="button" class="herramienta" aria-label="Condición del texto"
+        [title]="estado().condicionado ? 'Cambiar o quitar la condición de este texto' : 'Condicionar el texto seleccionado: solo aparecerá si se cumple la condición'"
+        [attr.aria-pressed]="estado().condicionado || editandoCondicion()" (click)="abrirCondicion()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H6a2 2 0 0 0-2 2v4l-2 2 2 2v4a2 2 0 0 0 2 2h2M16 4h2a2 2 0 0 1 2 2v4l2 2-2 2v4a2 2 0 0 1-2 2h-2" /><circle cx="12" cy="12" r="2.5" /></svg>
+      </button>
       <button type="button" class="herramienta" aria-label="Insertar tabla"
         [title]="estado().enTabla ? 'No se puede insertar una tabla dentro de otra' : 'Insertar tabla'"
         [disabled]="estado().enTabla" [attr.aria-pressed]="creandoTabla()" (click)="abrirTabla()">
@@ -116,6 +121,27 @@
     </div>
   }
 
+  @if (editandoCondicion()) {
+    <div class="panel-condicion" role="group" [attr.aria-labelledby]="uid + '-titulo-condicion'">
+      <p class="titulo-condicion" [id]="uid + '-titulo-condicion'">
+        {{ estado().condicionado ? 'Condición de este texto' : 'Condición del texto seleccionado' }}
+        <span>El texto solo aparecerá en el documento si se cumple la condición; el resto del párrafo sale siempre.</span>
+      </p>
+      <app-grupo-condiciones [grupo]="condicionTexto()" [campos]="camposCondicion()" [identificador]="uid + '-cond'"
+        (cambio)="condicionTexto.set($event); errorCondicion.set(null)" />
+      <div class="acciones-condicion">
+        <button type="button" class="boton boton-primario boton-compacto" (click)="aplicarCondicion()">Aplicar al texto</button>
+        @if (estado().condicionado) {
+          <button type="button" class="boton boton-secundario boton-compacto" (click)="quitarCondicion()">Quitar condición</button>
+        }
+        <button type="button" class="boton boton-texto boton-compacto" (click)="cancelarCondicion()">Cancelar</button>
+        @if (errorCondicion(); as error) {
+          <span class="error-enlace" role="alert">{{ error }}</span>
+        }
+      </div>
+    </div>
+  }
+
   @if (creandoTabla()) {
     <div class="enlace crear-tabla">
       <label>
@@ -159,6 +185,28 @@
 
   <div #superficie class="contenedor-superficie"></div>
 </div>
+
+@if (condicionados().length > 0) {
+  <section class="condicionados" [attr.aria-labelledby]="uid + '-condicionados'">
+    <p class="titulo-condicionados" [id]="uid + '-condicionados'">
+      {{ condicionados().length }} {{ condicionados().length === 1 ? 'texto condicionado' : 'textos condicionados' }}
+      <span>· haga clic en uno para ver su condición arriba</span>
+    </p>
+    <ul>
+      @for (fragmento of condicionados(); track fragmento.desde) {
+        <li>
+          <button type="button" class="fragmento-condicionado" title="Ver, cambiar o quitar su condición" (click)="editarFragmento(fragmento)">
+            <span class="fragmento">«{{ fragmento.texto }}»</span>&ngsp;<span class="solo-si">solo si {{ describirCondicion()(fragmento.condicion) }}</span>
+          </button>
+          <button type="button" class="quitar-fragmento" title="Quitar la condición: el texto saldrá siempre"
+            [attr.aria-label]="'Quitar la condición de «' + fragmento.texto + '»'" (click)="quitarFragmento(fragmento)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}
 
 <p class="contador" [class.contador-excedido]="excedido()" aria-live="polite">
   {{ caracteres() }}/{{ maximo }}

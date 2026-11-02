@@ -10,14 +10,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { Editor, JSONContent } from '@tiptap/core';
-import { TableKit } from '@tiptap/extension-table';
-import { TextAlign } from '@tiptap/extension-text-align';
-import { FontSize, TextStyle } from '@tiptap/extension-text-style';
-import { StarterKit } from '@tiptap/starter-kit';
 import { identificadorUnico } from '../../compartido/identificador';
+import { copiarGrupo, grupoVacio, normalizarCondicion, problemasCondicion, tieneReglas } from '../../core/condiciones';
 import { MAXIMO_CARACTERES, ResolverEtiqueta, contarCaracteres, documentoVacio } from '../../core/contenido';
-import { Campo, NodoContenido, esCampoLista } from '../../core/modelos';
-import { NodoCampo } from './nodo-campo';
+import { Campo, GrupoCondiciones, NodoContenido, esCampoLista } from '../../core/modelos';
+import { GrupoCondicionesComponente } from '../constructor-condiciones/grupo-condiciones';
+import { COLUMNAS_MAXIMAS, FILAS_MAXIMAS, TAMANOS_TEXTO, enlacePermitido, extensionesEditor } from './extensiones';
+
+export { COLUMNAS_MAXIMAS, FILAS_MAXIMAS, TAMANOS_TEXTO, enlacePermitido } from './extensiones';
 
 type Alineacion = 'left' | 'center' | 'right' | 'justify';
 
@@ -29,9 +29,19 @@ interface EstadoBarra {
   numerada: boolean;
   enlace: boolean;
   enTabla: boolean;
+  /** El cursor está en un texto condicionado. */
+  condicionado: boolean;
   alineacion: Alineacion;
   /** Tamaño del texto en el cursor (por ejemplo, "12pt"); vacío es el tamaño normal. */
   tamano: string;
+}
+
+/** Texto condicionado del párrafo y su posición en el editor, para abrir su condición o quitarla desde la lista. */
+export interface FragmentoCondicionado {
+  desde: number;
+  hasta: number;
+  texto: string;
+  condicion: GrupoCondiciones;
 }
 
 const ESTADO_INICIAL: EstadoBarra = {
@@ -42,52 +52,10 @@ const ESTADO_INICIAL: EstadoBarra = {
   numerada: false,
   enlace: false,
   enTabla: false,
+  condicionado: false,
   alineacion: 'justify',
   tamano: '',
 };
-
-/** Tamaños de texto que se pueden elegir; coinciden con los del servidor (ContenidoEditor.TamanosTexto). */
-export const TAMANOS_TEXTO = ['8pt', '9pt', '10pt', '11pt', '12pt', '13pt', '14pt', '16pt', '18pt', '20pt', '24pt'];
-
-/**
- * Tamaño del texto. Igual que FontSize de TipTap, pero al pegar contenido (por ejemplo, desde Word) solo conserva los
- * tamaños de la lista; los demás se descartan para que el servidor no rechace el párrafo.
- */
-const TamanoTexto = FontSize.extend({
-  addGlobalAttributes() {
-    return [
-      {
-        types: ['textStyle'],
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: (elemento: HTMLElement) => {
-              const tamano = elemento.style.fontSize.replace(/\s+/g, '');
-              return TAMANOS_TEXTO.includes(tamano) ? tamano : null;
-            },
-            renderHTML: (atributos: { fontSize?: string | null }) =>
-              atributos.fontSize ? { style: `font-size: ${atributos.fontSize}` } : {},
-          },
-        },
-      },
-    ];
-  },
-});
-
-/** Límites de una tabla; coinciden con los del servidor. */
-export const COLUMNAS_MAXIMAS = 12;
-export const FILAS_MAXIMAS = 100;
-
-const PROTOCOLOS_PERMITIDOS = ['http:', 'https:', 'mailto:'];
-
-/** Comprueba que un enlace use http, https o mailto (el servidor aplica la misma regla). */
-export function enlacePermitido(url: string): boolean {
-  try {
-    return PROTOCOLOS_PERMITIDOS.includes(new URL(url).protocol);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Editor de texto enriquecido con la barra del diseño: negrita, cursiva, subrayado, listas, alineación,
@@ -95,6 +63,7 @@ export function enlacePermitido(url: string): boolean {
  */
 @Component({
   selector: 'app-editor-texto',
+  imports: [GrupoCondicionesComponente],
   templateUrl: './editor-texto.html',
   styleUrl: './editor-texto.css',
 })
@@ -105,6 +74,10 @@ export class EditorTexto implements OnDestroy {
   readonly campos = input.required<Campo[]>();
   readonly etiqueta = input.required<ResolverEtiqueta>();
   readonly etiquetaAccesible = input('Texto del párrafo');
+  /** Campos que se pueden usar en las condiciones de un texto (los mismos que en la condición del párrafo). */
+  readonly camposCondicion = input<Campo[]>([]);
+  /** Describe una condición en palabras (para el resaltado y el resumen). */
+  readonly describirCondicion = input<(condicion: GrupoCondiciones) => string>(() => '');
 
   /** Se emite con cada cambio del contenido. */
   readonly cambio = output<NodoContenido>();
@@ -128,6 +101,13 @@ export class EditorTexto implements OnDestroy {
   protected readonly tablaConEncabezado = signal(true);
   protected readonly columnasMaximas = COLUMNAS_MAXIMAS;
   protected readonly filasMaximas = FILAS_MAXIMAS;
+
+  // Texto condicionado: un fragmento que solo aparece si se cumple su condición.
+  protected readonly editandoCondicion = signal(false);
+  protected readonly condicionTexto = signal<GrupoCondiciones>(grupoVacio());
+  protected readonly errorCondicion = signal<string | null>(null);
+  /** Textos condicionados del párrafo, con su posición; se listan debajo del editor. */
+  protected readonly condicionados = signal<FragmentoCondicionado[]>([]);
 
   protected readonly editandoEnlace = signal(false);
   protected readonly urlEnlace = signal('');
@@ -222,8 +202,76 @@ export class EditorTexto implements OnDestroy {
     this.editor?.chain().focus().unsetAllMarks().clearNodes().unsetTextAlign().run();
   }
 
+  /**
+   * Abre el panel de condición: si el cursor está en un texto condicionado, para cambiar su condición; si no, para
+   * condicionar el texto seleccionado.
+   */
+  protected abrirCondicion(): void {
+    const editor = this.editor;
+    if (!editor) {
+      return;
+    }
+    this.creandoTabla.set(false);
+    this.editandoEnlace.set(false);
+    this.errorCondicion.set(null);
+    if (editor.isActive('condicion')) {
+      editor.chain().extendMarkRange('condicion').run();
+      const actual = editor.getAttributes('condicion')['condicion'] as GrupoCondiciones | null;
+      this.condicionTexto.set(actual ? copiarGrupo(actual) : grupoVacio());
+    } else if (editor.state.selection.empty) {
+      this.condicionTexto.set(grupoVacio());
+      this.errorCondicion.set('Seleccione primero el texto que quiere condicionar.');
+    } else {
+      this.condicionTexto.set(grupoVacio());
+    }
+    this.editandoCondicion.set(true);
+  }
+
+  protected aplicarCondicion(): void {
+    const editor = this.editor;
+    const condicion = normalizarCondicion(this.condicionTexto());
+    if (!editor) {
+      return;
+    }
+    if (editor.state.selection.empty && !editor.isActive('condicion')) {
+      this.errorCondicion.set('Seleccione primero el texto que quiere condicionar.');
+      return;
+    }
+    const problemas = problemasCondicion(this.condicionTexto());
+    if (!condicion || !tieneReglas(condicion) || problemas.length > 0) {
+      this.errorCondicion.set(problemas[0] ?? 'Agregue al menos una condición completa.');
+      return;
+    }
+    const cadena = editor.chain().focus();
+    (editor.isActive('condicion') ? cadena.extendMarkRange('condicion') : cadena).condicionarTexto(condicion).run();
+    this.editandoCondicion.set(false);
+  }
+
+  /** Desde la lista de abajo: selecciona el texto condicionado y abre arriba su condición, para cambiarla o quitarla. */
+  protected editarFragmento(fragmento: FragmentoCondicionado): void {
+    this.editor?.chain().focus().setTextSelection({ from: fragmento.desde, to: fragmento.hasta }).run();
+    this.abrirCondicion();
+  }
+
+  /** Desde la lista de abajo: quita la condición de ese texto, que pasa a salir siempre. */
+  protected quitarFragmento(fragmento: FragmentoCondicionado): void {
+    this.editor?.chain().focus().setTextSelection({ from: fragmento.desde, to: fragmento.hasta }).unsetMark('condicion').run();
+    this.editandoCondicion.set(false);
+  }
+
+  protected quitarCondicion(): void {
+    this.editor?.chain().focus().quitarCondicionTexto().run();
+    this.editandoCondicion.set(false);
+  }
+
+  protected cancelarCondicion(): void {
+    this.editandoCondicion.set(false);
+    this.editor?.commands.focus();
+  }
+
   protected abrirEnlace(): void {
     this.creandoTabla.set(false);
+    this.editandoCondicion.set(false);
     const actual = (this.editor?.getAttributes('link')['href'] as string | undefined) ?? '';
     this.urlEnlace.set(actual || 'https://');
     this.errorEnlace.set(null);
@@ -269,6 +317,7 @@ export class EditorTexto implements OnDestroy {
 
   protected abrirTabla(): void {
     this.editandoEnlace.set(false);
+    this.editandoCondicion.set(false);
     this.creandoTabla.set(true);
   }
 
@@ -324,33 +373,11 @@ export class EditorTexto implements OnDestroy {
     this.editor = new Editor({
       element: this.superficie().nativeElement,
       content: (this.contenidoPendiente ?? documentoVacio()) as JSONContent,
-      extensions: [
-        StarterKit.configure({
-          heading: false,
-          blockquote: false,
-          code: false,
-          codeBlock: false,
-          horizontalRule: false,
-          strike: false,
-          link: {
-            openOnClick: false,
-            autolink: false,
-            linkOnPaste: false,
-            protocols: [],
-            isAllowedUri: (url) => enlacePermitido(url),
-          },
-        }),
-        TextAlign.configure({
-          types: ['paragraph'],
-          alignments: ['left', 'center', 'right', 'justify'],
-          // El documento va justificado: es la alineación de todo párrafo nuevo.
-          defaultAlignment: 'justify',
-        }),
-        TextStyle,
-        TamanoTexto,
-        TableKit.configure({ table: { resizable: false, HTMLAttributes: { class: 'tabla-editor' } } }),
-        NodoCampo.configure({ etiqueta: (id) => this.etiqueta()(id), esLista: (id) => this.esLista(id) }),
-      ],
+      extensions: extensionesEditor({
+        etiqueta: (id) => this.etiqueta()(id),
+        esLista: (id) => this.esLista(id),
+        describir: (condicion) => this.describirCondicion()(condicion),
+      }),
       editorProps: {
         attributes: {
           class: 'superficie-editor',
@@ -370,6 +397,35 @@ export class EditorTexto implements OnDestroy {
     this.actualizarEstado();
   }
 
+  /**
+   * Textos condicionados del documento del editor, en orden. Los nodos seguidos con la misma condición forman un solo
+   * fragmento; los campos se muestran como {Etiqueta}.
+   */
+  private leerCondicionados(editor: Editor): FragmentoCondicionado[] {
+    const lista: (FragmentoCondicionado & { clave: string })[] = [];
+    editor.state.doc.descendants((nodo, posicion) => {
+      if (!nodo.isInline) {
+        return true;
+      }
+      const marca = nodo.marks.find((m) => m.type.name === 'condicion');
+      const condicion = marca?.attrs['condicion'] as GrupoCondiciones | null | undefined;
+      if (!condicion) {
+        return false;
+      }
+      const clave = JSON.stringify(condicion);
+      const texto = nodo.isText ? (nodo.text ?? '') : `{${this.etiqueta()(String(nodo.attrs['campoId'] ?? ''))}}`;
+      const ultimo = lista.at(-1);
+      if (ultimo && ultimo.clave === clave && ultimo.hasta === posicion) {
+        ultimo.hasta = posicion + nodo.nodeSize;
+        ultimo.texto += texto;
+      } else {
+        lista.push({ desde: posicion, hasta: posicion + nodo.nodeSize, texto, condicion, clave });
+      }
+      return false;
+    });
+    return lista.map(({ desde, hasta, texto, condicion }) => ({ desde, hasta, texto: texto.replace(/\s+/g, ' ').trim(), condicion }));
+  }
+
   private actualizarEstado(): void {
     const editor = this.editor;
     if (!editor) {
@@ -385,10 +441,12 @@ export class EditorTexto implements OnDestroy {
       numerada: editor.isActive('orderedList'),
       enlace: editor.isActive('link'),
       enTabla: editor.isActive('table'),
+      condicionado: editor.isActive('condicion'),
       alineacion,
       tamano: (editor.getAttributes('textStyle')['fontSize'] as string | null | undefined) ?? '',
     });
     this.caracteres.set(contarCaracteres(editor.getJSON() as NodoContenido, this.etiqueta()));
+    this.condicionados.set(this.leerCondicionados(editor));
     if (this.estado().enTabla !== enTablaAntes) {
       this.enTablaCambio.emit(this.estado().enTabla);
     }

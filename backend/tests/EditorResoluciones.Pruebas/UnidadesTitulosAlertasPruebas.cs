@@ -154,6 +154,85 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
         Assert.Empty(detalle!.Alertas);
     }
 
+    [Fact]
+    public async Task El_listado_trae_cada_plantilla_con_los_nombres_de_su_identidad()
+    {
+        var consolidado = await Consolidados.CrearAsync(_cliente);
+        await Consolidados.ModificarAsync(_cliente, "PLA-001", consolidado);
+
+        var resumen = (await _cliente.GetFromJsonAsync<List<ResumenConsolidado>>("/api/consolidados", Json))!.Single(c => c.Id == consolidado);
+
+        var plantilla = Assert.Single(resumen.Plantillas);
+        Assert.Equal("PLA-001", (await _cliente.GetFromJsonAsync<Propuesta>($"/api/propuestas/{plantilla.PropuestaId}", Json))!.PlantillaId);
+        Assert.Equal(OperacionPropuesta.Modificar, plantilla.Operacion);
+        Assert.False(string.IsNullOrEmpty(plantilla.Rubro));
+        Assert.NotEqual(plantilla.RubroId, plantilla.Rubro);
+        Assert.Equal("Resolución de aprobación (prueba)", plantilla.TipoDocumento);
+        Assert.Equal("Original", plantilla.ClaseDocumento);
+    }
+
+    [Fact]
+    public async Task El_Nombre_Plantilla_se_escribe_al_agregar_la_plantilla_y_no_cambia_el_nombre_tecnico()
+    {
+        // MODIFICAR: con el nombre que escribe el analista (sin espacios sobrantes).
+        var consolidadoId = await Consolidados.CrearAsync(_cliente);
+        var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidadoId}/propuestas/modificar",
+            new SolicitudModificarPlantilla("PLA-001", "  Exoneración a docentes 2026  "), Json);
+        respuesta.EnsureSuccessStatusCode();
+        var modificacion = (await respuesta.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.First();
+        var edicion = await _cliente.GetFromJsonAsync<PlantillaEdicion>($"/api/propuestas/{modificacion.Id}/edicion", Json);
+        Assert.Equal("Exoneración a docentes 2026", edicion!.NombreReferencia);
+        Assert.NotEqual(edicion.NombreReferencia, edicion.Nombre);
+
+        // CREAR: también desde el diálogo.
+        var crear = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidadoId}/propuestas/crear",
+            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-003", "CDO-001", null, null, "Dictamen ONG"), Json);
+        crear.EnsureSuccessStatusCode();
+        Assert.Equal("Dictamen ONG", (await crear.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.First().NombreReferencia);
+
+        // Más de 200 caracteres se rechaza; ya no hay forma de cambiarlo en el editor.
+        var otro = await Consolidados.CrearAsync(_cliente);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _cliente.PostAsJsonAsync($"/api/consolidados/{otro}/propuestas/modificar",
+            new SolicitudModificarPlantilla("PLA-002", new string('x', 201)), Json)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _cliente.PutAsJsonAsync($"/api/propuestas/{modificacion.Id}/nombre-referencia",
+            new { nombreReferencia = "Otro" }, Json)).StatusCode);
+    }
+
+    [Fact]
+    public async Task El_analista_elimina_su_documento_EN_REGISTRO_de_forma_logica_y_libera_sus_plantillas()
+    {
+        var propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001")).First();
+        var id = propuesta.ConsolidadoId;
+
+        // El Oficial Jurídico no elimina documentos.
+        Assert.Equal(HttpStatusCode.Forbidden, (await Enviar(HttpMethod.Post, $"/api/consolidados/{id}/eliminar", "j.ramos", null)).StatusCode);
+        // Otro analista tampoco: no es suyo.
+        Assert.Equal(HttpStatusCode.NotFound, (await Enviar(HttpMethod.Post, $"/api/consolidados/{id}/eliminar", "m.lopez", null)).StatusCode);
+
+        var respuesta = await _cliente.PostAsync($"/api/consolidados/{id}/eliminar", null);
+        respuesta.EnsureSuccessStatusCode();
+        Assert.Equal(EstadoConsolidado.Eliminado, (await respuesta.Content.ReadFromJsonAsync<DocumentoConsolidado>(Json))!.Estado);
+
+        // No se borra: el documento y su propuesta siguen guardados, con el movimiento de la eliminación.
+        using var alcance = _fabrica.Services.CreateScope();
+        var guardado = (await alcance.ServiceProvider.GetRequiredService<IRepositorio<DocumentoConsolidado>>().ObtenerAsync(id))!;
+        Assert.Equal(EstadoConsolidado.Eliminado, guardado.Estado);
+        Assert.NotNull(await alcance.ServiceProvider.GetRequiredService<IRepositorio<Propuesta>>().ObtenerAsync(propuesta.Id));
+        Assert.Contains((await alcance.ServiceProvider.GetRequiredService<IRepositorio<Movimiento>>().ListarAsync()),
+            m => m.ConsolidadoId == id && m.Tipo == TipoMovimiento.Eliminacion && m.EstadoDestino == EstadoConsolidado.Eliminado);
+
+        // Sale de la bandeja del analista; el administrador lo sigue viendo, en consulta, como ELIMINADO.
+        Assert.False(ServicioConsolidados.PuedeVer(new Usuario { Id = guardado.AnalistaId, Roles = [Rol.Analista] }, guardado));
+        Assert.False(ServicioConsolidados.PuedeVer(new Usuario { Id = "j.ramos", Roles = [Rol.OficialJuridico] }, guardado));
+        var bandeja = await _cliente.GetFromJsonAsync<List<ResumenConsolidado>>("/api/consolidados", Json);
+        Assert.Equal(EstadoConsolidado.Eliminado, Assert.Single(bandeja!, c => c.Id == id).Estado);
+        // La plantilla queda libre para otro documento.
+        Assert.Single(await Consolidados.ModificarAsync(_cliente, "PLA-001"), p => p.PlantillaId == "PLA-001");
+
+        // Ya eliminado, no se vuelve a eliminar.
+        Assert.Equal(HttpStatusCode.Conflict, (await _cliente.PostAsync($"/api/consolidados/{id}/eliminar", null)).StatusCode);
+    }
+
     // ---------- Unidades ----------
 
     [Fact]

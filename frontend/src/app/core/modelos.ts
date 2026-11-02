@@ -53,6 +53,8 @@ export type AlineacionLogo = 'Izquierda' | 'Centro' | 'Derecha';
  */
 export interface PlantillaEdicion extends Entidad {
   nombre: string;
+  /** «Nombre Plantilla»: referencia que escribe el analista; se muestra en negrita arriba. */
+  nombreReferencia?: string | null;
   rubroId: string;
   subRubroId: string;
   tipoDocumentoId: string;
@@ -247,7 +249,7 @@ export interface Usuario extends Entidad {
   activo: boolean;
 }
 
-export type EstadoConsolidado = 'EnRegistro' | 'Verificado' | 'Aprobado';
+export type EstadoConsolidado = 'EnRegistro' | 'Verificado' | 'Aprobado' | 'Eliminado';
 
 export type OperacionPropuesta = 'Crear' | 'Modificar';
 
@@ -284,6 +286,25 @@ export interface ResumenConsolidado {
   fechaActualizacion: string;
   tiposDocumento: string[];
   totalPlantillas: number;
+  /** Plantillas del documento (sin las retiradas), con los nombres de su identidad. */
+  plantillas: PlantillaDelResumen[];
+}
+
+/** Plantilla de un documento en el listado, con los nombres de Rubro, Sub Rubro, Tipo Plantilla y Tipo Documento. */
+export interface PlantillaDelResumen {
+  propuestaId: string;
+  nombre: string;
+  operacion: OperacionPropuesta;
+  rubroId: string;
+  rubro: string;
+  subRubroId: string;
+  subRubro: string;
+  /** Tipo de plantilla: Resolución, Certificación, Dictamen… */
+  tipoDocumentoId: string;
+  tipoDocumento: string;
+  /** Tipo de documento: Original, Modificación o Aclaratoria. */
+  claseDocumentoId: string;
+  claseDocumento: string;
 }
 
 export interface Propuesta extends Entidad {
@@ -295,6 +316,8 @@ export interface Propuesta extends Entidad {
   tipoDocumentoId: string;
   claseDocumentoId: string;
   nombre: string;
+  /** «Nombre Plantilla» que escribió el analista (solo de referencia). */
+  nombreReferencia?: string | null;
   plantillaId?: string | null;
   versionOrigenId?: string | null;
   derivadaDePropuestaId?: string | null;
@@ -422,6 +445,7 @@ export const NOMBRE_ESTADO: Record<EstadoConsolidado, string> = {
   EnRegistro: 'EN REGISTRO',
   Verificado: 'VERIFICADO',
   Aprobado: 'APROBADO',
+  Eliminado: 'ELIMINADO',
 };
 
 /** Aclaración del estado VERIFICADO (decisión D6): está pendiente, no revisado. */
@@ -429,6 +453,7 @@ export const DETALLE_ESTADO: Record<EstadoConsolidado, string> = {
   EnRegistro: 'en preparación por el analista',
   Verificado: 'pendiente de revisión jurídica',
   Aprobado: 'cambios publicados',
+  Eliminado: 'descartado por el analista; no se borra',
 };
 
 // ---------- Comparación (Fase 4) ----------

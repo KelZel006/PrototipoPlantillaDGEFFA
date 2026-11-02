@@ -1,0 +1,62 @@
+<section class="tarjeta" aria-labelledby="titulo-vista-plantilla">
+  <header class="encabezado">
+    <h3 id="titulo-vista-plantilla">Contenido de la plantilla</h3>
+    <p class="texto-secundario sin-margen">
+      Solo lectura. Los textos resaltados aparecen solo si se cumple su condición; pase el cursor sobre ellos para verla.
+    </p>
+  </header>
+
+  @if (error(); as mensaje) {
+    <div class="aviso aviso-error" role="alert">{{ mensaje }}</div>
+  } @else if (cargando() && bloques().every((b) => b.elementos.length === 0)) {
+    <p class="texto-secundario" aria-live="polite">Cargando el contenido…</p>
+  } @else {
+    @for (grupo of bloques(); track grupo.bloque.codigo) {
+      <section class="bloque" [attr.aria-label]="grupo.bloque.nombre">
+        <h4>
+          {{ grupo.bloque.nombre }}
+          @if (grupo.bloque.titulo) {
+            <span class="titulo-documento">en el documento: «{{ grupo.bloque.titulo }}»</span>
+          }
+        </h4>
+        @for (e of grupo.elementos; track e.parrafo.id) {
+          <article class="parrafo" [class.inactivo]="!e.parrafo.activo" [class.continua]="e.continua">
+            <div class="marcas">
+              @if (e.numeracion) {
+                <strong class="numeracion">{{ e.numeracion }}</strong>
+              }
+              @if (e.parrafo.esTitulo) {
+                <span class="insignia insignia-titulo">Título · centrado</span>
+              }
+              @if (e.continua) {
+                <span class="insignia insignia-union">↳ Continúa el párrafo anterior</span>
+              }
+              @if (e.condicion) {
+                <span class="insignia" [class.insignia-condicion]="!e.condicionSinAplicar" [class.insignia-apagada]="e.condicionSinAplicar">
+                  {{ e.condicionSinAplicar ? 'Condición sin aplicar' : 'Solo si' }}: {{ e.condicion }}
+                </span>
+              }
+              @if (e.textosCondicionados > 0) {
+                <span class="insignia insignia-texto-condicionado">
+                  {{ e.textosCondicionados }} {{ e.textosCondicionados === 1 ? 'texto condicionado' : 'textos condicionados' }}
+                </span>
+              }
+              @if (!e.parrafo.activo) {
+                <span class="insignia insignia-error">Inactivo: no aparece en el documento</span>
+              }
+            </div>
+            <app-vista-contenido
+              [class.contenido-titulo]="e.parrafo.esTitulo"
+              [contenido]="e.parrafo.contenido"
+              [etiqueta]="catalogo.etiqueta"
+              [esLista]="esLista"
+              [describirCondicion]="describir"
+            />
+          </article>
+        } @empty {
+          <p class="vacio">Sin párrafos en este bloque.</p>
+        }
+      </section>
+    }
+  }
+</section>

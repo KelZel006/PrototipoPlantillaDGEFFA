@@ -271,7 +271,7 @@ CREATE TABLE consolidados (
     CONSTRAINT fk_consolidados_enviado_por FOREIGN KEY (enviado_por) REFERENCES usuarios (id),
     CONSTRAINT fk_consolidados_revisor FOREIGN KEY (revisor_id) REFERENCES usuarios (id),
     CONSTRAINT fk_consolidados_aprobador FOREIGN KEY (aprobador_id) REFERENCES usuarios (id),
-    CONSTRAINT ck_consolidados_estado CHECK (estado IN ('EnRegistro', 'Verificado', 'Aprobado')),
+    CONSTRAINT ck_consolidados_estado CHECK (estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
     CONSTRAINT ck_consolidados_secuencia CHECK (secuencia BETWEEN 1 AND 9999),
     CONSTRAINT ck_consolidados_anio CHECK (anio BETWEEN 2000 AND 2999),
     -- El número se deriva del año y la secuencia: PLAN-20260001.
@@ -408,9 +408,9 @@ CREATE TABLE movimientos (
     CONSTRAINT pk_movimientos PRIMARY KEY (id),
     CONSTRAINT fk_movimientos_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
     CONSTRAINT ck_movimientos_tipo CHECK (tipo IN ('Creacion', 'PropuestaAgregada', 'PropuestaModificada', 'PropuestaRetirada',
-        'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion')),
-    CONSTRAINT ck_movimientos_estado_origen CHECK (estado_origen IS NULL OR estado_origen IN ('EnRegistro', 'Verificado', 'Aprobado')),
-    CONSTRAINT ck_movimientos_estado_destino CHECK (estado_destino IS NULL OR estado_destino IN ('EnRegistro', 'Verificado', 'Aprobado'))
+        'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion', 'Eliminacion')),
+    CONSTRAINT ck_movimientos_estado_origen CHECK (estado_origen IS NULL OR estado_origen IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
+    CONSTRAINT ck_movimientos_estado_destino CHECK (estado_destino IS NULL OR estado_destino IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado'))
 );
 
 CREATE INDEX ix_movimientos_consolidado ON movimientos (consolidado_id, fecha);

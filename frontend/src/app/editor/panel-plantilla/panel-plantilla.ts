@@ -1,33 +1,37 @@
 import { DatePipe } from '@angular/common';
-import { HttpResponse } from '@angular/common/http';
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
+import { abrirPdf } from '../../compartido/abrir-pdf';
 import { ApiService } from '../../core/api.service';
-import { ContextoService } from '../../core/contexto.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
-import { INTERLINEADOS, Interlineado, NOMBRE_ESTADO } from '../../core/modelos';
+import { NOMBRE_ESTADO } from '../../core/modelos';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
+import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { DisenoDocumento } from '../diseno-documento/diseno-documento';
 
 /**
- * Propuesta abierta en el editor: su nombre, la operación (CREAR o MODIFICAR), el documento consolidado al que
- * pertenece, la vista previa en PDF y el diseño del documento.
+ * Propuesta abierta en el editor: su «Nombre Plantilla» (la referencia que escribió el analista al agregarla, en negrita), su
+ * nombre técnico, la operación (CREAR o MODIFICAR), el documento consolidado al que pertenece y el diseño del documento.
+ * Mientras el documento está EN REGISTRO, su analista lo envía a verificación desde aquí.
  */
 @Component({
   selector: 'app-panel-plantilla',
-  imports: [DatePipe, DisenoDocumento, RouterLink],
+  imports: [DatePipe, DisenoDocumento],
   templateUrl: './panel-plantilla.html',
   styleUrl: './panel-plantilla.css',
 })
 export class PanelPlantilla {
   private readonly api = inject(ApiService);
+  private readonly router = inject(Router);
   private readonly interaccion = inject(InteraccionService);
-  private readonly contexto = inject(ContextoService);
+  protected readonly usuario = inject(UsuarioPruebaService);
   protected readonly actual = inject(PlantillaActualService);
 
   protected readonly error = computed(() => (this.actual.error() ? mensajeError(this.actual.error()) : null));
+  protected readonly nombreEstado = NOMBRE_ESTADO;
 
   private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });
 
@@ -38,113 +42,82 @@ export class PanelPlantilla {
     return plantilla ? (tipos.find((t) => t.id === plantilla.tipoDocumentoId) ?? null) : null;
   });
 
-  protected readonly nombreEstado = NOMBRE_ESTADO;
+  // ---------- Vista previa en PDF (perfil Analista) ----------
 
-  private readonly solicitudesRecurso = rxResource({
-    params: () => this.actual.plantilla()?.id,
-    stream: () => this.api.solicitudes(),
-  });
-
-  private readonly bienesRecurso = rxResource({
-    params: () => this.actual.plantilla()?.id,
-    stream: () => this.api.detallesBienes(),
-  });
-
-  /** Cantidad de registros de la lista de bienes por solicitud: indica cuántas filas generará una tabla de lista. */
-  private readonly bienesPorSolicitud = computed(() => {
-    const conteo = new Map<string, number>();
-    for (const bien of this.bienesRecurso.hasValue() ? this.bienesRecurso.value() : []) {
-      conteo.set(bien.solicitudId, (conteo.get(bien.solicitudId) ?? 0) + 1);
-    }
-    return conteo;
-  });
-
-  /** Solicitudes de prueba; primero las del mismo rubro y sub rubro que la plantilla. */
-  protected readonly solicitudes = computed(() => {
-    const plantilla = this.actual.plantilla();
-    const lista = this.solicitudesRecurso.hasValue() ? this.solicitudesRecurso.value() : [];
-    return lista
-      .map((s) => ({
-        ...s,
-        mismaCombinacion: !!plantilla && s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId,
-        bienes: this.bienesPorSolicitud().get(s.id) ?? 0,
-      }))
-      .sort((a, b) => Number(b.mismaCombinacion) - Number(a.mismaCombinacion));
-  });
-
-  /** Por defecto, la primera solicitud de la misma combinación; '' significa "sin datos". */
-  protected readonly solicitudElegida = linkedSignal(
-    () => this.solicitudes().find((s) => s.mismaCombinacion)?.id ?? '',
-  );
   protected readonly generando = signal(false);
-  protected readonly interlineados = INTERLINEADOS;
-  protected readonly interlineado = signal<Interlineado>('1.5');
 
-  protected async generarPdf(): Promise<void> {
+  /**
+   * Genera el PDF de la plantilla tal como está, con los datos de la primera solicitud de prueba de su misma combinación
+   * (rubro y sub rubro); si no hay ninguna, sin datos.
+   */
+  protected async vistaPrevia(): Promise<void> {
     const plantilla = this.actual.plantilla();
     if (!plantilla || this.generando()) {
       return;
     }
-    if (
-      this.contexto.cambiosSinGuardar() &&
-      !(await this.interaccion.confirmar({
-        titulo: 'Hay cambios sin guardar',
-        mensaje: 'El PDF se genera con lo guardado. Los cambios que está editando no se incluirán.',
-        aceptar: 'Generar de todos modos',
-      }))
-    ) {
+    this.generando.set(true);
+    const peticion = this.api.solicitudes().pipe(
+      switchMap((solicitudes) => {
+        const solicitud = solicitudes.find((s) => s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId);
+        return this.api.generarPdf(plantilla.id, solicitud?.id ?? null);
+      }),
+    );
+    const error = await abrirPdf(peticion, plantilla.nombreReferencia || plantilla.nombre);
+    this.generando.set(false);
+    if (error) {
+      this.interaccion.avisar('error', `No se pudo generar el PDF. ${await mensajeErrorArchivo(error)}`, 8000);
+    }
+  }
+
+  // ---------- Documento consolidado (solo para su analista, EN REGISTRO) ----------
+
+  /** El detalle del documento se pide solo cuando la plantilla es editable: el envío cuenta sus plantillas. */
+  // Al guardar un párrafo o el nombre cambia la plantilla, pero no el documento: no se vuelve a pedir.
+  private readonly claveDocumento = computed(
+    () => {
+      const plantilla = this.actual.plantilla();
+      return plantilla?.editable ? { id: plantilla.consolidadoId, usuario: this.usuario.id() } : undefined;
+    },
+    { equal: (a, b) => a?.id === b?.id && a?.usuario === b?.usuario },
+  );
+  private readonly documento = rxResource({
+    params: () => this.claveDocumento(),
+    stream: ({ params }) => this.api.consolidado(params.id),
+  });
+  private readonly detalle = computed(() => (this.documento.hasValue() ? (this.documento.value() ?? null) : null));
+
+  protected readonly activas = computed(() => this.detalle()?.propuestas.filter((p) => !p.retirada) ?? []);
+
+  // ---------- Envío a verificación ----------
+
+  protected readonly enviando = signal(false);
+
+  /** EN REGISTRO → VERIFICADO. El documento sale de la bandeja del analista y pasa a la del Oficial Jurídico. */
+  protected async enviar(): Promise<void> {
+    const plantilla = this.actual.plantilla();
+    if (!plantilla || this.enviando()) {
       return;
     }
-
-    // La ventana se abre durante el clic para que el navegador no la bloquee; luego se le asigna el PDF.
-    const ventana = abrirVentana();
-    this.generando.set(true);
-    this.api.generarPdf(plantilla.id, this.solicitudElegida() || null, this.interlineado()).subscribe({
-      next: (respuesta) => {
-        this.generando.set(false);
-        this.mostrarPdf(respuesta, ventana);
+    const total = this.activas().length || 1;
+    const aceptado = await this.interaccion.confirmar({
+      titulo: `Enviar ${plantilla.consolidadoNumero} a verificación`,
+      mensaje: `Se enviarán ${total} ${total === 1 ? 'plantilla' : 'plantillas'} al Oficial Jurídico. Mientras se revisa, no podrá modificar el documento y dejará de verlo en su bandeja.`,
+      aceptar: 'Enviar a verificación',
+    });
+    if (!aceptado) {
+      return;
+    }
+    this.enviando.set(true);
+    this.api.enviarAVerificacion(plantilla.consolidadoId).subscribe({
+      next: (consolidado) => {
+        this.enviando.set(false);
+        this.interaccion.avisar('exito', `${consolidado.numero} se envió a verificación.`);
+        void this.router.navigate(['/consolidados']);
       },
-      error: async (error: unknown) => {
-        this.generando.set(false);
-        ventana?.close();
-        this.interaccion.avisar('error', `No se pudo generar el PDF. ${await mensajeErrorArchivo(error)}`, 8000);
+      error: (error: unknown) => {
+        this.enviando.set(false);
+        this.interaccion.avisar('error', mensajeError(error), 10000);
       },
     });
   }
-
-  private mostrarPdf(respuesta: HttpResponse<Blob>, ventana: Window | null): void {
-    const archivo = respuesta.body;
-    if (!archivo) {
-      ventana?.close();
-      this.interaccion.avisar('error', 'El servidor no devolvió el PDF.', 8000);
-      return;
-    }
-    const url = URL.createObjectURL(archivo);
-    if (ventana) {
-      ventana.location.href = url;
-    } else {
-      // El navegador bloqueó la ventana: se descarga el archivo.
-      const enlace = document.createElement('a');
-      enlace.href = url;
-      enlace.download = nombreArchivo(respuesta) ?? 'propuesta.pdf';
-      enlace.click();
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    this.interaccion.avisar('exito', 'Vista previa en PDF generada.');
-  }
-}
-
-function abrirVentana(): Window | null {
-  try {
-    return window.open('', '_blank');
-  } catch {
-    return null;
-  }
-}
-
-/** Nombre sugerido por el servidor en Content-Disposition. */
-function nombreArchivo(respuesta: HttpResponse<Blob>): string | null {
-  const disposicion = respuesta.headers.get('Content-Disposition') ?? '';
-  const coincidencia = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposicion);
-  return coincidencia ? decodeURIComponent(coincidencia[1]) : null;
 }

@@ -17,7 +17,7 @@ import { Observable } from 'rxjs';
 import { identificadorUnico } from '../../compartido/identificador';
 import { ApiService } from '../../core/api.service';
 import { CatalogoService } from '../../core/catalogo.service';
-import { copiarGrupo, grupoVacio, normalizarCondicion, problemasCondicion } from '../../core/condiciones';
+import { copiarGrupo, describirGrupo, grupoVacio, normalizarCondicion, problemasCondicion } from '../../core/condiciones';
 import {
   MAXIMO_CARACTERES,
   camposUsados,
@@ -131,6 +131,8 @@ export class EditorSeccion {
   protected readonly contextoCampos = computed(() => this.bloque()?.contextoCampos ?? this.seccion().toLowerCase());
   protected readonly camposSeccion = computed(() => this.catalogo.camposDeContexto(this.contextoCampos()));
   protected readonly camposCondicion = this.catalogo.camposCondicionParrafo;
+  /** Describe una condición en palabras, para el texto condicionado del editor. */
+  protected readonly describirCondicion = (condicion: GrupoCondiciones) => describirGrupo(condicion, this.catalogo.porId());
   protected readonly usados = computed(() => camposUsados(this.contenido()));
   /** El cursor del editor está dentro de una tabla (habilita los campos de lista). */
   protected readonly enTabla = signal(false);

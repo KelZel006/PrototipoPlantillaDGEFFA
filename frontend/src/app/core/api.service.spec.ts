@@ -33,7 +33,7 @@ describe('ApiService', () => {
   it('agrega plantillas a un consolidado con CREAR y MODIFICAR', () => {
     api.agregarModificar('CON-1', 'PLA-001').subscribe();
     const modificar = http.expectOne('/api/consolidados/CON-1/propuestas/modificar');
-    expect(modificar.request.body).toEqual({ plantillaId: 'PLA-001' });
+    expect(modificar.request.body).toEqual({ plantillaId: 'PLA-001', nombreReferencia: null });
     modificar.flush([]);
 
     api.agregarCrear('CON-1', { rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'T', claseDocumentoId: 'C' }).subscribe();

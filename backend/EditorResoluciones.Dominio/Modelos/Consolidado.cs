@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using EditorResoluciones.Dominio.Comun;
 
 namespace EditorResoluciones.Dominio.Modelos;
@@ -10,7 +11,10 @@ public enum EstadoConsolidado
     /// <summary>Enviado y pendiente de la revisión del Oficial Jurídico (decisión D6).</summary>
     Verificado,
 
-    Aprobado
+    Aprobado,
+
+    /// <summary>Eliminación lógica: el analista lo descartó EN REGISTRO. No se borra; queda con su bitácora.</summary>
+    Eliminado
 }
 
 /// <summary>Documento Consolidado (PLAN-AAAANNNN): agrupa las propuestas de creación y modificación de plantillas.</summary>
@@ -78,6 +82,13 @@ public class Propuesta : IEntidad
     public string ClaseDocumentoId { get; set; } = "";
 
     public string Nombre { get; set; } = "";
+
+    /// <summary>
+    /// Nombre de referencia que le da el analista («Nombre Plantilla»), por ejemplo «Exoneración a docentes 2026». Solo
+    /// sirve para reconocerla: no cambia su identidad ni el nombre técnico.
+    /// </summary>
+    [StringLength(200, ErrorMessage = "El nombre de la plantilla admite hasta 200 caracteres.")]
+    public string? NombreReferencia { get; set; }
 
     /// <summary>Plantilla que se modifica; null en una creación (la plantilla se crea al aprobar).</summary>
     public string? PlantillaId { get; set; }
@@ -166,7 +177,8 @@ public enum TipoMovimiento
     Publicacion,
     CambioVigencia,
     ErrorPublicacion,
-    Reasignacion
+    Reasignacion,
+    Eliminacion
 }
 
 /// <summary>Bitácora del consolidado: la línea de tiempo de su ciclo de vida. Solo se agregan registros.</summary>

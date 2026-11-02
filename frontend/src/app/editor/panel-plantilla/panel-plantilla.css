@@ -18,6 +18,19 @@
   gap: var(--espacio-3);
 }
 
+/* Título, «Vista previa en PDF» y número del documento, en ese orden; el envío va en su propia línea. */
+.resumen {
+  justify-content: flex-start;
+}
+
+.resumen > .texto-secundario {
+  margin-left: auto;
+}
+
+.resumen > .acciones-documento {
+  flex-basis: 100%;
+}
+
 .nombre {
   display: flex;
   align-items: center;
@@ -27,40 +40,6 @@
 
 .nombre h2 {
   overflow-wrap: anywhere;
-}
-
-.generar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--espacio-3);
-  padding-top: var(--espacio-3);
-  border-top: 1px solid var(--borde);
-}
-
-.solicitud,
-.selector-generar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--espacio-1);
-  min-width: min(100%, 320px);
-  font-size: var(--texto-pequeno);
-  font-weight: 600;
-}
-
-.generar .boton svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.nota-pdf {
-  flex-basis: 100%;
-  font-size: var(--texto-pequeno);
 }
 
 .aviso-copia {
@@ -75,20 +54,27 @@
   font-weight: 600;
 }
 
-.interlineado {
-  min-width: 130px;
 }
 
-.aviso-obligatorio {
-  border: 1px solid var(--prueba);
-  background: var(--prueba-suave);
-  color: var(--texto);
+/* «Nombre Plantilla»: referencia del analista. */
+.nombres {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-/* Sin solicitud el PDF no lleva datos ni aplica condiciones: se avisa para no confundirlo con un error. */
-.nota-sin-datos {
-  padding: var(--espacio-2) var(--espacio-3);
-  border-radius: var(--radio);
-  background: var(--prueba-suave);
-  color: var(--prueba);
+.nombres h2 {
+  font-weight: 800;
 }
+
+.nombre-tecnico {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}
+
+.acciones-documento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+

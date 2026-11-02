@@ -1,4 +1,4 @@
-import { NodoContenido } from './modelos';
+import { GrupoCondiciones, NodoContenido } from './modelos';
 
 /** Límite de caracteres por párrafo (diseño de referencia). El servidor aplica la misma regla. */
 export const MAXIMO_CARACTERES = 2000;
@@ -118,4 +118,37 @@ export function textoPlano(doc: NodoContenido, etiqueta: ResolverEtiqueta): stri
   };
   visitar(doc);
   return partes.join('').replace(/\s+/g, ' ').trim();
+}
+
+/** Fragmento condicionado de un párrafo: su texto y su condición. */
+export interface TextoCondicionado {
+  texto: string;
+  condicion: GrupoCondiciones;
+}
+
+/**
+ * Textos condicionados del contenido, en orden. Los nodos seguidos con la misma condición forman un solo fragmento;
+ * los campos se muestran como {Etiqueta}.
+ */
+export function textosCondicionados(doc: NodoContenido, etiqueta: ResolverEtiqueta): TextoCondicionado[] {
+  const resultado: (TextoCondicionado & { clave: string })[] = [];
+  let anterior: string | null = null;
+  const visitar = (nodo: NodoContenido) => {
+    const condicion = nodo.marks?.find((m) => m.type === 'condicion')?.attrs?.['condicion'] as GrupoCondiciones | undefined;
+    if (nodo.type === 'text' || nodo.type === 'campo') {
+      const texto = nodo.type === 'text' ? (nodo.text ?? '') : `{${etiqueta(campoId(nodo) ?? '')}}`;
+      const clave = condicion ? JSON.stringify(condicion) : null;
+      if (condicion && clave === anterior && resultado.length > 0) {
+        resultado[resultado.length - 1].texto += texto;
+      } else if (condicion && clave) {
+        resultado.push({ texto, condicion, clave });
+      }
+      anterior = clave;
+      return;
+    }
+    anterior = null;
+    nodo.content?.forEach(visitar);
+  };
+  visitar(doc);
+  return resultado.map(({ texto, condicion }) => ({ texto: texto.replace(/\s+/g, ' ').trim(), condicion }));
 }

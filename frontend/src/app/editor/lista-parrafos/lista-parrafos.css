@@ -248,3 +248,8 @@
   background: var(--primario-suave);
   color: var(--primario-oscuro);
 }
+
+.insignia-texto-condicionado {
+  background: var(--prueba-suave);
+  color: var(--prueba);
+}

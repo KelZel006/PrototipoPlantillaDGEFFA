@@ -62,6 +62,11 @@
                 </span>
               }
             }
+            @if (elemento.textosCondicionados > 0) {
+              <span class="insignia insignia-texto-condicionado" title="Partes del texto que solo aparecen si se cumple su condición">
+                {{ elemento.textosCondicionados }} {{ elemento.textosCondicionados === 1 ? 'texto condicionado' : 'textos condicionados' }}
+              </span>
+            }
             @if (!elemento.parrafo.activo) {
               <span class="insignia insignia-error">Inactivo</span>
             }

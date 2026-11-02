@@ -18,6 +18,8 @@ class EditorTextoFalso {
   readonly campos = input<Campo[]>([]);
   readonly etiqueta = input<(id: string) => string>();
   readonly etiquetaAccesible = input('');
+  readonly camposCondicion = input<Campo[]>([]);
+  readonly describirCondicion = input<unknown>();
   readonly cambio = output<NodoContenido>();
 }
 

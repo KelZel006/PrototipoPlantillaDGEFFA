@@ -39,6 +39,11 @@ public sealed class ConsolidadosController(
     public async Task<ActionResult<Devolucion>> Devolver(string id, [FromBody] SolicitudDevolucion solicitud, CancellationToken ct) =>
         Ok(await revision.DevolverAsync(id, solicitud, ct));
 
+    /// <summary>Eliminación lógica (EN REGISTRO → ELIMINADO): solo el analista dueño. No se borra nada.</summary>
+    [HttpPost("{id}/eliminar")]
+    public async Task<ActionResult<DocumentoConsolidado>> Eliminar(string id, CancellationToken ct) =>
+        Ok(await servicio.EliminarAsync(id, ct));
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ResumenConsolidado>>> Listar(CancellationToken ct) =>
         Ok(await servicio.ListarAsync(ct));

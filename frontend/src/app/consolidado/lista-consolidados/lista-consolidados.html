@@ -1,19 +1,9 @@
-<section class="tarjeta" aria-labelledby="titulo-consolidados">
-  <header class="encabezado-tarjeta">
-    <div>
-      <p class="unidad-actual">{{ unidades.nombre(unidadMostrada()) }}</p>
+<section class="tarjeta-datos" aria-labelledby="titulo-consolidados">
+  <header class="cabecera-tarjeta">
+    <div class="titulo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M3 15h18M9 4v16" /></svg>
       <h2 id="titulo-consolidados">Documentos Plantillas</h2>
-      <p class="texto-secundario sin-margen">
-        @if (usuario.tiene('Administrador')) {
-          Consulta de todos los documentos{{ usuario.tiene('Analista') ? '; como analista, puede crear los suyos' : '' }}.
-        } @else if (usuario.tiene('OficialJuridico') && !usuario.tiene('Analista')) {
-          Su bandeja: documentos VERIFICADOS (pendientes de revisión jurídica) y APROBADOS.
-        } @else if (usuario.tiene('Analista')) {
-          Sus documentos EN REGISTRO y APROBADOS. Los que envía a verificación pasan a la bandeja del Oficial Jurídico.
-        } @else {
-          Consulta de todos los documentos.
-        }
-      </p>
+      <span class="unidad-actual">{{ unidades.nombre(unidadMostrada()) }}</span>
     </div>
     @if (usuario.tiene('Analista')) {
       <button type="button" class="boton boton-primario" [disabled]="creando()" (click)="crear()">
@@ -22,113 +12,172 @@
     }
   </header>
 
-  <div class="filtros" role="search">
-    <label>
-      <span>Número</span>
-      <input class="control control-compacto" type="search" placeholder="PLAN-2026…" [value]="numero()" (input)="numero.set($any($event.target).value)" />
-    </label>
-    <label>
-      <span>Año</span>
-      <select class="control control-compacto" (change)="anio.set($any($event.target).value)">
-        <option value="" [selected]="anio() === ''">Todos</option>
-        @for (a of anios(); track a) {
-          <option [value]="a" [selected]="'' + a === anio()">{{ a }}</option>
-        }
-      </select>
-    </label>
-    <label>
-      <span>Estado</span>
-      <select class="control control-compacto" (change)="estado.set($any($event.target).value)">
-        <option value="" [selected]="estado() === ''">Todos</option>
-        @for (e of estados; track e.valor) {
-          <option [value]="e.valor" [selected]="e.valor === estado()">{{ e.nombre }}</option>
-        }
-      </select>
-    </label>
-    @if (analistas().length > 1) {
+  <div class="cuerpo-tarjeta">
+    <p class="texto-secundario sin-margen">
+      @if (usuario.tiene('Administrador')) {
+        Consulta de todos los documentos{{ usuario.tiene('Analista') ? '; como analista, puede crear los suyos' : '' }}.
+      } @else if (usuario.tiene('OficialJuridico') && !usuario.tiene('Analista')) {
+        Su bandeja: documentos VERIFICADOS (pendientes de revisión jurídica) y APROBADOS.
+      } @else if (usuario.tiene('Analista')) {
+        Sus documentos EN REGISTRO y APROBADOS. Los que envía a verificación pasan a la bandeja del Oficial Jurídico.
+      } @else {
+        Consulta de todos los documentos.
+      }
+    </p>
+
+    <div class="filtros" role="search" aria-label="Filtrar plantillas">
       <label>
-        <span>Analista</span>
-        <select class="control control-compacto" (change)="analista.set($any($event.target).value)">
-          <option value="" [selected]="analista() === ''">Todos</option>
-          @for (a of analistas(); track a) {
-            <option [value]="a" [selected]="a === analista()">{{ a }}</option>
+        <span>Rubro</span>
+        <select class="control" (change)="elegirRubro($any($event.target).value)">
+          <option value="" [selected]="rubro() === ''">Todos</option>
+          @for (o of rubros(); track o.id) {
+            <option [value]="o.id" [selected]="o.id === rubro()">{{ o.nombre }}</option>
           }
         </select>
       </label>
-    }
-    <label>
-      <span>Tipo documental</span>
-      <select class="control control-compacto" (change)="tipo.set($any($event.target).value)">
-        <option value="" [selected]="tipo() === ''">Todos</option>
-        @for (t of tipos(); track t) {
-          <option [value]="t" [selected]="t === tipo()">{{ t }}</option>
+      <label>
+        <span>Sub Rubro</span>
+        <select class="control" [disabled]="!rubro()" (change)="subRubro.set($any($event.target).value)">
+          <option value="" [selected]="subRubro() === ''">{{ rubro() ? 'Todos' : 'Primero elija un rubro' }}</option>
+          @for (o of subRubros(); track o.id) {
+            <option [value]="o.id" [selected]="o.id === subRubro()">{{ o.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Tipo Plantilla</span>
+        <select class="control" (change)="tipoPlantilla.set($any($event.target).value)">
+          <option value="" [selected]="tipoPlantilla() === ''">Todos</option>
+          @for (o of tiposPlantilla(); track o.id) {
+            <option [value]="o.id" [selected]="o.id === tipoPlantilla()">{{ o.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Tipo Documento</span>
+        <select class="control" (change)="tipoDocumento.set($any($event.target).value)">
+          <option value="" [selected]="tipoDocumento() === ''">Todos</option>
+          @for (o of tiposDocumento(); track o.id) {
+            <option [value]="o.id" [selected]="o.id === tipoDocumento()">{{ o.nombre }}</option>
+          }
+        </select>
+      </label>
+      @if (hayFiltros()) {
+        <button type="button" class="boton boton-secundario boton-compacto limpiar" (click)="limpiar()">Limpiar filtros</button>
+      }
+    </div>
+
+    @if (error(); as mensaje) {
+      <div class="aviso aviso-error" role="alert">
+        <span>{{ mensaje }}</span>
+        <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
+      </div>
+    } @else if (cargando() && filtradas().length === 0) {
+      <p class="texto-secundario" aria-live="polite">Cargando documentos…</p>
+    } @else if (filtradas().length === 0) {
+      <p class="vacio">
+        @if (hayFiltros()) {
+          Ninguna plantilla coincide con los filtros.
+        } @else if (usuario.tiene('Analista')) {
+          No tiene documentos. Pulse «+ Nueva Plantilla» para empezar a registrar cambios en las plantillas.
+        } @else {
+          No hay documentos en su bandeja.
         }
-      </select>
-    </label>
-    <label>
-      <span>Fecha de creación</span>
-      <input class="control control-compacto" type="date" [value]="fecha()" (change)="fecha.set($any($event.target).value)" />
-    </label>
-    @if (hayFiltros()) {
-      <button type="button" class="boton boton-secundario boton-compacto" (click)="limpiar()">Limpiar filtros</button>
+      </p>
+    } @else {
+      <div class="tabla-desplazable">
+        <table class="tabla-datos">
+          <thead>
+            <tr>
+              <th scope="col"><span class="oculto">Acción</span></th>
+              <th scope="col">Nro Documento</th>
+              <th scope="col">Rubro</th>
+              <th scope="col">Sub Rubro</th>
+              <th scope="col">Tipo Plantilla</th>
+              <th scope="col">Tipo Documento</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fila of visibles(); track (fila.plantilla?.propuestaId ?? fila.consolidado.id)) {
+              @let a = accion(fila);
+              <tr>
+                <td class="celda-accion">
+                  @if (a.enlace) {
+                    <a class="boton boton-compacto" [class.boton-primario]="a.principal" [class.boton-secundario]="!a.principal"
+                      [routerLink]="a.enlace" [title]="a.titulo">
+                      {{ a.texto }}
+                    </a>
+                  } @else if (a.agregar) {
+                    <button type="button" class="boton boton-compacto boton-primario" [title]="a.titulo" (click)="agregar(fila.consolidado)">
+                      {{ a.texto }}
+                    </button>
+                  } @else {
+                    <span class="texto-secundario" [title]="a.titulo">{{ a.texto }}</span>
+                  }
+                  @if (puedeEliminar(fila.consolidado)) {
+                    <button
+                      type="button"
+                      class="boton boton-compacto boton-eliminar"
+                      [title]="'Eliminar ' + fila.consolidado.numero + ' (pasa a ELIMINADO)'"
+                      [disabled]="eliminando() === fila.consolidado.id"
+                      (click)="eliminar(fila.consolidado)"
+                    >
+                      {{ eliminando() === fila.consolidado.id ? 'Eliminando…' : 'Eliminar' }}
+                    </button>
+                  }
+                </td>
+                <td>
+                  <span class="numero-plan">{{ fila.consolidado.numero }}</span>
+                </td>
+                @if (fila.plantilla; as p) {
+                  <td>{{ p.rubro }}</td>
+                  <td>{{ p.subRubro }}</td>
+                  <td>
+                    {{ p.tipoDocumento }}
+                    <span class="operacion" [class.crear]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
+                  </td>
+                  <td>{{ p.claseDocumento }}</td>
+                } @else {
+                  <td colspan="4" class="sin-plantillas">Sin plantillas todavía</td>
+                }
+                <td><app-insignia-estado [estado]="fila.consolidado.estado" /></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="pie-tabla">
+        <nav class="paginacion" aria-label="Páginas">
+          <button type="button" aria-label="Página anterior" [disabled]="pagina() === 1" (click)="irA(pagina() - 1)">«</button>
+          @for (n of paginas(); track n) {
+            <button type="button" [class.actual]="n === pagina()" [attr.aria-current]="n === pagina() ? 'page' : null" (click)="irA(n)">
+              {{ n }}
+            </button>
+          }
+          <button type="button" aria-label="Página siguiente" [disabled]="pagina() === totalPaginas()" (click)="irA(pagina() + 1)">»</button>
+        </nav>
+        <span class="texto-secundario rango">{{ rango().inicio }}–{{ rango().fin }} de {{ rango().total }}</span>
+        <label class="por-pagina">
+          <span class="oculto">Plantillas por página</span>
+          <select class="control control-compacto" (change)="porPagina.set(+$any($event.target).value)">
+            @for (n of itemsPorPagina; track n) {
+              <option [value]="n" [selected]="n === porPagina()">{{ n }} por página</option>
+            }
+          </select>
+        </label>
+      </footer>
     }
   </div>
-
-  @if (error(); as mensaje) {
-    <div class="aviso aviso-error" role="alert">
-      <span>{{ mensaje }}</span>
-      <button type="button" class="boton boton-secundario" (click)="recargar()">Reintentar</button>
-    </div>
-  } @else if (cargando() && filtrados().length === 0) {
-    <p class="texto-secundario" aria-live="polite">Cargando documentos…</p>
-  } @else if (filtrados().length === 0) {
-    <p class="vacio">
-      @if (hayFiltros()) {
-        Ningún documento coincide con los filtros.
-      } @else if (usuario.tiene('Analista')) {
-        No tiene documentos. Pulse «+ Nueva Plantilla» para empezar a registrar cambios en las plantillas.
-      } @else {
-        No hay documentos en su bandeja.
-      }
-    </p>
-  } @else {
-    <div class="tabla-desplazable">
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th scope="col">Número</th>
-            <th scope="col">Creación</th>
-            <th scope="col">Analista</th>
-            <th scope="col">Tipos documentales</th>
-            <th scope="col" class="numero">Plantillas</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Última actualización</th>
-            <th scope="col"><span class="oculto">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of filtrados(); track c.id) {
-            <tr>
-              <td><a class="numero-plan" [routerLink]="['/consolidados', c.id]">{{ c.numero }}</a></td>
-              <td>{{ c.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
-              <td>{{ c.analistaId }}</td>
-              <td>{{ c.tiposDocumento.length ? c.tiposDocumento.join(', ') : '—' }}</td>
-              <td class="numero">{{ c.totalPlantillas }}</td>
-              <td><app-insignia-estado [estado]="c.estado" /></td>
-              <td>{{ c.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}</td>
-              <td>
-                @if (c.estado === 'Verificado' && usuario.tiene('OficialJuridico')) {
-                  <a class="boton boton-primario boton-compacto" [routerLink]="['/consolidados', c.id, 'revision']">Revisar</a>
-                } @else {
-                  <a class="boton boton-secundario boton-compacto" [routerLink]="['/consolidados', c.id]">
-                    {{ c.estado === 'EnRegistro' && usuario.id() === c.analistaId ? 'Abrir' : 'Consultar' }}
-                  </a>
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
 </section>
+
+@if (agregandoEn(); as doc) {
+  <app-seleccion-plantilla
+    [consolidadoId]="doc.id"
+    [unidadId]="doc.unidadId"
+    operacion="Crear"
+    (cerrar)="agregandoEn.set(null)"
+    (agregado)="alAgregar($event)"
+  />
+}

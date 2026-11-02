@@ -45,6 +45,8 @@ export interface SolicitudCrear {
   nombre?: string | null;
   /** Plantilla vigente que se clona; sin ella, la plantilla nueva empieza vacía. */
   plantillaOrigenId?: string | null;
+  /** «Nombre Plantilla»: referencia que escribe el analista al agregarla. */
+  nombreReferencia?: string | null;
 }
 
 /**
@@ -104,14 +106,23 @@ export class ApiService {
     return this.http.post<Propuesta[]>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/propuestas/crear`, solicitud);
   }
 
-  /** Operación MODIFICAR de una plantilla vigente. Si es una Resolución, también su Certificación. */
-  agregarModificar(consolidadoId: string, plantillaId: string): Observable<Propuesta[]> {
+  /**
+   * Operación MODIFICAR de una plantilla vigente, con su «Nombre Plantilla» (sin él conserva el que tenía). Si es una
+   * Resolución, también su Certificación.
+   */
+  agregarModificar(consolidadoId: string, plantillaId: string, nombreReferencia: string | null = null): Observable<Propuesta[]> {
     return this.http.post<Propuesta[]>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/propuestas/modificar`, {
       plantillaId,
+      nombreReferencia,
     });
   }
 
   /** EN REGISTRO → VERIFICADO: el documento pasa a la bandeja del Oficial Jurídico. */
+  /** Eliminación lógica (EN REGISTRO → ELIMINADO): el documento no se borra. */
+  eliminarConsolidado(consolidadoId: string): Observable<DocumentoConsolidado> {
+    return this.http.post<DocumentoConsolidado>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/eliminar`, null);
+  }
+
   enviarAVerificacion(consolidadoId: string): Observable<DocumentoConsolidado> {
     return this.http.post<DocumentoConsolidado>(`${this.base}/consolidados/${encodeURIComponent(consolidadoId)}/enviar`, null);
   }
@@ -164,6 +175,7 @@ export class ApiService {
   comparacion(propuestaId: string): Observable<ComparacionPropuesta> {
     return this.http.get<ComparacionPropuesta>(`${this.propuesta(propuestaId)}/comparacion`);
   }
+
 
   actualizarDiseno(
     propuestaId: string,

@@ -21,6 +21,11 @@
           {{ v }}
         </button>
       }
+      <button type="button" class="boton boton-compacto solo-cambios" [class.boton-primario]="soloCambios()" [class.boton-secundario]="!soloCambios()"
+        [attr.aria-pressed]="soloCambios()" title="Oculta los párrafos que no cambiaron y que se muestran solo como contexto"
+        (click)="soloCambios.set(!soloCambios())">
+        Solo cambios
+      </button>
     </div>
   </div>
 
@@ -49,78 +54,86 @@
   }
 
   @for (b of c.bloques; track b.codigo) {
-    <details class="bloque" [open]="b.estado !== 'SinCambios'">
-      <summary>
-        <h3>{{ b.nombre }}</h3>
-        <span [class]="'estado estado-' + b.estado">{{ nombreEstado[b.estado] }}</span>
-      </summary>
-      <div class="columnas" [class.solo-original]="vista() === 'Original'" [class.solo-propuesta]="vista() === 'Consolidado'">
-        <div class="encabezado original">ORIGINAL{{ c.operacion === 'Crear' || b.estado === 'Nuevo' ? ' · NUEVO BLOQUE' : '' }}</div>
-        <div class="encabezado propuesta">CONSOLIDADO{{ b.estado === 'Eliminado' ? ' · BLOQUE ELIMINADO' : '' }}</div>
-        @for (p of b.parrafos; track p.parrafoId) {
-          <div class="celda original" [class.vacia]="!p.original">
-            @if (p.original; as segmentos) {
-              @if (p.posicionOriginal) {
-                <span class="posicion">{{ p.posicionOriginal }}</span>
-              }
-              <p>
-                @for (s of segmentos; track $index) {
-                  @switch (s.tipo) {
-                    @case ('Igual') {
-                      <span>{{ s.texto }}</span>
-                    }
-                    @case ('Agregado') {
-                      <ins [class]="claseSegmento(s, 'original')">{{ s.texto }}</ins>
-                    }
-                    @default {
-                      <del [class]="claseSegmento(s, 'original')">{{ s.texto }}</del>
-                    }
-                  }
+    @if (!soloCambios() || b.estado !== 'SinCambios') {
+      <details class="bloque" [open]="b.estado !== 'SinCambios'">
+        <summary>
+          <h3>{{ b.nombre }}</h3>
+          <span [class]="'estado estado-' + b.estado">{{ nombreEstado[b.estado] }}</span>
+        </summary>
+        <div class="columnas" [class.solo-original]="vista() === 'Original'" [class.solo-propuesta]="vista() === 'Consolidado'">
+          <div class="encabezado original">ORIGINAL{{ c.operacion === 'Crear' || b.estado === 'Nuevo' ? ' · NUEVO BLOQUE' : '' }}</div>
+          <div class="encabezado propuesta">CONSOLIDADO{{ b.estado === 'Eliminado' ? ' · BLOQUE ELIMINADO' : '' }}</div>
+          @for (p of parrafosVisibles(b); track p.parrafoId) {
+            <div class="celda original" [class.vacia]="!p.original">
+              @if (p.original; as segmentos) {
+                @if (p.posicionOriginal) {
+                  <span class="posicion">{{ p.posicionOriginal }}</span>
                 }
-              </p>
-            } @else {
-              <span class="marca">NUEVO PÁRRAFO</span>
-            }
-          </div>
-          <div class="celda propuesta" [class.vacia]="!p.propuesto">
-            @if (p.propuesto; as segmentos) {
-              @if (p.posicionPropuesta) {
-                <span class="posicion">{{ p.posicionPropuesta }}</span>
-              }
-              <p>
-                @for (s of segmentos; track $index) {
-                  @switch (s.tipo) {
-                    @case ('Igual') {
-                      <span>{{ s.texto }}</span>
-                    }
-                    @case ('Eliminado') {
-                      <del [class]="claseSegmento(s, 'propuesto')">{{ s.texto }}</del>
-                    }
-                    @default {
-                      <ins [class]="claseSegmento(s, 'propuesto')">{{ s.texto }}</ins>
+                <p>
+                  @for (s of segmentos; track $index) {
+                    @switch (s.tipo) {
+                      @case ('Igual') {
+                        <span>{{ s.texto }}</span>
+                      }
+                      @case ('Agregado') {
+                        <ins [class]="claseSegmento(s, 'original')">{{ s.texto }}</ins>
+                      }
+                      @default {
+                        <del [class]="claseSegmento(s, 'original')">{{ s.texto }}</del>
+                      }
                     }
                   }
+                </p>
+              } @else {
+                <span class="marca">NUEVO PÁRRAFO</span>
+              }
+            </div>
+            <div class="celda propuesta" [class.vacia]="!p.propuesto">
+              @if (p.propuesto; as segmentos) {
+                @if (p.posicionPropuesta) {
+                  <span class="posicion">{{ p.posicionPropuesta }}</span>
                 }
-              </p>
-              @if (p.movido || p.soloFormato || p.configuracion.length) {
-                <ul class="notas">
-                  @if (p.movido) {
-                    <li>↕ Movido de la posición {{ p.posicionOriginal }} a la {{ p.posicionPropuesta }}</li>
+                <p>
+                  @for (s of segmentos; track $index) {
+                    @switch (s.tipo) {
+                      @case ('Igual') {
+                        <span>{{ s.texto }}</span>
+                      }
+                      @case ('Eliminado') {
+                        <del [class]="claseSegmento(s, 'propuesto')">{{ s.texto }}</del>
+                      }
+                      @default {
+                        <ins [class]="claseSegmento(s, 'propuesto')">{{ s.texto }}</ins>
+                      }
+                    }
                   }
-                  @if (p.soloFormato) {
-                    <li>Cambio de formato (el texto es igual)</li>
-                  }
-                  @for (n of p.configuracion; track n) {
-                    <li>{{ n }}</li>
-                  }
-                </ul>
+                </p>
+                @if (p.movido || p.soloFormato || p.configuracion.length) {
+                  <ul class="notas">
+                    @if (p.movido) {
+                      <li>↕ Movido de la posición {{ p.posicionOriginal }} a la {{ p.posicionPropuesta }}</li>
+                    }
+                    @if (p.soloFormato) {
+                      <li>Cambio de formato (el texto es igual)</li>
+                    }
+                    @for (n of p.configuracion; track n) {
+                      <li>{{ n }}</li>
+                    }
+                  </ul>
+                }
+              } @else {
+                <span class="marca eliminado">PÁRRAFO ELIMINADO</span>
               }
-            } @else {
-              <span class="marca eliminado">PÁRRAFO ELIMINADO</span>
-            }
-          </div>
+            </div>
+          }
+        </div>
+        @if (ocultos(b); as n) {
+          <p class="ocultos">{{ n }} {{ n === 1 ? 'párrafo sin cambios oculto' : 'párrafos sin cambios ocultos' }}</p>
         }
-      </div>
-    </details>
+      </details>
+    }
+  }
+  @if (soloCambios() && conCambios() === 0 && !c.diseno.length) {
+    <p class="texto-secundario">No hay cambios respecto de la versión vigente.</p>
   }
 }

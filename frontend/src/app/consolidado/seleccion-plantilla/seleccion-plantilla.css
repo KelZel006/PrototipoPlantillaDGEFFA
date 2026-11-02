@@ -93,6 +93,11 @@
   font-weight: 600;
 }
 
+.campo-nombre .ayuda {
+  color: var(--texto-secundario);
+  font-weight: 400;
+}
+
 .nota {
   margin: 0;
   font-size: var(--texto-pequeno);

@@ -276,7 +276,7 @@ CREATE TABLE plantillas.Consolidados (
     CONSTRAINT FK_Consolidados_EnviadoPor FOREIGN KEY (EnviadoPor) REFERENCES plantillas.Usuarios (Id),
     CONSTRAINT FK_Consolidados_Revisor FOREIGN KEY (RevisorId) REFERENCES plantillas.Usuarios (Id),
     CONSTRAINT FK_Consolidados_Aprobador FOREIGN KEY (AprobadorId) REFERENCES plantillas.Usuarios (Id),
-    CONSTRAINT CK_Consolidados_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado')),
+    CONSTRAINT CK_Consolidados_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
     CONSTRAINT CK_Consolidados_Secuencia CHECK (Secuencia BETWEEN 1 AND 9999),
     CONSTRAINT CK_Consolidados_Anio CHECK (Anio BETWEEN 2000 AND 2999),
     -- El número se deriva del año y la secuencia: PLAN-20260001.
@@ -413,9 +413,9 @@ CREATE TABLE plantillas.Movimientos (
     CONSTRAINT PK_Movimientos PRIMARY KEY (Id),
     CONSTRAINT FK_Movimientos_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
     CONSTRAINT CK_Movimientos_Tipo CHECK (Tipo IN ('Creacion', 'PropuestaAgregada', 'PropuestaModificada', 'PropuestaRetirada',
-        'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion')),
-    CONSTRAINT CK_Movimientos_EstadoOrigen CHECK (EstadoOrigen IS NULL OR EstadoOrigen IN ('EnRegistro', 'Verificado', 'Aprobado')),
-    CONSTRAINT CK_Movimientos_EstadoDestino CHECK (EstadoDestino IS NULL OR EstadoDestino IN ('EnRegistro', 'Verificado', 'Aprobado'))
+        'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion', 'Eliminacion')),
+    CONSTRAINT CK_Movimientos_EstadoOrigen CHECK (EstadoOrigen IS NULL OR EstadoOrigen IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
+    CONSTRAINT CK_Movimientos_EstadoDestino CHECK (EstadoDestino IS NULL OR EstadoDestino IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado'))
 );
 
 CREATE INDEX IX_Movimientos_Consolidado ON plantillas.Movimientos (ConsolidadoId, Fecha);

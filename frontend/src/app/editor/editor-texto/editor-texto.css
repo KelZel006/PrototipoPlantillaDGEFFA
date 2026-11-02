@@ -239,3 +239,146 @@
   background: rgb(47 111 228 / 15%);
   pointer-events: none;
 }
+
+/* Texto condicionado: se resalta para distinguirlo del texto que sale siempre. */
+:host ::ng-deep .superficie-editor .texto-condicional {
+  border-bottom: 2px dashed var(--prueba);
+  background: var(--prueba-suave);
+  cursor: help;
+}
+
+.panel-condicion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo-suave);
+}
+
+.titulo-condicion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  margin: 0;
+  font-weight: 700;
+}
+
+.titulo-condicion span {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  font-weight: 400;
+}
+
+.acciones-condicion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.condicionados {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  margin-top: var(--espacio-2);
+  padding: var(--espacio-2) var(--espacio-3);
+  border-left: 3px solid var(--prueba);
+  border-radius: var(--radio);
+  background: var(--prueba-suave);
+  font-size: var(--texto-pequeno);
+}
+
+.titulo-condicionados {
+  margin: 0;
+  color: var(--prueba);
+  font-weight: 700;
+}
+
+.titulo-condicionados span {
+  color: var(--texto-secundario);
+  font-weight: 400;
+}
+
+.condicionados ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.condicionados li {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+}
+
+.fragmento-condicionado {
+  flex: 1;
+  padding: var(--espacio-1) var(--espacio-2);
+  border: 1px solid transparent;
+  border-radius: var(--radio);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fragmento-condicionado:hover,
+.fragmento-condicionado:focus-visible {
+  border-color: var(--prueba);
+  background: var(--superficie);
+}
+
+.fragmento-condicionado .fragmento {
+  font-weight: 600;
+}
+
+.fragmento-condicionado .solo-si {
+  color: var(--texto-secundario);
+}
+
+.quitar-fragmento {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--error);
+  cursor: pointer;
+}
+
+.quitar-fragmento:hover {
+  border-color: var(--error);
+  background: var(--error-suave);
+}
+
+.quitar-fragmento svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Vista de solo lectura de la plantilla: sin el alto mínimo del editor. */
+:host ::ng-deep .superficie-editor.superficie-lectura {
+  min-height: 0;
+  padding: var(--espacio-1) 0 0;
+}
+
+:host ::ng-deep .superficie-lectura p:last-child {
+  margin-bottom: 0;
+}
+
+/* Un párrafo marcado como título se ve centrado y en negrita, como en el documento. */
+:host(.contenido-titulo) ::ng-deep .superficie-editor p {
+  text-align: center;
+  font-weight: 700;
+}

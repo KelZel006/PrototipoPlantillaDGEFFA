@@ -53,14 +53,15 @@
       <app-selector-contexto />
     }
     <label class="campo-nombre">
-      <span>Nombre (opcional)</span>
+      <span>Nombre Plantilla</span>
       <input
         class="control"
         maxlength="200"
-        placeholder="Si lo deja vacío: «Tipo (Documento) – Sub Rubro»"
+        placeholder="Un nombre para reconocer esta plantilla (solo de referencia)"
         [value]="nombre()"
         (input)="nombre.set($any($event.target).value)"
       />
+      <span class="ayuda">No cambia la identidad de la plantilla; en el editor aparece arriba en negrita.</span>
     </label>
     @if (acompanante(); as otro) {
       <p class="nota">También se agregará su {{ otro }}: van juntas en el documento y se publican juntas.</p>
@@ -72,6 +73,17 @@
     </div>
   } @else {
     <p class="texto-secundario">Plantillas vigentes. En el consolidado empieza con su contenido actual; la vigente no cambia hasta la aprobación.</p>
+    <label class="campo-nombre">
+      <span>Nombre Plantilla</span>
+      <input
+        class="control"
+        maxlength="200"
+        placeholder="Un nombre para reconocer esta plantilla (solo de referencia)"
+        [value]="nombre()"
+        (input)="nombre.set($any($event.target).value)"
+      />
+      <span class="ayuda">Escríbalo antes de elegir «Modificar». Si lo deja vacío, conserva el que ya tenía la plantilla.</span>
+    </label>
     <input
       class="control"
       type="search"

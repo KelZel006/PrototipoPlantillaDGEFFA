@@ -2,7 +2,7 @@
   <header class="encabezado-tarjeta">
     <div>
       <p class="unidad-actual">{{ unidades.nombre(unidadMostrada()) }}</p>
-      <h2 id="titulo-vigentes">Consolidado de plantillas</h2>
+      <h2 id="titulo-vigentes">Consolidado de Plantillas</h2>
       <p class="texto-secundario sin-margen">
         Plantillas publicadas y su vigencia. Cada versión indica el documento consolidado que la publicó; las anteriores se
         conservan como NO VIGENTES.
@@ -60,7 +60,7 @@
               <td>{{ v ? (v.inicioVigencia | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
               <td>
                 @if (v?.consolidadoNumero) {
-                  <a [routerLink]="['/consolidados', v?.consolidadoId]">{{ v?.consolidadoNumero }}</a>
+                  {{ v?.consolidadoNumero }}
                 } @else if (v?.cargaInicial) {
                   Carga inicial
                 }
@@ -86,7 +86,7 @@
                           }
                           ·
                           @if (ver.consolidadoNumero) {
-                            publicada por <a [routerLink]="['/consolidados', ver.consolidadoId]">{{ ver.consolidadoNumero }}</a> ({{ ver.publicadaPor }})
+                            publicada por {{ ver.consolidadoNumero }} ({{ ver.publicadaPor }})
                           } @else {
                             carga inicial
                           }

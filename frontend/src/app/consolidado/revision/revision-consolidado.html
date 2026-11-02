@@ -24,7 +24,7 @@
   @if (!puedeRevisar()) {
     <div class="aviso aviso-copia" role="status">
       La revisión jurídica la hace el Oficial Jurídico cuando el documento está VERIFICADO.
-      <a [routerLink]="['/consolidados', d.consolidado.id]">Ver el documento</a>
+      <a routerLink="/consolidados">Volver a Documentos Plantillas</a>
     </div>
   } @else {
     <div class="revision">
@@ -55,7 +55,26 @@
 
       <section class="tarjeta principal" aria-label="Comparación">
         @if (seleccionada(); as p) {
-          <h3>{{ p.nombre }}</h3>
+          <header class="encabezado-plantilla">
+            <h3>{{ p.nombre }}</h3>
+            <div class="acciones-plantilla">
+              <label class="solicitud">
+                <span>Solicitud de prueba</span>
+                <select class="control control-compacto" (change)="solicitudElegida.set($any($event.target).value)">
+                  <option value="" [selected]="solicitudElegida() === ''">Sin datos (mostrar los campos)</option>
+                  @for (s of solicitudes(); track s.id) {
+                    <option [value]="s.id" [selected]="s.id === solicitudElegida()">
+                      {{ s.numeroSolicitud }} – {{ s.beneficiario ?? 'sin beneficiario' }} ·
+                      {{ s.bienes === 0 ? 'sin bienes' : s.bienes === 1 ? '1 bien' : s.bienes + ' bienes' }}{{ s.mismaCombinacion ? '' : ' (otro rubro)' }}
+                    </option>
+                  }
+                </select>
+              </label>
+              <button type="button" class="boton boton-secundario boton-compacto" [disabled]="generando() === p.id" (click)="vistaPrevia(p)">
+                {{ generando() === p.id ? 'Generando…' : 'Vista previa en PDF' }}
+              </button>
+            </div>
+          </header>
           <app-comparacion-propuesta [propuestaId]="p.id" />
         }
       </section>

@@ -1,0 +1,87 @@
+.encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  margin-bottom: var(--espacio-3);
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.bloque h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--espacio-2);
+  margin: 0;
+  color: var(--primario-oscuro);
+  font-size: 1rem;
+}
+
+.titulo-documento {
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+  font-weight: 400;
+}
+
+.parrafo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.parrafo.continua {
+  margin-left: var(--espacio-4);
+  border-left: 3px solid var(--primario);
+}
+
+.parrafo.inactivo app-vista-contenido {
+  opacity: 0.55;
+}
+
+.marcas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-1) var(--espacio-2);
+}
+
+.marcas:empty {
+  display: none;
+}
+
+.numeracion {
+  color: var(--primario-oscuro);
+}
+
+.insignia-titulo,
+.insignia-union {
+  background: var(--primario-suave);
+  color: var(--primario-oscuro);
+}
+
+.insignia-texto-condicionado {
+  background: var(--prueba-suave);
+  color: var(--prueba);
+}
+
+/* Un título se ve centrado y en negrita, como saldrá en el documento. */
+.contenido-titulo {
+  text-align: center;
+  font-weight: 700;
+}
+
+.vacio {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: var(--texto-pequeno);
+}

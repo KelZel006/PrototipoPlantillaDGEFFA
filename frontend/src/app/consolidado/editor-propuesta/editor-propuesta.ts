@@ -4,6 +4,7 @@ import { ContextoService } from '../../core/contexto.service';
 import { PlantillaActualService } from '../../core/plantilla-actual.service';
 import { PanelPlantilla } from '../../editor/panel-plantilla/panel-plantilla';
 import { PestanasSecciones } from '../../editor/pestanas-secciones/pestanas-secciones';
+import { VistaPlantilla } from '../../editor/vista-plantilla/vista-plantilla';
 
 /**
  * Editor de una propuesta (/consolidados/:id/propuestas/:propuestaId): el mismo editor de siempre (pestañas, campos,
@@ -11,9 +12,9 @@ import { PestanasSecciones } from '../../editor/pestanas-secciones/pestanas-secc
  */
 @Component({
   selector: 'app-editor-propuesta',
-  imports: [RouterLink, PanelPlantilla, PestanasSecciones],
+  imports: [RouterLink, PanelPlantilla, PestanasSecciones, VistaPlantilla],
   template: `
-    <a class="volver" [routerLink]="['/consolidados', id()]">← Volver al documento</a>
+    <a class="volver" routerLink="/consolidados">← Documentos Plantillas</a>
     <app-panel-plantilla />
     @if (actual.plantilla(); as plantilla) {
       @if (plantilla.editable) {
@@ -24,6 +25,15 @@ import { PestanasSecciones } from '../../editor/pestanas-secciones/pestanas-secc
           <p class="texto-secundario" aria-live="polite">Cargando el editor…</p>
         } @error {
           <div class="aviso aviso-error" role="alert">No se pudo cargar el editor. Recargue la página.</div>
+        }
+      } @else {
+        <!-- Solo lectura (por ejemplo, el Oficial Jurídico): la plantilla completa, con el mismo formato del editor. -->
+        @defer {
+          <app-vista-plantilla [plantilla]="plantilla" />
+        } @loading (minimum 200ms) {
+          <p class="texto-secundario" aria-live="polite">Cargando la plantilla…</p>
+        } @error {
+          <div class="aviso aviso-error" role="alert">No se pudo mostrar la plantilla. Recargue la página.</div>
         }
       }
     }

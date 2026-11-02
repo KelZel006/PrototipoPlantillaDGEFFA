@@ -42,6 +42,8 @@
           [campos]="camposSeccion()"
           [etiqueta]="catalogo.etiqueta"
           [etiquetaAccesible]="nombre().texto"
+          [camposCondicion]="camposCondicion()"
+          [describirCondicion]="describirCondicion"
           (cambio)="contenido.set($event)"
           (enTablaCambio)="enTabla.set($event)"
         />

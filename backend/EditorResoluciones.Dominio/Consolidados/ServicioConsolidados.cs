@@ -21,7 +21,25 @@ public sealed record ResumenConsolidado(
     DateTimeOffset FechaCreacion,
     DateTimeOffset FechaActualizacion,
     IReadOnlyList<string> TiposDocumento,
-    int TotalPlantillas);
+    int TotalPlantillas,
+    IReadOnlyList<PlantillaDelResumen> Plantillas);
+
+/// <summary>
+/// Plantilla de un documento en el listado: su identidad con los nombres del catálogo (Rubro, Sub Rubro, Tipo Documento
+/// y Documento), para mostrar una fila por plantilla y filtrar por esos datos.
+/// </summary>
+public sealed record PlantillaDelResumen(
+    string PropuestaId,
+    string Nombre,
+    OperacionPropuesta Operacion,
+    string RubroId,
+    string Rubro,
+    string SubRubroId,
+    string SubRubro,
+    string TipoDocumentoId,
+    string TipoDocumento,
+    string ClaseDocumentoId,
+    string ClaseDocumento);
 
 /// <summary>
 /// Fila de «Tipos de documento incluidos»: cada tipo documental una sola vez, aunque tenga varias plantillas o ajustes.
@@ -54,6 +72,9 @@ public sealed class ServicioConsolidados(
     IRepositorio<VersionPlantilla> versiones,
     IRepositorio<Campo> campos,
     IRepositorio<Unidad> unidades,
+    IRepositorio<Rubro> rubros,
+    IRepositorio<SubRubro> subRubros,
+    IRepositorio<ClaseDocumento> clases,
     ServicioAutorizacion autorizacion,
     ZonaHorariaInstitucional zona,
     TimeProvider reloj)
@@ -111,6 +132,44 @@ public sealed class ServicioConsolidados(
         }, ct);
     }
 
+    /// <summary>
+    /// Eliminación lógica (EN REGISTRO → ELIMINADO): solo el analista dueño. El documento y sus plantillas no se borran,
+    /// pero salen de las bandejas y las plantillas vigentes que modificaba quedan libres para otro documento.
+    /// </summary>
+    public async Task<DocumentoConsolidado> EliminarAsync(string id, CancellationToken ct = default)
+    {
+        var analista = await autorizacion.ExigirAsync(Rol.Analista, ct);
+        var ahora = reloj.GetUtcNow();
+        return await unidad.EjecutarAsync(async tx =>
+        {
+            var consolidado = (await tx.ListarAsync<DocumentoConsolidado>(ct)).FirstOrDefault(c => c.Id == id);
+            if (consolidado is null || consolidado.AnalistaId != analista.Id || !PuedeVer(analista, consolidado))
+                throw new EntidadNoEncontradaException(consolidados.Coleccion, id);
+            if (consolidado.Estado != EstadoConsolidado.EnRegistro)
+                throw new ConflictoException($"El documento {consolidado.Numero} no está EN REGISTRO: no se puede eliminar.");
+
+            var anterior = FusionDerivada.Clonar(consolidado);
+            consolidado.Estado = EstadoConsolidado.Eliminado;
+            consolidado.FechaActualizacion = ahora;
+            await tx.ActualizarAsync(consolidado, ct);
+            var plantillas = (await tx.ListarAsync<Propuesta>(ct)).Count(p => p.ConsolidadoId == consolidado.Id && !p.Retirada);
+            await tx.CrearAsync(new Movimiento
+            {
+                ConsolidadoId = consolidado.Id,
+                Tipo = TipoMovimiento.Eliminacion,
+                Usuario = analista.Id,
+                Fecha = ahora,
+                EstadoOrigen = EstadoConsolidado.EnRegistro,
+                EstadoDestino = EstadoConsolidado.Eliminado,
+                Detalle = $"Se eliminó el documento {consolidado.Numero} ({plantillas} {(plantillas == 1 ? "plantilla" : "plantillas")}).",
+            }, ct);
+            await tx.CrearAsync(ServicioHistorial.Construir(
+                new CambioHistorial(consolidados.Coleccion, consolidado.Id, AccionHistorial.Actualizacion, consolidado.Version, anterior, consolidado),
+                analista.Id, ahora), ct);
+            return consolidado;
+        }, ct);
+    }
+
     /// <summary>Consolidados que el usuario puede ver, del más reciente al más antiguo.</summary>
     public async Task<IReadOnlyList<ResumenConsolidado>> ListarAsync(CancellationToken ct = default)
     {
@@ -118,6 +177,9 @@ public sealed class ServicioConsolidados(
         var visibles = (await consolidados.ListarAsync(ct)).Where(c => PuedeVer(usuario, c)).ToList();
         var todasPropuestas = await propuestas.ListarAsync(ct);
         var nombresTipo = (await tipos.ListarAsync(ct)).ToDictionary(t => t.Id, t => t.Nombre, StringComparer.Ordinal);
+        var nombresRubro = (await rubros.ListarAsync(ct)).ToDictionary(r => r.Id, r => r.Nombre, StringComparer.Ordinal);
+        var nombresSubRubro = (await subRubros.ListarAsync(ct)).ToDictionary(s => s.Id, s => s.Nombre, StringComparer.Ordinal);
+        var nombresClase = (await clases.ListarAsync(ct)).ToDictionary(c => c.Id, c => c.Nombre, StringComparer.Ordinal);
 
         return visibles
             .OrderByDescending(c => c.Anio).ThenByDescending(c => c.Secuencia)
@@ -127,8 +189,14 @@ public sealed class ServicioConsolidados(
                 // Cada tipo documental una sola vez, aunque tenga varias propuestas o ajustes.
                 var tiposIncluidos = activas.Select(p => p.TipoDocumentoId).Distinct(StringComparer.Ordinal)
                     .Select(id => nombresTipo.GetValueOrDefault(id, id)).Order(StringComparer.CurrentCulture).ToList();
+                var plantillas = activas.OrderBy(p => p.FechaCreacion).Select(p => new PlantillaDelResumen(
+                    p.Id, p.Nombre, p.Operacion,
+                    p.RubroId, nombresRubro.GetValueOrDefault(p.RubroId, p.RubroId),
+                    p.SubRubroId, nombresSubRubro.GetValueOrDefault(p.SubRubroId, p.SubRubroId),
+                    p.TipoDocumentoId, nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId),
+                    p.ClaseDocumentoId, nombresClase.GetValueOrDefault(p.ClaseDocumentoId, p.ClaseDocumentoId))).ToList();
                 return new ResumenConsolidado(c.Id, c.Numero, c.Anio, c.Estado, c.UnidadId, c.AnalistaId, c.FechaCreacion,
-                    c.FechaActualizacion, tiposIncluidos, activas.Count);
+                    c.FechaActualizacion, tiposIncluidos, activas.Count, plantillas);
             })
             .ToList();
     }
@@ -194,11 +262,13 @@ public sealed class ServicioConsolidados(
     /// <item>Analista: solo los suyos, EN REGISTRO (incluidos los devueltos) o APROBADOS. Al enviarlo a verificación
     /// sale de su bandeja.</item>
     /// <item>Oficial Jurídico: los VERIFICADOS (su bandeja) y los APROBADOS.</item>
-    /// <item>Administrador: todos, en consulta.</item>
+    /// <item>Administrador: todos, en consulta (también los ELIMINADOS).</item>
+    /// <item>Los ELIMINADOS salen de las bandejas del analista y del Oficial Jurídico.</item>
     /// </list>
     /// </summary>
     public static bool PuedeVer(Usuario usuario, DocumentoConsolidado consolidado) =>
         usuario.Tiene(Rol.Administrador) ||
-        (usuario.Tiene(Rol.Analista) && consolidado.AnalistaId == usuario.Id && consolidado.Estado != EstadoConsolidado.Verificado) ||
-        (usuario.Tiene(Rol.OficialJuridico) && consolidado.Estado != EstadoConsolidado.EnRegistro);
+        (consolidado.Estado != EstadoConsolidado.Eliminado &&
+         ((usuario.Tiene(Rol.Analista) && consolidado.AnalistaId == usuario.Id && consolidado.Estado != EstadoConsolidado.Verificado) ||
+          (usuario.Tiene(Rol.OficialJuridico) && consolidado.Estado != EstadoConsolidado.EnRegistro)));
 }

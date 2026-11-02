@@ -20,14 +20,11 @@ export const rutas: Routes = [
   },
   {
     path: 'unidades/:unidad/vigentes',
-    title: 'Consolidado de plantillas',
+    title: 'Consolidado de Plantillas',
     loadComponent: () => import('./consolidado/plantillas-vigentes/plantillas-vigentes').then((m) => m.PlantillasVigentes),
   },
-  {
-    path: 'consolidados/:id',
-    title: 'Documento consolidado',
-    loadComponent: () => import('./consolidado/detalle-consolidado/detalle-consolidado').then((m) => m.DetalleConsolidado),
-  },
+  // El documento ya no tiene pantalla propia: sus plantillas se abren desde la lista.
+  { path: 'consolidados/:id', pathMatch: 'full', redirectTo: aLaUnidad('consolidados') },
   {
     path: 'consolidados/:id/propuestas/:propuestaId',
     title: 'Editar propuesta',
