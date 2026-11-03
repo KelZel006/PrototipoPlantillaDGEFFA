@@ -102,15 +102,38 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
 
     // ---------- Alerta del campo Operador ----------
 
+    /// <summary>Copia del contenido con el campo indicado al final del primer párrafo.</summary>
+    private static NodoContenido ConCampoAlFinal(NodoContenido contenido, string campoId)
+    {
+        var copia = JsonSerializer.Deserialize<NodoContenido>(JsonSerializer.Serialize(contenido))!;
+        var primero = copia.Contenido!.First(n => n.Tipo == "paragraph");
+        primero.Contenido = [.. primero.Contenido ?? [], new NodoContenido { Tipo = "text", Texto = " " },
+            new NodoContenido { Tipo = "campo", Atributos = new Dictionary<string, JsonElement> { ["campoId"] = JsonSerializer.SerializeToElement(campoId) } }];
+        return copia;
+    }
+
     [Fact]
-    public async Task Al_aprobador_se_le_avisa_que_se_modifico_un_parrafo_con_el_campo_Operador()
+    public async Task Cambiar_solo_el_texto_alrededor_del_campo_Operador_no_genera_aviso()
     {
         var consolidado = await Consolidados.CrearAsync(_cliente);
         var propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001", consolidado)).Single().Id;
-        // PAR-002 usa {Operador}; PAR-003 no lo usa.
+        // PAR-002 usa {Operador}: se le agrega texto, pero el campo sigue igual.
         var par002 = await Parrafo(propuesta, "PAR-002");
-        var contenido = FusionDerivadaPrueba.ConTextoAlFinal(par002.Contenido, " Texto agregado.");
-        (await Actualizar(propuesta, par002, contenido)).EnsureSuccessStatusCode();
+        (await Actualizar(propuesta, par002, FusionDerivadaPrueba.ConTextoAlFinal(par002.Contenido, " Texto agregado."))).EnsureSuccessStatusCode();
+        (await _cliente.PostAsync($"/api/consolidados/{consolidado}/enviar", null)).EnsureSuccessStatusCode();
+
+        var paraAprobador = await (await Enviar(HttpMethod.Get, $"/api/consolidados/{consolidado}", "j.ramos")).Content.ReadFromJsonAsync<DetalleConsolidado>(Json);
+        Assert.Empty(paraAprobador!.Alertas);
+    }
+
+    [Fact]
+    public async Task Al_aprobador_se_le_avisa_que_se_agrego_el_campo_Operador_al_texto()
+    {
+        var consolidado = await Consolidados.CrearAsync(_cliente);
+        var propuesta = (await Consolidados.ModificarAsync(_cliente, "PLA-001", consolidado)).Single().Id;
+        // PAR-002 ya usa {Operador}: se le agrega otro; PAR-003 no lo usa y solo cambia su texto.
+        var par002 = await Parrafo(propuesta, "PAR-002");
+        (await Actualizar(propuesta, par002, ConCampoAlFinal(par002.Contenido, "operador"))).EnsureSuccessStatusCode();
         var par003 = await Parrafo(propuesta, "PAR-003");
         (await Actualizar(propuesta, par003, FusionDerivadaPrueba.ConTextoAlFinal(par003.Contenido, " Otro."))).EnsureSuccessStatusCode();
         (await _cliente.PostAsync($"/api/consolidados/{consolidado}/enviar", null)).EnsureSuccessStatusCode();
@@ -120,7 +143,7 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
         Assert.Equal("operador", alerta.CampoId);
         Assert.Equal("Operador", alerta.Campo);
         Assert.Equal("CONSIDERANDO 1", alerta.Ubicacion);
-        Assert.Contains("cambió el texto alrededor de {Operador}", alerta.Detalle);
+        Assert.Contains("se agregó otro {Operador} al texto", alerta.Detalle);
 
         // El analista no recibe la alerta.
         var paraAnalista = await _cliente.GetFromJsonAsync<DetalleConsolidado>($"/api/consolidados/{consolidado}", Json);

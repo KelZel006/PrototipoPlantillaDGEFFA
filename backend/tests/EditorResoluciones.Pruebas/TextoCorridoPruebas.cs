@@ -32,7 +32,7 @@ public class TextoCorridoPruebas
         nodo.Tipo == "text" ? nodo.Texto ?? "" : string.Concat((nodo.Contenido ?? []).Select(Plano));
 
     [Fact]
-    public void Une_todo_el_texto_en_un_solo_parrafo_con_los_titulos_en_negrita()
+    public void Une_todo_el_texto_en_un_solo_parrafo_con_los_titulos_en_negrita_y_el_titulo_del_documento_aparte()
     {
         var bloques = TextoCorrido.Unir(
         [
@@ -44,10 +44,16 @@ public class TextoCorridoPruebas
             Seccion(Dominio.Modelos.Seccion.Resuelve, Bloque(Parrafo(Texto("PRIMERO: ", true), Texto("Autorizar.")), Parrafo())),
         ]);
 
-        var parrafo = Assert.Single(bloques);
+        // El título (primera línea de la Cabecera) va aparte, centrado y en negrita, como en la Resolución.
+        Assert.Equal(2, bloques.Count);
+        var titulo = bloques[0];
+        Assert.Equal("RESOLUCIÓN No. 1", Plano(titulo));
+        Assert.Equal("center", titulo.Atributos!["textAlign"].GetString());
+        Assert.All(titulo.Contenido!, n => Assert.Contains(n.Marcas!, m => m.Tipo == "bold"));
+        var parrafo = bloques[1];
         Assert.Equal("paragraph", parrafo.Tipo);
         Assert.Equal(
-            "RESOLUCIÓN No. 1 Documento de prueba. VISTO: la solicitud presentada. CONSIDERANDO(1): Que… POR TANTO: Esta Dirección. RESUELVE: PRIMERO: Autorizar.",
+            "Documento de prueba. VISTO: la solicitud presentada. CONSIDERANDO(1): Que… POR TANTO: Esta Dirección. RESUELVE: PRIMERO: Autorizar.",
             Plano(parrafo));
         Assert.Contains(parrafo.Contenido!, n => n.Texto == "RESUELVE:" && n.Marcas!.Any(m => m.Tipo == "bold"));
     }

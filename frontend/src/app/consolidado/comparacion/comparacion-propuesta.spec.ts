@@ -59,7 +59,7 @@ describe('ComparacionPropuesta', () => {
     expect(elemento.querySelector('table')?.textContent).toContain('Pie nuevo');
 
     // Se puede ver una sola columna.
-    Array.from(elemento.querySelectorAll<HTMLButtonElement>('.vistas button')).find((b) => b.textContent?.includes('Consolidado'))!.click();
+    Array.from(elemento.querySelectorAll<HTMLButtonElement>('.vistas button')).find((b) => b.textContent?.includes('Documento'))!.click();
     fixture.detectChanges();
     expect(bloques[1].querySelector('.columnas')?.classList).toContain('solo-propuesta');
     http.verify();

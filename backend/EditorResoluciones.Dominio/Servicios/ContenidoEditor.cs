@@ -114,6 +114,10 @@ public static class ContenidoEditor
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
+    /// <summary>Cuántas veces aparece el campo en el texto.</summary>
+    public static int VecesCampo(NodoContenido raiz, string campoId) =>
+        Recorrer(raiz).Count(n => n.Tipo == NodoCampo && CampoId(n) == campoId);
+
     /// <summary>
     /// Caracteres visibles: el texto escrito más cada campo contado como "{Etiqueta}".
     /// El contador del editor en Angular usa la misma regla.

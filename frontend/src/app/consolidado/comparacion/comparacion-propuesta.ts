@@ -4,7 +4,7 @@ import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
 import { BloqueComparado, EstadoBloqueComparado, ParrafoComparado, Segmento } from '../../core/modelos';
 
-type Vista = 'Ambos' | 'Original' | 'Consolidado';
+type Vista = 'Ambos' | 'Original' | 'Documento';
 
 const NOMBRE_ESTADO: Record<EstadoBloqueComparado, string> = {
   SinCambios: 'Sin cambios',
@@ -41,7 +41,7 @@ export class ComparacionPropuesta {
 
   /** En pantallas angostas conviene ver una sola columna. */
   protected readonly vista = signal<Vista>('Ambos');
-  protected readonly vistas: Vista[] = ['Ambos', 'Original', 'Consolidado'];
+  protected readonly vistas: Vista[] = ['Ambos', 'Original', 'Documento'];
 
   /** Oculta los párrafos y bloques sin cambios, que solo se muestran como contexto. */
   protected readonly soloCambios = signal(false);

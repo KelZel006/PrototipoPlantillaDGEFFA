@@ -145,9 +145,10 @@ export class ApiService {
     return this.http.get<PlantillaConVersiones[]>(`${this.base}/consolidado-plantillas`);
   }
 
-  /** PDF de una versión publicada (vigente o no). */
-  pdfVersion(versionId: string): Observable<HttpResponse<Blob>> {
+  /** PDF de una versión publicada (vigente o no). Con una solicitud se sustituyen los campos y se aplican las condiciones. */
+  pdfVersion(versionId: string, solicitudId: string | null = null): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.base}/versiones-plantilla/${encodeURIComponent(versionId)}/pdf`, {
+      params: solicitudId ? { solicitudId } : {},
       responseType: 'blob',
       observe: 'response',
     });

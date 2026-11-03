@@ -64,6 +64,20 @@ describe('PlantillasVigentes', () => {
     expect(versiones[0]).toContain('publicada por PLAN-20260002');
     expect(versiones[1]).toContain('NO VIGENTE');
     expect(versiones[1]).toContain('carga inicial');
+
+    // El PDF se genera con la solicitud de prueba del rubro y sub rubro de la plantilla.
+    const ventana = { location: { href: '' }, close: vi.fn() };
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(ventana as unknown as Window);
+    Array.from(elemento.querySelectorAll<HTMLButtonElement>('.versiones button')).find((b) => b.textContent?.trim() === 'PDF')!.click();
+    http.expectOne('/api/solicitudes').flush([
+      { id: 'SOL-9', rubroId: '1800', subRubroId: '1801' },
+      { id: 'SOL-1', rubroId: '1100', subRubroId: '1107' },
+    ]);
+    const pdf = http.expectOne((r) => r.url === '/api/versiones-plantilla/VER-2/pdf');
+    expect(pdf.request.params.get('solicitudId')).toBe('SOL-1');
+    pdf.flush(new Blob(['%PDF']));
+    expect(ventana.location.href).toMatch(/^blob:/);
+    abrir.mockRestore();
     responderUnidades(http);
     http.verify();
   });

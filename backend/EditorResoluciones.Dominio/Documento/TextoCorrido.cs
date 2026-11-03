@@ -6,8 +6,9 @@ namespace EditorResoluciones.Dominio.Documento;
 /// Presentación de texto corrido (por ejemplo, la Certificación): el texto de todas las secciones se transcribe
 /// seguido, en un solo párrafo, sin saltos ni espacios entre párrafos. Solo las tablas conservan su forma: cortan el
 /// texto, se presentan como cuadro y el texto continúa después. Los títulos (POR TANTO:, RESUELVE:) quedan en negrita
-/// dentro del texto. Los párrafos marcados como título también cortan el texto y van centrados. Las firmas no se pasan
-/// por aquí: conservan su presentación.
+/// dentro del texto. El título del documento (la primera línea de la Cabecera, por ejemplo «CERTIFICACIÓN No. …») va aparte, centrado
+/// y en negrita, como en la Resolución. Los párrafos marcados como título también cortan el texto y van centrados. Las
+/// firmas no se pasan por aquí: conservan su presentación.
 /// </summary>
 public static class TextoCorrido
 {
@@ -16,6 +17,8 @@ public static class TextoCorrido
     {
         var bloques = new List<NodoContenido>();
         List<NodoContenido>? enCurso = null;
+        // La primera línea con texto de la Cabecera es el título; deja de esperarse si la Cabecera empieza de otra forma.
+        var tituloPendiente = false;
 
         void Cerrar()
         {
@@ -42,10 +45,16 @@ public static class TextoCorrido
             {
                 switch (bloque.Tipo)
                 {
+                    case "paragraph" when tituloPendiente && TieneTexto(bloque.Contenido):
+                        tituloPendiente = false;
+                        Cerrar();
+                        bloques.AddRange(ServicioDocumento.Titular(new NodoContenido { Tipo = "doc", Contenido = [bloque] }).Contenido ?? []);
+                        break;
                     case "paragraph":
                         Agregar(bloque.Contenido ?? []);
                         break;
                     case "table":
+                        tituloPendiente = false;
                         Cerrar();
                         bloques.Add(bloque);
                         break;
@@ -67,12 +76,17 @@ public static class TextoCorrido
 
         foreach (var parte in secciones.Where(s => s.Parrafos.Count > 0))
         {
+            tituloPendiente = parte.Codigo == CodigosBloque.De(Seccion.Cabecera);
             if (parte.Bloque.Titulo is { } titulo)
+            {
+                tituloPendiente = false;
                 Agregar([Texto(titulo, negrita: true)]);
+            }
             foreach (var parrafo in parte.Parrafos)
             {
                 if (parrafo.EsTitulo)
                 {
+                    tituloPendiente = false;
                     Cerrar();
                     bloques.AddRange(parrafo.Contenido.Contenido ?? []);
                     continue;
@@ -83,6 +97,9 @@ public static class TextoCorrido
         Cerrar();
         return bloques;
     }
+
+    private static bool TieneTexto(IEnumerable<NodoContenido>? nodos) =>
+        nodos?.Any(n => !string.IsNullOrWhiteSpace(n.Texto) || TieneTexto(n.Contenido)) == true;
 
     private static NodoContenido Espacio() => Texto(" ");
 

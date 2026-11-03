@@ -60,9 +60,9 @@
           <h3>{{ b.nombre }}</h3>
           <span [class]="'estado estado-' + b.estado">{{ nombreEstado[b.estado] }}</span>
         </summary>
-        <div class="columnas" [class.solo-original]="vista() === 'Original'" [class.solo-propuesta]="vista() === 'Consolidado'">
+        <div class="columnas" [class.solo-original]="vista() === 'Original'" [class.solo-propuesta]="vista() === 'Documento'">
           <div class="encabezado original">ORIGINAL{{ c.operacion === 'Crear' || b.estado === 'Nuevo' ? ' · NUEVO BLOQUE' : '' }}</div>
-          <div class="encabezado propuesta">CONSOLIDADO{{ b.estado === 'Eliminado' ? ' · BLOQUE ELIMINADO' : '' }}</div>
+          <div class="encabezado propuesta">DOCUMENTO{{ b.estado === 'Eliminado' ? ' · BLOQUE ELIMINADO' : '' }}</div>
           @for (p of parrafosVisibles(b); track p.parrafoId) {
             <div class="celda original" [class.vacia]="!p.original">
               @if (p.original; as segmentos) {

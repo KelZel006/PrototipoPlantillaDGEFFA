@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { UnidadService } from '../../core/unidad.service';
 import { mensajeError, mensajeErrorArchivo } from '../../core/errores';
@@ -33,24 +34,36 @@ export class PlantillasVigentes {
   private readonly interaccion = inject(InteraccionService);
   private readonly usuario = inject(UsuarioPruebaService);
 
-  private readonly recurso = rxResource({ params: () => this.usuario.id(), stream: () => this.api.consolidadoDePlantillas() });
+  private readonly recurso = rxResource({
+    params: () => this.usuario.id(),
+    stream: () => this.api.consolidadoDePlantillas(),
+  });
 
   protected readonly cargando = this.recurso.isLoading;
-  protected readonly error = computed(() => (this.recurso.error() ? mensajeError(this.recurso.error()) : null));
+  protected readonly error = computed(() =>
+    this.recurso.error() ? mensajeError(this.recurso.error()) : null,
+  );
   // Solo las plantillas de la unidad.
   private readonly todas = computed(() =>
-    (this.recurso.hasValue() ? this.recurso.value() : []).filter((p) => p.unidadId === this.unidadMostrada()),
+    (this.recurso.hasValue() ? this.recurso.value() : []).filter(
+      (p) => p.unidadId === this.unidadMostrada(),
+    ),
   );
 
   protected readonly busqueda = signal('');
   protected readonly tipo = signal('');
-  protected readonly tipos = computed(() => [...new Set(this.todas().map((p) => p.tipoDocumento))].sort());
+  protected readonly tipos = computed(() =>
+    [...new Set(this.todas().map((p) => p.tipoDocumento))].sort(),
+  );
   protected readonly filtradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
     return this.todas().filter(
       (p) =>
         (!this.tipo() || p.tipoDocumento === this.tipo()) &&
-        (!texto || [p.nombre, p.plantillaId, p.rubroId, p.subRubroId].some((v) => v.toLowerCase().includes(texto))),
+        (!texto ||
+          [p.nombre, p.plantillaId, p.rubroId, p.subRubroId].some((v) =>
+            v.toLowerCase().includes(texto),
+          )),
     );
   });
 
@@ -78,30 +91,45 @@ export class PlantillasVigentes {
       ventana = null;
     }
     this.generando.set(version.id);
-    this.api.pdfVersion(version.id).subscribe({
-      next: (respuesta) => {
-        this.generando.set(null);
-        if (!respuesta.body) {
+    // Con la solicitud de prueba de su rubro y sub rubro, para ver el documento con datos.
+    this.api
+      .solicitudes()
+      .pipe(
+        switchMap((solicitudes) => {
+          const solicitud = solicitudes.find(
+            (s) => s.rubroId === plantilla.rubroId && s.subRubroId === plantilla.subRubroId,
+          );
+          return this.api.pdfVersion(version.id, solicitud?.id ?? null);
+        }),
+      )
+      .subscribe({
+        next: (respuesta) => {
+          this.generando.set(null);
+          if (!respuesta.body) {
+            ventana?.close();
+            return;
+          }
+          const url = URL.createObjectURL(respuesta.body);
+          if (ventana) {
+            ventana.location.href = url;
+          } else {
+            const enlace = document.createElement('a');
+            enlace.href = url;
+            enlace.download = `${plantilla.plantillaId}_v${version.numeroVersion}.pdf`;
+            enlace.click();
+          }
+          setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        },
+        error: async (error: unknown) => {
+          this.generando.set(null);
           ventana?.close();
-          return;
-        }
-        const url = URL.createObjectURL(respuesta.body);
-        if (ventana) {
-          ventana.location.href = url;
-        } else {
-          const enlace = document.createElement('a');
-          enlace.href = url;
-          enlace.download = `${plantilla.plantillaId}_v${version.numeroVersion}.pdf`;
-          enlace.click();
-        }
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      },
-      error: async (error: unknown) => {
-        this.generando.set(null);
-        ventana?.close();
-        this.interaccion.avisar('error', `No se pudo generar el PDF. ${await mensajeErrorArchivo(error)}`, 8000);
-      },
-    });
+          this.interaccion.avisar(
+            'error',
+            `No se pudo generar el PDF. ${await mensajeErrorArchivo(error)}`,
+            8000,
+          );
+        },
+      });
   }
 
   protected recargar(): void {

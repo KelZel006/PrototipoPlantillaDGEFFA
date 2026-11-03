@@ -13,10 +13,11 @@ public sealed record AlertaCampo(
     string Detalle);
 
 /// <summary>
-/// Detecta los cambios de una propuesta, respecto de su versión original, en los párrafos que usan un campo marcado
-/// «Alertar cambios al aprobador» (<see cref="Campo.AlertarCambios"/>): en el texto o en la condición, al agregarlos,
-/// eliminarlos, activarlos o desactivarlos. Solo se avisa en una MODIFICACIÓN de una plantilla vigente: una plantilla
-/// nueva (CREAR) no tiene un Operador anterior que haya cambiado.
+/// Detecta los cambios de una propuesta, respecto de su versión original, en un campo marcado «Alertar cambios al
+/// aprobador» (<see cref="Campo.AlertarCambios"/>). Solo cuenta lo que le pasa al campo mismo: que se agregue o se quite
+/// del texto, que cambien las reglas de una condición sobre él, o que se agregue, elimine, active o desactive un párrafo
+/// que lo usa. Cambiar el texto alrededor del campo, sin tocarlo, no se avisa. Solo se avisa en una MODIFICACIÓN de una
+/// plantilla vigente: una plantilla nueva (CREAR) no tiene un Operador anterior que haya cambiado.
 /// </summary>
 public static class AlertasCampos
 {
@@ -51,20 +52,26 @@ public static class AlertasCampos
                 }
                 else
                 {
-                    if (!ComparadorContenido.MismoJson(viejo.Parrafo.Contenido, nuevo.Parrafo.Contenido) && (textoViejo || textoNuevo))
+                    // El campo en el texto: solo cuenta si se agrega o se quita, no lo que se escribe alrededor.
+                    var vecesAntes = ContenidoEditor.VecesCampo(viejo.Parrafo.Contenido, campo.Id);
+                    var vecesAhora = ContenidoEditor.VecesCampo(nuevo.Parrafo.Contenido, campo.Id);
+                    if (vecesAntes != vecesAhora)
                     {
-                        cambios.Add(textoViejo && !textoNuevo ? $"se quitó {etiqueta} del texto"
-                            : !textoViejo && textoNuevo ? $"se agregó {etiqueta} al texto"
-                            : $"cambió el texto alrededor de {etiqueta}");
+                        cambios.Add(vecesAhora == 0 ? $"se quitó {etiqueta} del texto"
+                            : vecesAntes == 0 ? $"se agregó {etiqueta} al texto"
+                            : vecesAhora > vecesAntes ? $"se agregó otro {etiqueta} al texto"
+                            : $"se quitó un {etiqueta} del texto");
                     }
-                    if (!ComparadorContenido.MismoJson(viejo.Parrafo.Condicion, nuevo.Parrafo.Condicion) && (condicionVieja || condicionNueva))
+                    // Las condiciones: solo las reglas que usan el campo.
+                    if (!ComparadorContenido.MismoJson(ReglasDel(viejo.Parrafo.Condicion, campo.Id), ReglasDel(nuevo.Parrafo.Condicion, campo.Id)))
                         cambios.Add($"cambió la condición sobre «{campo.Etiqueta}»");
-                    var enTextoViejo = CondicionesDeTexto(viejo.Parrafo, campo.Id);
-                    var enTextoNuevo = CondicionesDeTexto(nuevo.Parrafo, campo.Id);
-                    if ((enTextoViejo.Count > 0 || enTextoNuevo.Count > 0) && !ComparadorContenido.MismoJson(enTextoViejo, enTextoNuevo))
+                    var enTextoViejo = CondicionesDeTexto(viejo.Parrafo, campo.Id).SelectMany(c => ReglasDel(c, campo.Id)).ToList();
+                    var enTextoNuevo = CondicionesDeTexto(nuevo.Parrafo, campo.Id).SelectMany(c => ReglasDel(c, campo.Id)).ToList();
+                    if (!ComparadorContenido.MismoJson(enTextoViejo, enTextoNuevo))
                         cambios.Add($"cambió una condición dentro del texto sobre «{campo.Etiqueta}»");
-                    if (viejo.Parrafo.Activo != nuevo.Parrafo.Activo)
-                        cambios.Add(nuevo.Parrafo.Activo ? "se activó el párrafo" : "se desactivó el párrafo");
+                    // Activar o desactivar el párrafo hace aparecer o desaparecer el campo del documento.
+                    if (viejo.Parrafo.Activo != nuevo.Parrafo.Activo && (textoViejo || textoNuevo))
+                        cambios.Add(nuevo.Parrafo.Activo ? $"se activó un párrafo con {etiqueta}" : $"se desactivó un párrafo con {etiqueta}");
                     if (viejo.Parrafo.MostrarSoloSiCumple != nuevo.Parrafo.MostrarSoloSiCumple && (condicionVieja || condicionNueva))
                         cambios.Add("cambió «mostrar solo si cumple»");
                 }
@@ -95,6 +102,10 @@ public static class AlertasCampos
         : (ContenidoEditor.CamposUsados(parrafo.Contenido).Contains(campoId),
            (parrafo.Condicion is not null && ReglasCondiciones.Reglas(parrafo.Condicion).Any(r => r.CampoId == campoId)) ||
            CondicionesDeTexto(parrafo, campoId).Count > 0);
+
+    /// <summary>Reglas de la condición que usan el campo; sin condición, ninguna.</summary>
+    private static List<ReglaCondicion> ReglasDel(GrupoCondiciones? condicion, string campoId) =>
+        condicion is null ? [] : ReglasCondiciones.Reglas(condicion).Where(r => r.CampoId == campoId).ToList();
 
     /// <summary>Condiciones de los textos condicionados del párrafo que usan el campo.</summary>
     private static IReadOnlyList<GrupoCondiciones> CondicionesDeTexto(ParrafoContenido parrafo, string campoId) =>
