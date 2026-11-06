@@ -14,7 +14,7 @@ registerLocaleData(localeEs);
 const PLANTILLAS: PlantillaConVersiones[] = [
   {
     plantillaId: 'PLA-001', nombre: 'Aprobación de prueba', unidadId: 'exoneraciones', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
-    tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001',
+    tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', beneficio: 'ISV',
     versiones: [
       { id: 'VER-2', numeroVersion: 2, vigencia: 'Vigente', cargaInicial: false, publicadaPor: 'j.ramos', fechaPublicacion: '2026-10-17T10:00:00Z',
         inicioVigencia: '2026-10-17T10:00:00Z', consolidadoId: 'CON-2', consolidadoNumero: 'PLAN-20260002', versionAnteriorId: 'VER-1' },
@@ -24,7 +24,7 @@ const PLANTILLAS: PlantillaConVersiones[] = [
   },
   {
     plantillaId: 'PLA-002', nombre: 'Dictamen de prueba', unidadId: 'exoneraciones', rubroId: '1800', subRubroId: '1801', tipoDocumentoId: 'TDO-002',
-    tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-001',
+    tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', beneficio: 'ISV',
     versiones: [{ id: 'VER-3', numeroVersion: 1, vigencia: 'Vigente', cargaInicial: true, publicadaPor: 'carga.inicial',
       fechaPublicacion: '2026-10-16T10:00:00Z', inicioVigencia: '2026-10-16T10:00:00Z' }],
   },

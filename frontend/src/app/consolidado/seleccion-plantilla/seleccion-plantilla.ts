@@ -16,8 +16,8 @@ export type ModoCrear = 'Cero' | 'Clonar';
 /**
  * Pantalla C: agregar una plantilla al consolidado.
  * <ul>
- * <li>CREAR: Rubro, Sub Rubro, Tipo Documento y Documento de una plantilla que todavía no existe, y su nombre. Puede
- * empezar vacía o como copia de una plantilla vigente, elegida con las mismas cuatro listas.</li>
+ * <li>CREAR: Rubro, Sub Rubro y, si aplican, Tipo Documento, Documento y Beneficios de una plantilla que todavía no existe, y su nombre. Puede
+ * empezar vacía o como copia de una plantilla vigente, elegida con las mismas cinco listas.</li>
  * <li>MODIFICAR: el catálogo de plantillas vigentes, con su tipo, código y versión. Las que ya están en otro documento
  * abierto aparecen deshabilitadas (D4).</li>
  * </ul>
@@ -71,7 +71,7 @@ export class SeleccionPlantilla {
     );
     return texto
       ? lista.filter((p) =>
-          [p.nombre, p.plantillaId, p.tipoDocumento, p.rubroId, p.subRubroId].some((v) => v.toLowerCase().includes(texto)),
+          [p.nombre, p.plantillaId, p.tipoDocumento, p.rubroId, p.subRubroId, p.beneficio].some((v) => v.toLowerCase().includes(texto)),
         )
       : lista;
   });
@@ -122,6 +122,7 @@ export class SeleccionPlantilla {
     this.contexto.seleccionarRubro(null);
     this.contexto.seleccionarTipoDocumento(null);
     this.contexto.seleccionarClaseDocumento(null);
+    this.contexto.seleccionarBeneficio(null);
   }
 
   protected cancelar(evento?: Event): void {
@@ -134,17 +135,16 @@ export class SeleccionPlantilla {
   protected crear(): void {
     const rubro = this.contexto.rubro();
     const subRubro = this.contexto.subRubro();
-    const tipo = this.contexto.tipoDocumento();
-    const clase = this.contexto.claseDocumento();
-    if (!this.puedeCrear() || !rubro || !subRubro || !tipo || !clase) {
+    if (!this.puedeCrear() || !rubro || !subRubro) {
       return;
     }
     this.enviar(
       this.api.agregarCrear(this.consolidadoId(), {
         rubroId: rubro.id,
         subRubroId: subRubro.id,
-        tipoDocumentoId: tipo.id,
-        claseDocumentoId: clase.id,
+        tipoDocumentoId: this.contexto.tipoDocumento()?.id ?? null,
+        claseDocumentoId: this.contexto.claseDocumento()?.id ?? null,
+        beneficioId: this.contexto.beneficio()?.id ?? null,
         plantillaOrigenId: this.modo() === 'Clonar' ? (this.origen()?.plantillaId ?? null) : null,
         nombreReferencia: this.nombre().trim() || null,
       }),

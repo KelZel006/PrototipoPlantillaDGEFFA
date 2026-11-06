@@ -106,12 +106,22 @@ public sealed class ValidadorClaseDocumento(IRepositorio<Plantilla> plantillas) 
     }
 }
 
+public sealed class ValidadorBeneficio(IRepositorio<Plantilla> plantillas) : ValidadorEntidad<Beneficio>
+{
+    public override async Task ValidarEliminacionAsync(Beneficio beneficio, ResultadoValidacion resultado, CancellationToken ct)
+    {
+        if ((await plantillas.ListarAsync(ct)).Any(p => p.BeneficioId == beneficio.Id))
+            resultado.Agregar("id", "No se puede eliminar el beneficio porque lo usan plantillas.");
+    }
+}
+
 public sealed class ValidadorPlantilla(
     IRepositorio<Unidad> unidades,
     IRepositorio<Rubro> rubros,
     IRepositorio<SubRubro> subRubros,
     IRepositorio<TipoDocumento> tiposDocumento,
     IRepositorio<ClaseDocumento> clasesDocumento,
+    IRepositorio<Beneficio> beneficios,
     IRepositorio<Plantilla> plantillas,
     IRepositorio<Parrafo> parrafos,
     IRepositorio<ArchivoRecurso> archivos) : ValidadorEntidad<Plantilla>
@@ -137,11 +147,14 @@ public sealed class ValidadorPlantilla(
         else if (subRubro.RubroId != plantilla.RubroId)
             resultado.Agregar("subRubroId", "El sub rubro no pertenece al rubro seleccionado.");
 
-        if (await tiposDocumento.ObtenerAsync(plantilla.TipoDocumentoId, ct) is null)
+        if (plantilla.TipoDocumentoId != "" && await tiposDocumento.ObtenerAsync(plantilla.TipoDocumentoId, ct) is null)
             resultado.Agregar("tipoDocumentoId", $"El tipo de documento '{plantilla.TipoDocumentoId}' no existe.");
 
-        if (await clasesDocumento.ObtenerAsync(plantilla.ClaseDocumentoId, ct) is null)
+        if (plantilla.ClaseDocumentoId != "" && await clasesDocumento.ObtenerAsync(plantilla.ClaseDocumentoId, ct) is null)
             resultado.Agregar("claseDocumentoId", $"El documento '{plantilla.ClaseDocumentoId}' no existe.");
+
+        if (plantilla.BeneficioId != "" && await beneficios.ObtenerAsync(plantilla.BeneficioId, ct) is null)
+            resultado.Agregar("beneficioId", $"El beneficio '{plantilla.BeneficioId}' no existe.");
 
         var repetida = (await plantillas.ListarAsync(ct)).Any(p =>
             p.Id != plantilla.Id &&
@@ -149,9 +162,10 @@ public sealed class ValidadorPlantilla(
             p.RubroId == plantilla.RubroId &&
             p.SubRubroId == plantilla.SubRubroId &&
             p.TipoDocumentoId == plantilla.TipoDocumentoId &&
-            p.ClaseDocumentoId == plantilla.ClaseDocumentoId);
+            p.ClaseDocumentoId == plantilla.ClaseDocumentoId &&
+            p.BeneficioId == plantilla.BeneficioId);
         if (repetida)
-            resultado.Agregar("claseDocumentoId", "Ya existe una plantilla de esta unidad para esta combinación de Rubro, Sub Rubro, Tipo Documento y Documento.");
+            resultado.Agregar("beneficioId", "Ya existe una plantilla de esta unidad para esta combinación de Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios.");
     }
 
     public override async Task ValidarEliminacionAsync(Plantilla plantilla, ResultadoValidacion resultado, CancellationToken ct)

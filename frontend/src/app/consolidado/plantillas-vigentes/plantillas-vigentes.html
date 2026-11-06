@@ -3,17 +3,13 @@
     <div>
       <p class="unidad-actual">{{ unidades.nombre(unidadMostrada()) }}</p>
       <h2 id="titulo-vigentes">Consolidado de Plantillas</h2>
-      <p class="texto-secundario sin-margen">
-        Plantillas publicadas y su vigencia. Cada versión indica el documento consolidado que la publicó; las anteriores se
-        conservan como NO VIGENTES.
-      </p>
     </div>
   </header>
 
   <div class="filtros" role="search">
     <label>
       <span>Buscar</span>
-      <input class="control control-compacto" type="search" placeholder="Nombre, código, rubro o sub rubro" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+      <input class="control control-compacto" type="search" placeholder="Nombre, código, rubro, sub rubro o beneficio" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
     </label>
     <label>
       <span>Tipo documental</span>
@@ -24,6 +20,15 @@
         }
       </select>
     </label>
+  </div>
+
+  <div class="consulta">
+    <button type="button" class="boton boton-secundario boton-compacto" [attr.aria-expanded]="consultaAbierta()" (click)="consultaAbierta.set(!consultaAbierta())">
+      {{ consultaAbierta() ? 'Ocultar consulta' : '¿Qué plantilla le corresponde a un registro?' }}
+    </button>
+    @if (consultaAbierta()) {
+      <app-plantilla-aplicable [unidadId]="unidadMostrada()" />
+    }
   </div>
 
   @if (error(); as mensaje) {
@@ -43,6 +48,7 @@
             <th scope="col">Tipo</th>
             <th scope="col">Plantilla</th>
             <th scope="col">Rubro / Sub rubro</th>
+            <th scope="col">Beneficio</th>
             <th scope="col" class="numero">Versión</th>
             <th scope="col">Vigente desde</th>
             <th scope="col">Publicada por</th>
@@ -53,9 +59,10 @@
           @for (p of filtradas(); track p.plantillaId) {
             @let v = vigente(p);
             <tr>
-              <td>{{ p.tipoDocumento }}</td>
+              <td>{{ p.tipoDocumento || '—' }}</td>
               <td><strong>{{ p.nombre }}</strong><br /><code>{{ p.plantillaId }}</code></td>
               <td>{{ p.rubroId }} / {{ p.subRubroId }}</td>
+              <td>{{ p.beneficio || '—' }}</td>
               <td class="numero">{{ v?.numeroVersion ?? '—' }}</td>
               <td>{{ v ? (v.inicioVigencia | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
               <td>
@@ -73,7 +80,7 @@
             </tr>
             @if (abierta() === p.plantillaId) {
               <tr class="fila-detalle">
-                <td colspan="7">
+                <td colspan="8">
                   <ol class="versiones">
                     @for (ver of p.versiones; track ver.id) {
                       <li>

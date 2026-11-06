@@ -38,7 +38,7 @@ export const ITEMS_POR_PAGINA = [5, 10, 25, 50];
 
 /**
  * Pantalla A: Documentos Plantillas de la unidad. Una fila por plantilla de cada documento, con filtros por Rubro, Sub
- * Rubro, Tipo Plantilla y Tipo Documento, y paginación. El servidor decide qué entra en cada bandeja: el analista ve solo
+ * Rubro, Tipo Plantilla, Tipo Documento y Beneficios, y paginación. El servidor decide qué entra en cada bandeja: el analista ve solo
  * los suyos (sin los que ya envió a verificación) y el Oficial Jurídico, los VERIFICADOS y APROBADOS.
  */
 @Component({
@@ -88,11 +88,13 @@ export class ListaConsolidados {
   protected readonly subRubro = signal('');
   protected readonly tipoPlantilla = signal('');
   protected readonly tipoDocumento = signal('');
+  protected readonly beneficio = signal('');
 
   private opciones(valores: (Opcion | null)[]): Opcion[] {
     const unicas = new Map<string, string>();
     for (const valor of valores) {
-      if (valor) {
+      // Las listas opcionales vacías no son una opción del filtro.
+      if (valor?.id) {
         unicas.set(valor.id, valor.nombre);
       }
     }
@@ -116,7 +118,15 @@ export class ListaConsolidados {
     this.opciones(this.plantillas().map((p) => ({ id: p.claseDocumentoId, nombre: p.claseDocumento }))),
   );
 
-  protected readonly hayFiltros = computed(() => !!(this.rubro() || this.subRubro() || this.tipoPlantilla() || this.tipoDocumento()));
+  // Beneficios siempre muestra el catálogo completo, en su orden.
+  private readonly beneficiosRecurso = rxResource({ stream: () => this.api.beneficios() });
+  protected readonly beneficios = computed(() =>
+    this.beneficiosRecurso.hasValue() ? this.beneficiosRecurso.value().filter((b) => b.activo) : [],
+  );
+
+  protected readonly hayFiltros = computed(
+    () => !!(this.rubro() || this.subRubro() || this.tipoPlantilla() || this.tipoDocumento() || this.beneficio()),
+  );
 
   protected readonly filtradas = computed(() =>
     this.filas().filter(({ plantilla: p }) =>
@@ -126,7 +136,8 @@ export class ListaConsolidados {
           (!this.rubro() || p.rubroId === this.rubro()) &&
           (!this.subRubro() || p.subRubroId === this.subRubro()) &&
           (!this.tipoPlantilla() || p.tipoDocumentoId === this.tipoPlantilla()) &&
-          (!this.tipoDocumento() || p.claseDocumentoId === this.tipoDocumento()),
+          (!this.tipoDocumento() || p.claseDocumentoId === this.tipoDocumento()) &&
+          (!this.beneficio() || p.beneficioId === this.beneficio()),
     ),
   );
 
@@ -137,7 +148,7 @@ export class ListaConsolidados {
   }
 
   protected limpiar(): void {
-    for (const filtro of [this.rubro, this.subRubro, this.tipoPlantilla, this.tipoDocumento]) {
+    for (const filtro of [this.rubro, this.subRubro, this.tipoPlantilla, this.tipoDocumento, this.beneficio]) {
       filtro.set('');
     }
   }
@@ -147,7 +158,7 @@ export class ListaConsolidados {
   protected readonly porPagina = signal(10);
   /** Vuelve a la primera página cuando cambian los filtros, la unidad o el tamaño de página. */
   protected readonly pagina = linkedSignal({
-    source: () => [this.filtradas().length, this.porPagina(), this.rubro(), this.subRubro(), this.tipoPlantilla(), this.tipoDocumento()],
+    source: () => [this.filtradas().length, this.porPagina(), this.rubro(), this.subRubro(), this.tipoPlantilla(), this.tipoDocumento(), this.beneficio()],
     computation: () => 1,
   });
   protected readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtradas().length / this.porPagina())));

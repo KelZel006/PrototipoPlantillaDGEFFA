@@ -92,6 +92,16 @@ CREATE TABLE plantillas.ClasesDocumento (
     CONSTRAINT UQ_ClasesDocumento_Nombre UNIQUE (Nombre)
 );
 
+-- Lista «Beneficios»: ISV, ISR, ACPV, Aportación Solidaria.
+CREATE TABLE plantillas.Beneficios (
+    Id              varchar(20)     NOT NULL,
+    Nombre          nvarchar(150)   NOT NULL,
+    Activo          bit             NOT NULL CONSTRAINT DF_Beneficios_Activo DEFAULT (1),
+    Version         int             NOT NULL CONSTRAINT DF_Beneficios_Version DEFAULT (1),
+    CONSTRAINT PK_Beneficios PRIMARY KEY (Id),
+    CONSTRAINT UQ_Beneficios_Nombre UNIQUE (Nombre)
+);
+
 -- Catálogo de bloques documentales: CABECERA, VISTOS, CONSIDERANDO, FUNDAMENTACION_LEGAL…
 CREATE TABLE plantillas.BloquesDocumentales (
     Id              varchar(40)     NOT NULL,
@@ -196,8 +206,9 @@ CREATE TABLE plantillas.Plantillas (
     UnidadId            varchar(40)     NOT NULL,
     RubroId             varchar(20)     NOT NULL,
     SubRubroId          varchar(20)     NOT NULL,
-    TipoDocumentoId     varchar(20)     NOT NULL,
-    ClaseDocumentoId    varchar(20)     NOT NULL,
+    TipoDocumentoId     varchar(20)     NULL,
+    ClaseDocumentoId    varchar(20)     NULL,
+    BeneficioId         varchar(20)     NULL,
     FechaModificacion   datetimeoffset(7) NOT NULL,
     Version             int             NOT NULL CONSTRAINT DF_Plantillas_Version DEFAULT (1),
     CONSTRAINT PK_Plantillas PRIMARY KEY (Id),
@@ -205,8 +216,10 @@ CREATE TABLE plantillas.Plantillas (
     CONSTRAINT FK_Plantillas_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES plantillas.SubRubros (RubroId, Id),
     CONSTRAINT FK_Plantillas_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES plantillas.TiposDocumento (Id),
     CONSTRAINT FK_Plantillas_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES plantillas.ClasesDocumento (Id),
-    -- Identidad funcional: Unidad + Rubro + Sub Rubro + Tipo Documento + Documento identifican una única plantilla.
-    CONSTRAINT UQ_Plantillas_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId)
+    CONSTRAINT FK_Plantillas_Beneficio FOREIGN KEY (BeneficioId) REFERENCES plantillas.Beneficios (Id),
+    -- Identidad funcional: Unidad + Rubro + Sub Rubro + Tipo Documento + Documento + Beneficios identifican una única plantilla.
+    -- Tipo Documento, Documento y Beneficios son opcionales: NULL significa que sirve para cualquier valor (UNIQUE trata los NULL como iguales).
+    CONSTRAINT UQ_Plantillas_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId, BeneficioId)
 );
 
 CREATE TABLE plantillas.VersionesPlantilla (
@@ -295,8 +308,9 @@ CREATE TABLE plantillas.Propuestas (
     UnidadId                varchar(40)     NOT NULL,
     RubroId                 varchar(20)     NOT NULL,
     SubRubroId              varchar(20)     NOT NULL,
-    TipoDocumentoId         varchar(20)     NOT NULL,
-    ClaseDocumentoId        varchar(20)     NOT NULL,
+    TipoDocumentoId         varchar(20)     NULL,
+    ClaseDocumentoId        varchar(20)     NULL,
+    BeneficioId             varchar(20)     NULL,
     Nombre                  nvarchar(200)   NOT NULL,
     PlantillaId             varchar(40)     NULL,       -- obligatorio en MODIFICAR
     VersionOrigenId         varchar(40)     NULL,       -- versión vigente de la que partió (MODIFICAR)
@@ -314,6 +328,7 @@ CREATE TABLE plantillas.Propuestas (
     CONSTRAINT FK_Propuestas_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES plantillas.SubRubros (RubroId, Id),
     CONSTRAINT FK_Propuestas_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES plantillas.TiposDocumento (Id),
     CONSTRAINT FK_Propuestas_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES plantillas.ClasesDocumento (Id),
+    CONSTRAINT FK_Propuestas_Beneficio FOREIGN KEY (BeneficioId) REFERENCES plantillas.Beneficios (Id),
     CONSTRAINT FK_Propuestas_Plantilla FOREIGN KEY (PlantillaId) REFERENCES plantillas.Plantillas (Id),
     CONSTRAINT FK_Propuestas_VersionOrigen FOREIGN KEY (VersionOrigenId) REFERENCES plantillas.VersionesPlantilla (Id),
     CONSTRAINT FK_Propuestas_Derivada FOREIGN KEY (DerivadaDePropuestaId) REFERENCES plantillas.Propuestas (Id),
@@ -335,15 +350,16 @@ CREATE TABLE plantillas.BloqueosPlantilla (
     UnidadId            varchar(40)     NOT NULL,
     RubroId             varchar(20)     NOT NULL,
     SubRubroId          varchar(20)     NOT NULL,
-    TipoDocumentoId     varchar(20)     NOT NULL,
-    ClaseDocumentoId    varchar(20)     NOT NULL,
+    TipoDocumentoId     varchar(20)     NULL,
+    ClaseDocumentoId    varchar(20)     NULL,
+    BeneficioId         varchar(20)     NULL,
     ConsolidadoId       varchar(40)     NOT NULL,
     PropuestaId         varchar(40)     NOT NULL,
     Fecha               datetimeoffset(7) NOT NULL,
-    CONSTRAINT PK_BloqueosPlantilla PRIMARY KEY (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId),
+    CONSTRAINT PK_BloqueosPlantilla PRIMARY KEY (PropuestaId),
+    CONSTRAINT UQ_BloqueosPlantilla_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId, BeneficioId),
     CONSTRAINT FK_BloqueosPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
-    CONSTRAINT FK_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.Propuestas (Id),
-    CONSTRAINT UQ_BloqueosPlantilla_Propuesta UNIQUE (PropuestaId)
+    CONSTRAINT FK_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.Propuestas (Id)
 );
 
 -- Cada envío a verificación, con la copia congelada de lo enviado y su huella de integridad.

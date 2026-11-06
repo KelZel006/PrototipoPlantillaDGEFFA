@@ -21,7 +21,7 @@ const TIPOS = [
 function propuesta(id: string, cambios: Partial<Propuesta> = {}): Propuesta {
   return {
     id, version: 1, consolidadoId: 'CON-001', unidadId: 'exoneraciones', operacion: 'Modificar', rubroId: 'R', subRubroId: 'S',
-    tipoDocumentoId: 'TDO-001', claseDocumentoId: 'C', nombre: 'Plantilla de prueba', plantillaId: 'PLA-001', retirada: false,
+    tipoDocumentoId: 'TDO-001', claseDocumentoId: 'C', beneficioId: 'BEN-001', nombre: 'Plantilla de prueba', plantillaId: 'PLA-001', retirada: false,
     fechaCreacion: '2026-10-12T15:00:00Z', fechaModificacion: '2026-10-12T15:00:00Z', contenidoPropuesto: { bloques: [] }, ...cambios,
   } as Propuesta;
 }
@@ -77,7 +77,7 @@ describe('PanelPlantilla', () => {
     http.match((r) => r.url.startsWith('/api/consolidados/')).forEach((p) => p.cancelled || p.flush(DOCUMENTO));
     http.match('/api/usuarios').forEach((p) => p.flush([]));
     // Catálogos del diálogo para agregar otra plantilla.
-    for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/tipos-documento']) {
+    for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/beneficios', '/api/tipos-documento']) {
       http.match(url).forEach((p) => p.cancelled || p.flush([]));
     }
     http.verify();

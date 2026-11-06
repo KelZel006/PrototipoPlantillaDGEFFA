@@ -36,7 +36,7 @@ public sealed class ClonarPlantillaPruebas : IDisposable
 
     private async Task<HttpResponseMessage> Crear(string consolidado, string rubro, string subRubro, string tipo, string clase, string? origen) =>
         await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
-            new SolicitudCrearPlantilla(rubro, subRubro, tipo, clase, null, origen), Json);
+            new SolicitudCrearPlantilla(rubro, subRubro, tipo, clase, "BEN-001", null, origen), Json);
 
     private async Task<VersionPlantilla> Vigente(string plantillaId) =>
         (await _cliente.GetFromJsonAsync<List<VersionPlantilla>>("/api/versiones-plantilla?vigencia=Vigente", Json))!
@@ -138,7 +138,7 @@ public sealed class ClonarResolucionPruebas : IDisposable
 
         // PLA-001: Resolución 1100 / 1107 Original. La nueva: la misma combinación como Modificación.
         var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
-            new SolicitudCrearPlantilla("1100", "1107", "TDO-001", "CDO-002", null, "PLA-001"), Json);
+            new SolicitudCrearPlantilla("1100", "1107", "TDO-001", "CDO-002", "BEN-001", null, "PLA-001"), Json);
         respuesta.EnsureSuccessStatusCode();
         var agregadas = (await respuesta.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!;
 

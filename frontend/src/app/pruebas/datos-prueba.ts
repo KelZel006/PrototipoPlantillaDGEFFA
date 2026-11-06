@@ -65,6 +65,7 @@ export const PLANTILLA: PlantillaEdicion = {
   nombre: 'Plantilla de prueba',
   rubroId: 'RUB-001',
   subRubroId: 'SUB-001',
+  beneficioId: 'BEN-001',
   tipoDocumentoId: 'TDO-001',
   claseDocumentoId: 'CDO-001',
   fechaModificacion: '2026-10-14T00:00:00+00:00',

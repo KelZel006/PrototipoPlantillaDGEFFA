@@ -45,16 +45,29 @@ describe('SelectorContexto', () => {
       { id: 'CDO-002', version: 1, nombre: 'Modificación', activo: true },
       { id: 'CDO-003', version: 1, nombre: 'Aclaratoria', activo: true },
     ]);
+    http.expectOne('/api/beneficios').flush([
+      { id: 'BEN-001', version: 1, nombre: 'ISV', activo: true },
+      { id: 'BEN-002', version: 1, nombre: 'ISR', activo: true },
+      { id: 'BEN-003', version: 1, nombre: 'ACPV', activo: true },
+      { id: 'BEN-004', version: 1, nombre: 'Aportación Solidaria', activo: true },
+    ]);
     await estabilizar();
   });
 
   afterEach(() => http.verify());
 
-  it('muestra las cuatro listas con sus etiquetas', () => {
+  it('muestra las cinco listas con sus etiquetas', () => {
     const etiquetas = Array.from(elemento.querySelectorAll('label')).map((l) => l.textContent?.trim());
-    expect(etiquetas).toEqual(['Rubro', 'Sub Rubro', 'Tipo Documento', 'Documento']);
+    expect(etiquetas).toEqual(['Rubro', 'Sub Rubro', 'Tipo Documento', 'Documento', 'Beneficios']);
+    expect(Array.from(lista('lista-beneficio').options).map((o) => o.textContent?.trim())).toEqual([
+      'Todos (opcional)',
+      'ISV',
+      'ISR',
+      'ACPV',
+      'Aportación Solidaria',
+    ]);
     expect(Array.from(lista('lista-documento').options).map((o) => o.textContent?.trim())).toEqual([
-      'Seleccione el documento',
+      'Todos (opcional)',
       'Original',
       'Modificación',
       'Aclaratoria',
@@ -77,14 +90,22 @@ describe('SelectorContexto', () => {
     await estabilizar();
 
     expect(lista('lista-subrubro').disabled).toBe(false);
+    expect(TestBed.inject(ContextoService).completo()).toBe(false);
     elegir('lista-subrubro', 'SUB-001');
+    await estabilizar();
+    // Con Rubro y Sub Rubro basta: las demás listas son opcionales.
+    expect(TestBed.inject(ContextoService).completo()).toBe(true);
+
     elegir('lista-tipo', 'TDO-001');
     await estabilizar();
-    expect(TestBed.inject(ContextoService).completo()).toBe(false);
 
     elegir('lista-documento', 'CDO-002');
     await estabilizar();
     expect(TestBed.inject(ContextoService).claseDocumento()?.nombre).toBe('Modificación');
+
+    elegir('lista-beneficio', 'BEN-003');
+    await estabilizar();
+    expect(TestBed.inject(ContextoService).beneficio()?.nombre).toBe('ACPV');
     expect(TestBed.inject(ContextoService).completo()).toBe(true);
   });
 

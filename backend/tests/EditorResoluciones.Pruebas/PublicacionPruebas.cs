@@ -66,7 +66,7 @@ public sealed class PublicacionPruebas : IDisposable
         (await Enviar(HttpMethod.Post, $"/api/propuestas/{modificar}/parrafos", "a.perez",
             new DatosParrafo("CONSIDERANDO", 0, Doc("Que se publica este considerando."), false, null, 0))).EnsureSuccessStatusCode();
         var crear = (await (await Enviar(HttpMethod.Post, $"/api/consolidados/{consolidado}/propuestas/crear", "a.perez",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-003", "CDO-001", "Plantilla nueva publicada"))).Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.Single().Id;
+            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-003", "CDO-001", "BEN-001", "Plantilla nueva publicada"))).Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.Single().Id;
         (await Enviar(HttpMethod.Post, $"/api/propuestas/{crear}/parrafos", "a.perez",
             new DatosParrafo("RESUELVE", 0, Doc("Resolver lo que corresponda."), false, null, 0))).EnsureSuccessStatusCode();
         (await Enviar(HttpMethod.Post, $"/api/consolidados/{consolidado}/enviar", "a.perez")).EnsureSuccessStatusCode();

@@ -1,8 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { ClaseDocumento, Rubro, Seccion, SubRubro, TipoDocumento } from './modelos';
+import { Beneficio, ClaseDocumento, Rubro, Seccion, SubRubro, TipoDocumento } from './modelos';
 
 /**
- * Selección de las cuatro listas (Rubro, Sub Rubro, Tipo Documento y Documento).
+ * Selección de las cinco listas (Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios). Rubro y Sub Rubro son
+ * obligatorios; las demás son opcionales.
  * Vive en un servicio para conservarse mientras el usuario navega entre secciones.
  */
 @Injectable({ providedIn: 'root' })
@@ -12,6 +13,8 @@ export class ContextoService {
   readonly tipoDocumento = signal<TipoDocumento | null>(null);
   /** Lista "Documento": Original, Modificación o Aclaratoria. */
   readonly claseDocumento = signal<ClaseDocumento | null>(null);
+  /** Lista "Beneficios": ISV, ISR, ACPV o Aportación Solidaria. */
+  readonly beneficio = signal<Beneficio | null>(null);
 
   /** Secciones con cambios sin guardar; las marca cada editor de sección. */
   readonly seccionesConCambios = signal<ReadonlySet<Seccion>>(new Set());
@@ -42,13 +45,11 @@ export class ContextoService {
     this.seccionesConCambios.set(new Set());
   }
 
-  /** La combinación está completa y es coherente (el sub rubro pertenece al rubro). */
+  /** La combinación tiene lo obligatorio, Rubro y Sub Rubro, y es coherente (el sub rubro pertenece al rubro). */
   readonly completo = computed(() => {
     const rubro = this.rubro();
     const subRubro = this.subRubro();
-    return (
-      !!rubro && !!subRubro && !!this.tipoDocumento() && !!this.claseDocumento() && subRubro.rubroId === rubro.id
-    );
+    return !!rubro && !!subRubro && subRubro.rubroId === rubro.id;
   });
 
   seleccionarRubro(rubro: Rubro | null): void {
@@ -73,5 +74,9 @@ export class ContextoService {
 
   seleccionarClaseDocumento(clase: ClaseDocumento | null): void {
     this.claseDocumento.set(clase);
+  }
+
+  seleccionarBeneficio(beneficio: Beneficio | null): void {
+    this.beneficio.set(beneficio);
   }
 }

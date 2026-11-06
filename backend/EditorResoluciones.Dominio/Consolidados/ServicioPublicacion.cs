@@ -33,6 +33,8 @@ public sealed record PlantillaConVersiones(
     string TipoDocumentoId,
     string TipoDocumento,
     string ClaseDocumentoId,
+    string BeneficioId,
+    string Beneficio,
     IReadOnlyList<VersionResumen> Versiones);
 
 /// <summary>
@@ -54,6 +56,7 @@ public sealed class ServicioPublicacion(
     IRepositorio<VersionPlantilla> versiones,
     IRepositorio<DocumentoConsolidado> consolidados,
     IRepositorio<TipoDocumento> tipos,
+    IRepositorio<Beneficio> beneficios,
     ServicioAutorizacion autorizacion,
     TimeProvider reloj)
 {
@@ -136,7 +139,8 @@ public sealed class ServicioPublicacion(
             {
                 var repetida = todasPlantillas.FirstOrDefault(p => p.UnidadId == propuesta.UnidadId &&
                     p.RubroId == propuesta.RubroId && p.SubRubroId == propuesta.SubRubroId &&
-                    p.TipoDocumentoId == propuesta.TipoDocumentoId && p.ClaseDocumentoId == propuesta.ClaseDocumentoId);
+                    p.TipoDocumentoId == propuesta.TipoDocumentoId && p.ClaseDocumentoId == propuesta.ClaseDocumentoId &&
+                    p.BeneficioId == propuesta.BeneficioId);
                 if (repetida is not null)
                     throw new ConflictoException($"Ya existe una plantilla vigente con la identidad de «{propuesta.Nombre}» ({repetida.Id}). No se publicó nada.");
                 plantilla = await tx.CrearAsync(new Plantilla
@@ -148,6 +152,7 @@ public sealed class ServicioPublicacion(
                     SubRubroId = propuesta.SubRubroId,
                     TipoDocumentoId = propuesta.TipoDocumentoId,
                     ClaseDocumentoId = propuesta.ClaseDocumentoId,
+                    BeneficioId = propuesta.BeneficioId,
                     Estado = EstadoPlantilla.Publicada,
                     Descripcion = $"Creada por {consolidado.Numero}.",
                     LogoId = contenido.Diseno.LogoId,
@@ -255,12 +260,14 @@ public sealed class ServicioPublicacion(
     {
         await autorizacion.UsuarioAsync(ct);
         var nombresTipo = (await tipos.ListarAsync(ct)).ToDictionary(t => t.Id, t => t.Nombre, StringComparer.Ordinal);
+        var nombresBeneficio = (await beneficios.ListarAsync(ct)).ToDictionary(b => b.Id, b => b.Nombre, StringComparer.Ordinal);
         var numeros = (await consolidados.ListarAsync(ct)).ToDictionary(c => c.Id, c => c.Numero, StringComparer.Ordinal);
         var porPlantilla = (await versiones.ListarAsync(ct)).ToLookup(v => v.PlantillaId, StringComparer.Ordinal);
         return (await plantillas.ListarAsync(ct))
             .Where(p => porPlantilla[p.Id].Any())
             .Select(p => new PlantillaConVersiones(p.Id, p.Nombre, p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
                 nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId), p.ClaseDocumentoId,
+                p.BeneficioId, nombresBeneficio.GetValueOrDefault(p.BeneficioId, p.BeneficioId),
                 porPlantilla[p.Id].OrderByDescending(v => v.NumeroVersion).Select(v => new VersionResumen(
                     v.Id, v.NumeroVersion, v.Vigencia, v.CargaInicial, v.PublicadaPor, v.FechaPublicacion, v.InicioVigencia, v.FinVigencia,
                     v.ConsolidadoId, v.ConsolidadoId is null ? null : numeros.GetValueOrDefault(v.ConsolidadoId), v.VersionAnteriorId)).ToList()))

@@ -272,7 +272,7 @@ public sealed class BloquesConfigurablesPruebas : IDisposable
         await ConfigurarDictamen();
         var consolidado = await Consolidados.CrearAsync(_cliente);
         var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-002", "CDO-001", null), Json);
+            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-002", "CDO-001", "BEN-001", null), Json);
         var creada = Assert.Single((await respuesta.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!);
 
         Assert.Equal(["CABECERA", "VISTOS", "CONSIDERANDO", "FIRMAS"], creada.ContenidoPropuesto.Bloques.Select(b => b.Codigo));

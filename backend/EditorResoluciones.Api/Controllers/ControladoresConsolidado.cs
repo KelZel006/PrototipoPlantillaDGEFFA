@@ -211,6 +211,17 @@ public sealed class ConsolidadoPlantillasController(ServicioPublicacion servicio
 [Route("api/plantillas-vigentes")]
 public sealed class PlantillasVigentesController(ServicioPropuestas servicio) : ControllerBase
 {
+    /// <summary>Plantilla que corresponde a un registro: la más específica que coincida; sin contenido si ninguna coincide.</summary>
+    [HttpGet("aplicable")]
+    public async Task<ActionResult<PlantillaVigente?>> Aplicable(
+        [FromQuery] string unidadId, [FromQuery] string rubroId, [FromQuery] string subRubroId,
+        [FromQuery] string? tipoDocumentoId, [FromQuery] string? claseDocumentoId, [FromQuery] string? beneficioId, CancellationToken ct)
+    {
+        var plantilla = await servicio.AplicableAsync(
+            new ConsultaPlantillaAplicable(unidadId, rubroId, subRubroId, tipoDocumentoId, claseDocumentoId, beneficioId), ct);
+        return plantilla is null ? NoContent() : Ok(plantilla);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PlantillaVigente>>> Listar(CancellationToken ct) => Ok(await servicio.VigentesAsync(ct));
 }

@@ -18,6 +18,7 @@ public static class ColeccionesJson
         new("subRubros", "subRubros.json", "SUB", typeof(SubRubro)),
         new("tiposDocumento", "tiposDocumento.json", "TDO", typeof(TipoDocumento)),
         new("clasesDocumento", "clasesDocumento.json", "CDO", typeof(ClaseDocumento)),
+        new("beneficios", "beneficios.json", "BEN", typeof(Beneficio)),
         new("plantillas", "plantillas.json", "PLA", typeof(Plantilla)),
         new("parrafos", "parrafos.json", "PAR", typeof(Parrafo)),
         new("campos", "campos.json", "CAM", typeof(Campo)),

@@ -13,17 +13,13 @@
   </header>
 
   <div class="cuerpo-tarjeta">
-    <p class="texto-secundario sin-margen">
-      @if (usuario.tiene('Administrador')) {
+    @if (usuario.tiene('Administrador')) {
+      <p class="texto-secundario sin-margen">
         Consulta de todos los documentos{{ usuario.tiene('Analista') ? '; como analista, puede crear los suyos' : '' }}.
-      } @else if (usuario.tiene('OficialJuridico') && !usuario.tiene('Analista')) {
-        Su bandeja: documentos VERIFICADOS (pendientes de revisión jurídica) y APROBADOS.
-      } @else if (usuario.tiene('Analista')) {
-        Sus documentos EN REGISTRO y APROBADOS. Los que envía a verificación pasan a la bandeja del Oficial Jurídico.
-      } @else {
-        Consulta de todos los documentos.
-      }
-    </p>
+      </p>
+    } @else if (!usuario.tiene('OficialJuridico') && !usuario.tiene('Analista')) {
+      <p class="texto-secundario sin-margen">Consulta de todos los documentos.</p>
+    }
 
     <div class="filtros" role="search" aria-label="Filtrar plantillas">
       <label>
@@ -62,6 +58,15 @@
           }
         </select>
       </label>
+      <label>
+        <span>Beneficios</span>
+        <select class="control" (change)="beneficio.set($any($event.target).value)">
+          <option value="" [selected]="beneficio() === ''">Todos</option>
+          @for (o of beneficios(); track o.id) {
+            <option [value]="o.id" [selected]="o.id === beneficio()">{{ o.nombre }}</option>
+          }
+        </select>
+      </label>
       @if (hayFiltros()) {
         <button type="button" class="boton boton-secundario boton-compacto limpiar" (click)="limpiar()">Limpiar filtros</button>
       }
@@ -95,6 +100,7 @@
               <th scope="col">Sub Rubro</th>
               <th scope="col">Tipo Plantilla</th>
               <th scope="col">Tipo Documento</th>
+              <th scope="col">Beneficio</th>
               <th scope="col">Estado</th>
             </tr>
           </thead>
@@ -134,12 +140,13 @@
                   <td>{{ p.rubro }}</td>
                   <td>{{ p.subRubro }}</td>
                   <td>
-                    {{ p.tipoDocumento }}
+                    {{ p.tipoDocumento || '—' }}
                     <span class="operacion" [class.crear]="p.operacion === 'Crear'">{{ p.operacion === 'Crear' ? 'CREAR' : 'MODIFICAR' }}</span>
                   </td>
-                  <td>{{ p.claseDocumento }}</td>
+                  <td>{{ p.claseDocumento || '—' }}</td>
+                  <td>{{ p.beneficio || '—' }}</td>
                 } @else {
-                  <td colspan="4" class="sin-plantillas">Sin plantillas todavía</td>
+                  <td colspan="5" class="sin-plantillas">Sin plantillas todavía</td>
                 }
                 <td><app-insignia-estado [estado]="fila.consolidado.estado" /></td>
               </tr>

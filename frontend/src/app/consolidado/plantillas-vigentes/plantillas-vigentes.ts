@@ -9,6 +9,7 @@ import { InteraccionService } from '../../core/interaccion.service';
 import { PlantillaConVersiones, VersionResumen } from '../../core/modelos';
 import { UsuarioPruebaService } from '../../core/usuario-prueba.service';
 import { InsigniaVigencia } from '../insignia-vigencia';
+import { PlantillaAplicable } from './plantilla-aplicable';
 
 /**
  * Pantalla F: consolidado de plantillas (/vigentes). Cada plantilla con su versión vigente y, al desplegarla, todas sus
@@ -16,7 +17,7 @@ import { InsigniaVigencia } from '../insignia-vigencia';
  */
 @Component({
   selector: 'app-plantillas-vigentes',
-  imports: [DatePipe, InsigniaVigencia],
+  imports: [DatePipe, InsigniaVigencia, PlantillaAplicable],
   templateUrl: './plantillas-vigentes.html',
   styleUrl: './plantillas-vigentes.css',
 })
@@ -53,7 +54,7 @@ export class PlantillasVigentes {
   protected readonly busqueda = signal('');
   protected readonly tipo = signal('');
   protected readonly tipos = computed(() =>
-    [...new Set(this.todas().map((p) => p.tipoDocumento))].sort(),
+    [...new Set(this.todas().map((p) => p.tipoDocumento).filter((t) => !!t))].sort(),
   );
   protected readonly filtradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -61,13 +62,15 @@ export class PlantillasVigentes {
       (p) =>
         (!this.tipo() || p.tipoDocumento === this.tipo()) &&
         (!texto ||
-          [p.nombre, p.plantillaId, p.rubroId, p.subRubroId].some((v) =>
+          [p.nombre, p.plantillaId, p.rubroId, p.subRubroId, p.beneficio].some((v) =>
             v.toLowerCase().includes(texto),
           )),
     );
   });
 
   protected readonly abierta = signal<string | null>(null);
+  /** Consulta de qué plantilla corresponde a un registro. */
+  protected readonly consultaAbierta = signal(false);
 
   protected vigente(plantilla: PlantillaConVersiones): VersionResumen | undefined {
     return plantilla.versiones.find((v) => v.vigencia === 'Vigente');

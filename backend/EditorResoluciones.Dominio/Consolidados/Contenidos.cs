@@ -21,7 +21,7 @@ public static class HuellaContenido
         .OrderBy(p => p.Id, StringComparer.Ordinal)
         .Select(p => new
         {
-            p.Id, p.Operacion, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.Nombre,
+            p.Id, p.Operacion, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId, p.Nombre,
             p.PlantillaId, p.VersionOrigenId, p.HuellaOrigen, p.ContenidoPropuesto, p.DerivadaDePropuestaId,
         }));
 

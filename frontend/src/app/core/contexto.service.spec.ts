@@ -16,13 +16,16 @@ describe('ContextoService', () => {
     contexto = TestBed.inject(ContextoService);
   });
 
-  it('está completo solo con las cuatro listas seleccionadas', () => {
+  it('está completo con Rubro y Sub Rubro: las demás listas son opcionales', () => {
     contexto.seleccionarRubro(rubroA);
-    contexto.seleccionarSubRubro(subDeA);
-    contexto.seleccionarTipoDocumento(tipo);
     expect(contexto.completo()).toBe(false);
 
+    contexto.seleccionarSubRubro(subDeA);
+    expect(contexto.completo()).toBe(true);
+
+    contexto.seleccionarTipoDocumento(tipo);
     contexto.seleccionarClaseDocumento(original);
+    contexto.seleccionarBeneficio({ id: 'BEN-001', version: 1, nombre: 'ISV', activo: true });
     expect(contexto.completo()).toBe(true);
   });
 
