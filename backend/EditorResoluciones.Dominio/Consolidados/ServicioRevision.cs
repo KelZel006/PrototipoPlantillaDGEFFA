@@ -89,7 +89,7 @@ public sealed class ServicioRevision(
                 Propuestas = enviadas,
             }, ct);
 
-            var tiposEnviados = enviadas.Select(p => nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId))
+            var tiposEnviados = enviadas.Where(p => p.TipoDocumentoId != "").Select(p => nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId))
                 .Distinct().Order(StringComparer.CurrentCulture);
             await tx.CrearAsync(new Movimiento
             {

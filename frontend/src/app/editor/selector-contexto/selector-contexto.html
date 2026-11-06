@@ -61,7 +61,7 @@
       [value]="contexto.tipoDocumento()?.id ?? ''"
       (change)="alCambiarTipoDocumento($event)"
     >
-      <option value="">Seleccione un tipo de documento</option>
+      <option value="">Todos (opcional)</option>
       @for (tipo of tiposDocumento(); track tipo.id) {
         <option [value]="tipo.id" [selected]="tipo.id === contexto.tipoDocumento()?.id">{{ tipo.nombre }}</option>
       }
@@ -81,9 +81,29 @@
       [value]="contexto.claseDocumento()?.id ?? ''"
       (change)="alCambiarClaseDocumento($event)"
     >
-      <option value="">Seleccione el documento</option>
+      <option value="">Todos (opcional)</option>
       @for (clase of clasesDocumento(); track clase.id) {
         <option [value]="clase.id" [selected]="clase.id === contexto.claseDocumento()?.id">{{ clase.nombre }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="lista">
+    <label class="etiqueta" [for]="prefijo() + '-beneficio'">
+      <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3ZM9 12l2 2 4-4" />
+      </svg>
+      Beneficios
+    </label>
+    <select
+      [id]="prefijo() + '-beneficio'"
+      class="control"
+      [value]="contexto.beneficio()?.id ?? ''"
+      (change)="alCambiarBeneficio($event)"
+    >
+      <option value="">Todos (opcional)</option>
+      @for (beneficio of beneficios(); track beneficio.id) {
+        <option [value]="beneficio.id" [selected]="beneficio.id === contexto.beneficio()?.id">{{ beneficio.nombre }}</option>
       }
     </select>
   </div>

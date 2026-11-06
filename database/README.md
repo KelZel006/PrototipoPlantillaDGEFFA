@@ -27,6 +27,26 @@ Los scripts se ejecutan una vez sobre una base vacía y crean todo dentro del es
 Los dos scripts crean el rol `rol_editor_plantillas` con los permisos de la aplicación. Asígnelo al usuario con el
 que se conecte la API; la línea está comentada al final.
 
+## Scripts con tablas PAM_* (SQL Server)
+
+En [sqlserver-pam/](sqlserver-pam/) están el esquema y los datos del sistema con todas las tablas en `dbo` y el prefijo
+`PAM_` (`PAM_PLANTILLAS`, `PAM_RUBROS`…):
+
+1. [01-PAM-esquema.sql](sqlserver-pam/01-PAM-esquema.sql): 28 tablas, restricciones, índices, triggers y el rol `PAM_ROL_EDITOR`.
+2. [02-PAM-datos.sql](sqlserver-pam/02-PAM-datos.sql): los datos de `backend/EditorResoluciones.Api/Data`, en una sola transacción. Al final muestra las filas esperadas y las cargadas.
+
+Ejecútelos una vez, en ese orden. Con sqlcmd: `sqlcmd -d SuBase -f 65001 -b -i 01-PAM-esquema.sql`.
+
+Para actualizarlos con los datos del momento: `node database/sqlserver-pam/generar-pam.js`. El generador parte de
+`sqlserver/01-esquema.sql` y le agrega lo que ese esquema no guarda: `PAM_PARRAFOS`, y en plantillas, propuestas e historial
+las columnas `NombreReferencia`, `Estado`, `Descripcion`, `LogoId`, `AlineacionLogo`, `PiePagina`, `EspacioFirmasCm` y
+`Version`. Si una colección trae una propiedad sin columna, se detiene con error.
+
+**Verificación (06/11/2026), en SQL Server 2019 real (15.0.4500):** los dos scripts se ejecutaron sobre una base vacía, con
+`Modern_Spanish_CI_AI` y con la intercalación del servidor; las 28 tablas cargaron sus filas esperadas; el contenido JSON,
+los textos y los importes son idénticos al origen; y las reglas del motor rechazaron cada intento de romperlas. La API todavía
+trabaja con los archivos JSON: estas tablas no están conectadas a la aplicación.
+
 ## Tablas
 
 | Grupo | Colección JSON actual | SQL Server | PostgreSQL |
@@ -35,6 +55,7 @@ que se conecte la API; la línea está comentada al final.
 | Catálogos | `unidades` | `Unidades` | `unidades` |
 | | `rubros`, `subRubros` | `Rubros`, `SubRubros` | `rubros`, `sub_rubros` |
 | | `clasesDocumento` | `ClasesDocumento` | `clases_documento` |
+| | `beneficios` | `Beneficios` | `beneficios` |
 | | `bloques` (con los bloques que reemplaza cada uno) | `BloquesDocumentales`, `BloqueReemplazos` | `bloques_documentales`, `bloque_reemplazos` |
 | | `tiposDocumento` (con sus bloques) | `TiposDocumento`, `TipoDocumentoBloques` | `tipos_documento`, `tipo_documento_bloques` |
 | | `campos` (con sus contextos) | `Campos`, `CampoContextos` | `campos`, `campo_contextos` |
@@ -71,7 +92,7 @@ que se conecte la API; la línea está comentada al final.
 |---|---|
 | Número PLAN único y bien formado | `UNIQUE (Anio, Secuencia)`, `UNIQUE (Numero)` y un `CHECK` que lo arma desde el año y la secuencia |
 | Una sola versión vigente por plantilla (regla 14) | Índice único filtrado `WHERE Vigencia = 'Vigente'` |
-| Identidad funcional única | `UNIQUE (Unidad, Rubro, SubRubro, TipoDocumento, ClaseDocumento)`: cada unidad tiene sus propias plantillas |
+| Identidad funcional única | `UNIQUE (Unidad, Rubro, SubRubro, TipoDocumento, ClaseDocumento, Beneficio)`: cada unidad tiene sus propias plantillas. Las tres últimas son opcionales: el valor vacío de los JSON se guarda como `NULL` (en PostgreSQL, índice único con `COALESCE`) |
 | El sub rubro pertenece a su rubro | Clave foránea compuesta `(RubroId, SubRubroId)` |
 | D4: una plantilla en un solo documento abierto | `BloqueosPlantilla`, con la identidad como clave primaria |
 | Separación de funciones | `CHECK`: quien aprueba no es quien preparó ni quien envió |

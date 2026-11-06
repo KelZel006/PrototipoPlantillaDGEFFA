@@ -144,11 +144,11 @@ public sealed class MigracionCargaInicial(IUnidadDeTrabajo unidad, TimeProvider 
         foreach (var grupo in versiones.Where(v => v.Vigencia == Vigencia.Vigente).GroupBy(v => v.PlantillaId).Where(g => g.Count() > 1))
             problemas.Add($"La plantilla {grupo.Key} tiene {grupo.Count()} versiones vigentes.");
         foreach (var grupo in plantillas
-                     .GroupBy(p => (p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId))
+                     .GroupBy(p => (p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId))
                      .Where(g => g.Count() > 1))
         {
             problemas.Add($"Hay {grupo.Count()} plantillas con la misma identidad ({grupo.Key.RubroId} / {grupo.Key.SubRubroId} / " +
-                          $"{grupo.Key.TipoDocumentoId} / {grupo.Key.ClaseDocumentoId}): {string.Join(", ", grupo.Select(p => p.Id))}.");
+                          $"{grupo.Key.TipoDocumentoId} / {grupo.Key.ClaseDocumentoId} / {grupo.Key.BeneficioId}): {string.Join(", ", grupo.Select(p => p.Id))}.");
         }
         foreach (var version in versiones.Where(v => plantillas.All(p => p.Id != v.PlantillaId)))
             problemas.Add($"La versión {version.Id} pertenece a la plantilla {version.PlantillaId}, que no existe.");

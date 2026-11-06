@@ -6,7 +6,7 @@ import { PlantillaVigente } from '../../core/modelos';
 import { SelectorContexto } from '../../editor/selector-contexto/selector-contexto';
 
 /**
- * Plantilla a clonar: se elige con las mismas cuatro listas (Rubro, Sub Rubro, Tipo Documento y Documento) entre las
+ * Plantilla a clonar: se elige con las mismas cinco listas (Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios) entre las
  * plantillas vigentes. Tiene su propia selección, independiente de la de la plantilla nueva.
  */
 @Component({
@@ -71,22 +71,24 @@ export class SelectorOrigen {
   /** Unidad con que empieza la búsqueda (la del documento); se puede clonar de cualquier unidad. */
   readonly unidadInicial = input('');
   protected readonly unidad = linkedSignal(() => this.unidadInicial());
-  /** Plantilla vigente que coincide con las cuatro listas; null mientras no haya una. */
+  /** Plantilla vigente que coincide con las cinco listas; null mientras no haya una. */
   readonly cambio = output<PlantillaVigente | null>();
 
   protected readonly encontrada = computed(() => {
     const rubro = this.contexto.rubro();
     const subRubro = this.contexto.subRubro();
-    const tipo = this.contexto.tipoDocumento();
-    const clase = this.contexto.claseDocumento();
-    if (!this.contexto.completo() || !rubro || !subRubro || !tipo || !clase) {
+    const tipo = this.contexto.tipoDocumento()?.id ?? '';
+    const clase = this.contexto.claseDocumento()?.id ?? '';
+    const beneficio = this.contexto.beneficio()?.id ?? '';
+    if (!this.contexto.completo() || !rubro || !subRubro) {
       return null;
     }
     return (
       this.vigentes().find(
         (p) =>
           (!this.unidad() || p.unidadId === this.unidad()) &&
-          p.rubroId === rubro.id && p.subRubroId === subRubro.id && p.tipoDocumentoId === tipo.id && p.claseDocumentoId === clase.id,
+          p.rubroId === rubro.id && p.subRubroId === subRubro.id && p.tipoDocumentoId === tipo && p.claseDocumentoId === clase &&
+          p.beneficioId === beneficio,
       ) ?? null
     );
   });

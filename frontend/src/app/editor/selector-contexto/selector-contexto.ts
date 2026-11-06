@@ -5,7 +5,7 @@ import { ContextoService } from '../../core/contexto.service';
 import { mensajeError } from '../../core/errores';
 import { InteraccionService } from '../../core/interaccion.service';
 
-/** Las cuatro listas superiores: Rubro, Sub Rubro (depende del rubro), Tipo Documento y Documento. */
+/** Las cinco listas superiores: Rubro, Sub Rubro (depende del rubro), Tipo Documento, Documento y Beneficios. */
 @Component({
   selector: 'app-selector-contexto',
   templateUrl: './selector-contexto.html',
@@ -24,6 +24,7 @@ export class SelectorContexto {
   private readonly rubrosRecurso = rxResource({ stream: () => this.api.rubros() });
   private readonly tiposRecurso = rxResource({ stream: () => this.api.tiposDocumento() });
   private readonly clasesRecurso = rxResource({ stream: () => this.api.clasesDocumento() });
+  private readonly beneficiosRecurso = rxResource({ stream: () => this.api.beneficios() });
   private readonly subRubrosRecurso = rxResource({
     params: () => this.contexto.rubro()?.id,
     stream: ({ params: rubroId }) => this.api.subRubros(rubroId),
@@ -38,6 +39,9 @@ export class SelectorContexto {
   protected readonly clasesDocumento = computed(() =>
     this.clasesRecurso.hasValue() ? this.clasesRecurso.value().filter((c) => c.activo) : [],
   );
+  protected readonly beneficios = computed(() =>
+    this.beneficiosRecurso.hasValue() ? this.beneficiosRecurso.value().filter((b) => b.activo) : [],
+  );
   protected readonly subRubros = computed(() =>
     this.subRubrosRecurso.hasValue() ? this.subRubrosRecurso.value().filter((s) => s.activo) : [],
   );
@@ -45,7 +49,7 @@ export class SelectorContexto {
   protected readonly cargandoSubRubros = this.subRubrosRecurso.isLoading;
 
   protected readonly error = computed(() => {
-    const fallido = [this.rubrosRecurso, this.tiposRecurso, this.clasesRecurso, this.subRubrosRecurso].find((r) =>
+    const fallido = [this.rubrosRecurso, this.tiposRecurso, this.clasesRecurso, this.beneficiosRecurso, this.subRubrosRecurso].find((r) =>
       r.error(),
     );
     return fallido ? mensajeError(fallido.error()) : null;
@@ -79,6 +83,13 @@ export class SelectorContexto {
     }
   }
 
+  protected async alCambiarBeneficio(evento: Event): Promise<void> {
+    const id = await this.confirmarCambio(evento, this.contexto.beneficio()?.id);
+    if (id !== null) {
+      this.contexto.seleccionarBeneficio(this.beneficios().find((b) => b.id === id) ?? null);
+    }
+  }
+
   /**
    * Cambiar de combinación cambia la plantilla en edición. Si hay cambios sin guardar, se pide confirmación;
    * si el usuario cancela, la lista vuelve a su valor anterior. Devuelve el nuevo id o null si se canceló.
@@ -107,6 +118,7 @@ export class SelectorContexto {
     this.rubrosRecurso.reload();
     this.tiposRecurso.reload();
     this.clasesRecurso.reload();
+    this.beneficiosRecurso.reload();
     this.subRubrosRecurso.reload();
   }
 }

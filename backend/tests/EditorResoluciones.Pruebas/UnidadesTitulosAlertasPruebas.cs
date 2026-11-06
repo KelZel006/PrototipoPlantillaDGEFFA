@@ -169,7 +169,7 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
         // CREAR clonando PLA-001, cuyo texto usa {Operador}: todos sus párrafos son nuevos, pero no es una modificación.
         var consolidado = await Consolidados.CrearAsync(_cliente);
         (await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-002", null, "PLA-001"), Json)).EnsureSuccessStatusCode();
+            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-002", "BEN-001", null, "PLA-001"), Json)).EnsureSuccessStatusCode();
         (await _cliente.PostAsync($"/api/consolidados/{consolidado}/enviar", null)).EnsureSuccessStatusCode();
 
         var detalle = await (await Enviar(HttpMethod.Get, $"/api/consolidados/{consolidado}", "j.ramos")).Content.ReadFromJsonAsync<DetalleConsolidado>(Json);
@@ -209,7 +209,7 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
 
         // CREAR: también desde el diálogo.
         var crear = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidadoId}/propuestas/crear",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-003", "CDO-001", null, null, "Dictamen ONG"), Json);
+            new SolicitudCrearPlantilla("RUB-001", "SUB-002", "TDO-003", "CDO-001", "BEN-001", null, null, "Dictamen ONG"), Json);
         crear.EnsureSuccessStatusCode();
         Assert.Equal("Dictamen ONG", (await crear.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.First().NombreReferencia);
 
@@ -290,14 +290,14 @@ public sealed class UnidadesTitulosAlertasPruebas : IDisposable
 
         // La misma combinación de PLA-001 se puede crear en Dispensas: es otra plantilla.
         var crear = await _cliente.PostAsJsonAsync($"/api/consolidados/{dispensas.Id}/propuestas/crear",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-001", null), Json);
+            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-001", "BEN-001", null), Json);
         Assert.Equal(HttpStatusCode.OK, crear.StatusCode);
         Assert.Equal("dispensas", (await crear.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!.Single().UnidadId);
 
         // En Exoneraciones esa combinación ya existe.
         var exoneraciones = await Consolidados.CrearAsync(_cliente);
         var repetida = await _cliente.PostAsJsonAsync($"/api/consolidados/{exoneraciones}/propuestas/crear",
-            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-001", null), Json);
+            new SolicitudCrearPlantilla("RUB-001", "SUB-001", "TDO-001", "CDO-001", "BEN-001", null), Json);
         Assert.Equal(HttpStatusCode.Conflict, repetida.StatusCode);
     }
 

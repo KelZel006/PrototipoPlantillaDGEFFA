@@ -39,7 +39,9 @@ public sealed record PlantillaDelResumen(
     string TipoDocumentoId,
     string TipoDocumento,
     string ClaseDocumentoId,
-    string ClaseDocumento);
+    string ClaseDocumento,
+    string BeneficioId,
+    string Beneficio);
 
 /// <summary>
 /// Fila de «Tipos de documento incluidos»: cada tipo documental una sola vez, aunque tenga varias plantillas o ajustes.
@@ -75,6 +77,7 @@ public sealed class ServicioConsolidados(
     IRepositorio<Rubro> rubros,
     IRepositorio<SubRubro> subRubros,
     IRepositorio<ClaseDocumento> clases,
+    IRepositorio<Beneficio> beneficios,
     ServicioAutorizacion autorizacion,
     ZonaHorariaInstitucional zona,
     TimeProvider reloj)
@@ -180,6 +183,7 @@ public sealed class ServicioConsolidados(
         var nombresRubro = (await rubros.ListarAsync(ct)).ToDictionary(r => r.Id, r => r.Nombre, StringComparer.Ordinal);
         var nombresSubRubro = (await subRubros.ListarAsync(ct)).ToDictionary(s => s.Id, s => s.Nombre, StringComparer.Ordinal);
         var nombresClase = (await clases.ListarAsync(ct)).ToDictionary(c => c.Id, c => c.Nombre, StringComparer.Ordinal);
+        var nombresBeneficio = (await beneficios.ListarAsync(ct)).ToDictionary(b => b.Id, b => b.Nombre, StringComparer.Ordinal);
 
         return visibles
             .OrderByDescending(c => c.Anio).ThenByDescending(c => c.Secuencia)
@@ -187,14 +191,15 @@ public sealed class ServicioConsolidados(
             {
                 var activas = todasPropuestas.Where(p => p.ConsolidadoId == c.Id && !p.Retirada).ToList();
                 // Cada tipo documental una sola vez, aunque tenga varias propuestas o ajustes.
-                var tiposIncluidos = activas.Select(p => p.TipoDocumentoId).Distinct(StringComparer.Ordinal)
+                var tiposIncluidos = activas.Select(p => p.TipoDocumentoId).Where(id => id != "").Distinct(StringComparer.Ordinal)
                     .Select(id => nombresTipo.GetValueOrDefault(id, id)).Order(StringComparer.CurrentCulture).ToList();
                 var plantillas = activas.OrderBy(p => p.FechaCreacion).Select(p => new PlantillaDelResumen(
                     p.Id, p.Nombre, p.Operacion,
                     p.RubroId, nombresRubro.GetValueOrDefault(p.RubroId, p.RubroId),
                     p.SubRubroId, nombresSubRubro.GetValueOrDefault(p.SubRubroId, p.SubRubroId),
                     p.TipoDocumentoId, nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId),
-                    p.ClaseDocumentoId, nombresClase.GetValueOrDefault(p.ClaseDocumentoId, p.ClaseDocumentoId))).ToList();
+                    p.ClaseDocumentoId, nombresClase.GetValueOrDefault(p.ClaseDocumentoId, p.ClaseDocumentoId),
+                    p.BeneficioId, nombresBeneficio.GetValueOrDefault(p.BeneficioId, p.BeneficioId))).ToList();
                 return new ResumenConsolidado(c.Id, c.Numero, c.Anio, c.Estado, c.UnidadId, c.AnalistaId, c.FechaCreacion,
                     c.FechaActualizacion, tiposIncluidos, activas.Count, plantillas);
             })
@@ -225,7 +230,7 @@ public sealed class ServicioConsolidados(
             {
                 var operaciones = g.Select(p => p.Operacion).Distinct().Order().ToList();
                 var operacion = operaciones.Count == 2 ? "Crear y Modificar" : operaciones[0] == OperacionPropuesta.Crear ? "Crear" : "Modificar";
-                return new ResumenTipo(g.Key, nombresTipo.GetValueOrDefault(g.Key, g.Key), operacion, g.Count(), g.Sum(p => ajustes[p.Id].Count));
+                return new ResumenTipo(g.Key, g.Key == "" ? "Sin tipo de documento" : nombresTipo.GetValueOrDefault(g.Key, g.Key), operacion, g.Count(), g.Sum(p => ajustes[p.Id].Count));
             })
             .OrderBy(r => r.TipoDocumento, StringComparer.CurrentCulture)
             .ToList();

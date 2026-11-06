@@ -9,7 +9,8 @@
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba con párrafos en las tres secciones.",
     "fechaModificacion": "2026-10-14T00:00:00+00:00",
-    "claseDocumentoId": "CDO-001"
+    "claseDocumentoId": "CDO-001",
+    "beneficioId": "BEN-001"
   },
   {
     "id": "PLA-002",
@@ -21,7 +22,8 @@
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba sin párrafos todavía.",
     "fechaModificacion": "2026-10-14T00:00:00+00:00",
-    "claseDocumentoId": "CDO-001"
+    "claseDocumentoId": "CDO-001",
+    "beneficioId": "BEN-002"
   },
   {
     "id": "PLA-003",
@@ -31,6 +33,7 @@
     "subRubroId": "1601",
     "tipoDocumentoId": "TDO-001",
     "claseDocumentoId": "CDO-001",
+    "beneficioId": "BEN-003",
     "estado": "Borrador",
     "descripcion": "Plantilla de prueba con contenido en las cinco secciones.",
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
@@ -43,8 +46,35 @@
     "subRubroId": "1107",
     "tipoDocumentoId": "TDO-004",
     "claseDocumentoId": "CDO-001",
+    "beneficioId": "BEN-001",
     "estado": "Borrador",
     "descripcion": "Certificación de prueba con el mismo contenido de la resolución PLA-001; se genera con el texto corrido.",
     "fechaModificacion": "2026-10-15T00:00:00+00:00"
+  },
+  {
+    "id": "PLA-005",
+    "version": 1,
+    "rubroId": "1800",
+    "subRubroId": "1801",
+    "tipoDocumentoId": "",
+    "estado": "Borrador",
+    "fechaModificacion": "2026-10-14T00:00:00+00:00",
+    "claseDocumentoId": "CDO-003",
+    "nombre": "Plantilla (Aclaratoria) – ONGS",
+    "descripcion": "Plantilla general de prueba: sirve para cualquier beneficio.",
+    "beneficioId": ""
+  },
+  {
+    "id": "PLA-006",
+    "version": 1,
+    "rubroId": "1800",
+    "subRubroId": "1801",
+    "tipoDocumentoId": "",
+    "estado": "Borrador",
+    "fechaModificacion": "2026-10-14T00:00:00+00:00",
+    "claseDocumentoId": "CDO-003",
+    "nombre": "Plantilla (Aclaratoria) – ONGS – ISV",
+    "descripcion": "Plantilla específica de prueba: manda sobre la general cuando el beneficio es ISV.",
+    "beneficioId": "BEN-001"
   }
 ]

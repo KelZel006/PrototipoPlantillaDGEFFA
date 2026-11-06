@@ -168,7 +168,7 @@ public sealed class CopiaCertificacionPruebas : IDisposable
     {
         var consolidado = await Consolidados.CrearAsync(_cliente);
         var respuesta = await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidado}/propuestas/crear",
-            new SolicitudCrearPlantilla("1600", "1602", "TDO-001", "CDO-001", null), Json);
+            new SolicitudCrearPlantilla("1600", "1602", "TDO-001", "CDO-001", "BEN-001", null), Json);
         respuesta.EnsureSuccessStatusCode();
         var agregadas = (await respuesta.Content.ReadFromJsonAsync<List<Propuesta>>(Json))!;
 

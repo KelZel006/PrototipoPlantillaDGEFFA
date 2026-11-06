@@ -18,6 +18,7 @@
         "subRubroId": "1801",
         "tipoDocumentoId": "TDO-002",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-002",
         "nombre": "Denegación – asociaciones civiles (prueba)",
         "plantillaId": "PLA-002",
         "versionOrigenId": "VER-0001",
@@ -675,6 +676,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-001",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-001",
         "nombre": "Aprobación – cooperación bilateral (prueba)",
         "plantillaId": "PLA-001",
         "contenidoPropuesto": {
@@ -1240,6 +1242,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-004",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-001",
         "nombre": "Certificación (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
         "plantillaId": "PLA-004",
         "contenidoPropuesto": {
@@ -1806,6 +1809,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-003",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-004",
         "nombre": "Constancia de Obligados Tributarios (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
         "contenidoPropuesto": {
           "diseno": {
@@ -1999,6 +2003,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-001",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-001",
         "nombre": "Aprobación – cooperación bilateral (prueba)",
         "plantillaId": "PLA-001",
         "contenidoPropuesto": {
@@ -2564,6 +2569,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-004",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-001",
         "nombre": "Certificación (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
         "plantillaId": "PLA-004",
         "contenidoPropuesto": {
@@ -3130,6 +3136,7 @@
         "subRubroId": "1107",
         "tipoDocumentoId": "TDO-003",
         "claseDocumentoId": "CDO-001",
+        "beneficioId": "BEN-004",
         "nombre": "Constancia de Obligados Tributarios (Original) – FONDOS DE ORGANISMOS BILATERALES O MULTILATERALES",
         "contenidoPropuesto": {
           "diseno": {

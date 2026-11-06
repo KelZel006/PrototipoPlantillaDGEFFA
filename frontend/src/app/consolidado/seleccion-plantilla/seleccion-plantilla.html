@@ -24,9 +24,6 @@
   }
 
   @if (pestana() === 'Crear') {
-    <p class="texto-secundario">
-      Para una plantilla que todavía no existe. Queda en el consolidado: no será vigente hasta que se apruebe el documento.
-    </p>
     <fieldset class="modo">
       <legend>¿Cómo empieza la plantilla?</legend>
       <label>
@@ -72,7 +69,6 @@
       </button>
     </div>
   } @else {
-    <p class="texto-secundario">Plantillas vigentes. En el consolidado empieza con su contenido actual; la vigente no cambia hasta la aprobación.</p>
     <label class="campo-nombre">
       <span>Nombre Plantilla</span>
       <input
@@ -87,7 +83,7 @@
     <input
       class="control"
       type="search"
-      placeholder="Buscar por nombre, código, tipo, rubro o sub rubro"
+      placeholder="Buscar por nombre, código, tipo, rubro, sub rubro o beneficio"
       aria-label="Buscar plantilla vigente"
       [value]="busqueda()"
       (input)="busqueda.set($any($event.target).value)"
@@ -101,10 +97,10 @@
         @for (p of vigentes(); track p.plantillaId) {
           <li [class.bloqueada]="!!p.enConsolidado">
             <div class="datos">
-              <span class="tipo">{{ p.tipoDocumento }}</span>
+              <span class="tipo">{{ p.tipoDocumento || 'Sin tipo de documento' }}</span>
               <strong>{{ p.nombre }}</strong>
               <span class="texto-secundario sin-margen">
-                <code>{{ p.plantillaId }}</code> · {{ p.rubroId }} / {{ p.subRubroId }} · versión vigente {{ p.numeroVersion }} ·
+                <code>{{ p.plantillaId }}</code> · {{ p.rubroId }} / {{ p.subRubroId }} · {{ p.beneficio || 'Todos los beneficios' }} · versión vigente {{ p.numeroVersion }} ·
                 desde {{ p.fechaPublicacion | date: 'dd/MM/yyyy' }}
               </span>
               @if (p.enConsolidado) {

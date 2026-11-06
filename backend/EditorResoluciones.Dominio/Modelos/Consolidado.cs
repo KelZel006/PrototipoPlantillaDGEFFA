@@ -74,12 +74,13 @@ public class Propuesta : IEntidad
     public string ConsolidadoId { get; set; } = "";
     public OperacionPropuesta Operacion { get; set; }
 
-    // Identidad funcional de la plantilla (Unidad, Rubro, Sub Rubro, Tipo Documento y Documento).
+    // Identidad funcional de la plantilla (Unidad, Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios).
     public string UnidadId { get; set; } = "";
     public string RubroId { get; set; } = "";
     public string SubRubroId { get; set; } = "";
     public string TipoDocumentoId { get; set; } = "";
     public string ClaseDocumentoId { get; set; } = "";
+    public string BeneficioId { get; set; } = "";
 
     public string Nombre { get; set; } = "";
 

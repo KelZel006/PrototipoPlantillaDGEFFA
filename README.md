@@ -95,6 +95,13 @@ En VS Code: **Terminal → Ejecutar tarea → Iniciar todo**, o en **Ejecutar y 
 - Si un archivo está dañado, la API no lo sobrescribe. Guarda una copia en `Data/cuarentena/` y responde con un error
   claro (503). Para recuperarlo, restaure el `.bak` o borre el archivo.
 
+### Plantillas generales y específicas
+
+Rubro y Sub Rubro son obligatorios; Tipo Documento, Documento y Beneficios son opcionales. Una lista vacía significa que la
+plantilla sirve para cualquier valor de esa lista. A cada registro le corresponde la plantilla vigente **más específica** que
+coincida: una Aclaratoria de ONGS con ISV usa la plantilla de ISV, si existe, y una con ISR usa la general de Aclaratoria de
+ONGS. Se consulta en `GET /api/plantillas-vigentes/aplicable` y en la pantalla **Consolidado de Plantillas**.
+
 ## Pruebas
 
 ```bash
@@ -115,7 +122,8 @@ Todas las colecciones de la tabla ofrecen `GET` (listar), `GET /{id}`, `POST`, `
 | `/api/subrubros` | `rubroId` |
 | `/api/tipos-documento` | — |
 | `/api/clases-documento` | — |
-| `/api/plantillas` | `rubroId`, `subRubroId`, `tipoDocumentoId` |
+| `/api/beneficios` | — |
+| `/api/plantillas` | `rubroId`, `subRubroId`, `tipoDocumentoId`, `claseDocumentoId`, `beneficioId` |
 | `/api/parrafos` | `plantillaId`, `seccion` (ordenados por sección y orden) |
 | `/api/campos` | — |
 | `/api/solicitudes` | — |

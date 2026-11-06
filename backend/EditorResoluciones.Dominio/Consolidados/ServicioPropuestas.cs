@@ -9,10 +9,11 @@ namespace EditorResoluciones.Dominio.Consolidados;
 
 /// <summary>
 /// CREAR una plantilla nueva. Con <c>plantillaOrigenId</c>, empieza como copia de la versión vigente de esa plantilla
-/// (clonar); sin él, empieza vacía. <c>NombreReferencia</c> es el «Nombre Plantilla» que escribe el analista.
+/// (clonar); sin él, empieza vacía. <c>NombreReferencia</c> es el «Nombre Plantilla» que escribe el analista. Tipo
+/// Documento, Documento y Beneficios son opcionales.
 /// </summary>
 public sealed record SolicitudCrearPlantilla(
-    string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string? Nombre, string? PlantillaOrigenId = null,
+    string RubroId, string SubRubroId, string? TipoDocumentoId, string? ClaseDocumentoId, string? BeneficioId, string? Nombre, string? PlantillaOrigenId = null,
     string? NombreReferencia = null);
 
 /// <summary>MODIFICAR una plantilla vigente. Sin «Nombre Plantilla», conserva el que ya tenía la plantilla.</summary>
@@ -70,6 +71,7 @@ public sealed record PlantillaEdicion(
     string SubRubroId,
     string TipoDocumentoId,
     string ClaseDocumentoId,
+    string BeneficioId,
     string? LogoId,
     AlineacionLogo AlineacionLogo,
     string? PiePagina,
@@ -87,6 +89,10 @@ public sealed record PlantillaEdicion(
     IReadOnlyList<string> ObligatoriosVacios,
     string? NombreReferencia = null);
 
+/// <summary>Datos de un registro para saber qué plantilla le corresponde.</summary>
+public sealed record ConsultaPlantillaAplicable(
+    string UnidadId, string RubroId, string SubRubroId, string? TipoDocumentoId, string? ClaseDocumentoId, string? BeneficioId);
+
 /// <summary>Plantilla vigente que se puede elegir para MODIFICAR. Si ya está en un consolidado abierto, se indica cuál (D4).</summary>
 public sealed record PlantillaVigente(
     string PlantillaId,
@@ -97,6 +103,8 @@ public sealed record PlantillaVigente(
     string TipoDocumentoId,
     string TipoDocumento,
     string ClaseDocumentoId,
+    string BeneficioId,
+    string Beneficio,
     string VersionId,
     int NumeroVersion,
     DateTimeOffset FechaPublicacion,
@@ -112,6 +120,32 @@ public sealed record PlantillaVigente(
 /// Resolución y también se puede editar (D3).</item>
 /// </list>
 /// </summary>
+/// <summary>
+/// Plantilla que corresponde a un registro: coincide si tiene su mismo Rubro y Sub Rubro y cada lista opcional está vacía
+/// o es igual a la del registro. Entre las que coinciden manda la más específica; por ejemplo, una Aclaratoria de ONGS con
+/// ISV gana a la de ONGS sin beneficio, pero un registro con ISR usa esta última. Si empatan en cantidad de listas, gana
+/// la que tenga la lista de más a la izquierda (Tipo Documento, luego Documento y luego Beneficios).
+/// </summary>
+public static class ReglaPlantillaAplicable
+{
+    public static PlantillaVigente? Elegir(IEnumerable<PlantillaVigente> vigentes, ConsultaPlantillaAplicable consulta) =>
+        vigentes
+            .Where(p => p.UnidadId == consulta.UnidadId && p.RubroId == consulta.RubroId && p.SubRubroId == consulta.SubRubroId &&
+                        Coincide(p.TipoDocumentoId, consulta.TipoDocumentoId) &&
+                        Coincide(p.ClaseDocumentoId, consulta.ClaseDocumentoId) &&
+                        Coincide(p.BeneficioId, consulta.BeneficioId))
+            .OrderByDescending(Detalle)
+            .ThenBy(Peso)
+            .FirstOrDefault();
+
+    private static bool Coincide(string dePlantilla, string? delRegistro) => dePlantilla == "" || dePlantilla == delRegistro;
+
+    private static int Detalle(PlantillaVigente p) => new[] { p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId }.Count(v => v != "");
+
+    /// <summary>Desempate: menor es mejor.</summary>
+    private static int Peso(PlantillaVigente p) => (p.TipoDocumentoId == "" ? 4 : 0) + (p.ClaseDocumentoId == "" ? 2 : 0) + (p.BeneficioId == "" ? 1 : 0);
+}
+
 public sealed class ServicioPropuestas(
     IUnidadDeTrabajo unidad,
     IRepositorio<Propuesta> propuestas,
@@ -122,6 +156,7 @@ public sealed class ServicioPropuestas(
     IRepositorio<SubRubro> subRubros,
     IRepositorio<TipoDocumento> tipos,
     IRepositorio<ClaseDocumento> clases,
+    IRepositorio<Beneficio> beneficios,
     IRepositorio<Campo> campos,
     CatalogoBloques catalogoBloques,
     ServicioAutorizacion autorizacion,
@@ -138,21 +173,30 @@ public sealed class ServicioPropuestas(
             resultado.Agregar("rubroId", "El rubro no existe o está inactivo.");
         if (!catalogo.SubRubros.TryGetValue(solicitud.SubRubroId ?? "", out var subRubro) || !subRubro.Activo || subRubro.RubroId != solicitud.RubroId)
             resultado.Agregar("subRubroId", "El sub rubro no existe, está inactivo o no pertenece al rubro.");
-        if (!catalogo.Tipos.TryGetValue(solicitud.TipoDocumentoId ?? "", out var tipo) || !tipo.Activo)
+        // Tipo Documento, Documento y Beneficios son opcionales: vacíos, la plantilla sirve para cualquier valor.
+        var tipoId = solicitud.TipoDocumentoId ?? "";
+        var claseId = solicitud.ClaseDocumentoId ?? "";
+        var beneficioId = solicitud.BeneficioId ?? "";
+        TipoDocumento? tipo = null;
+        ClaseDocumento? clase = null;
+        Beneficio? beneficio = null;
+        if (tipoId != "" && (!catalogo.Tipos.TryGetValue(tipoId, out tipo) || !tipo.Activo))
             resultado.Agregar("tipoDocumentoId", "El tipo de documento no existe o está inactivo.");
-        if (!catalogo.Clases.TryGetValue(solicitud.ClaseDocumentoId ?? "", out var clase) || !clase.Activo)
+        if (claseId != "" && (!catalogo.Clases.TryGetValue(claseId, out clase) || !clase.Activo))
             resultado.Agregar("claseDocumentoId", "El documento (Original, Modificación o Aclaratoria) no existe o está inactivo.");
+        if (beneficioId != "" && (!catalogo.Beneficios.TryGetValue(beneficioId, out beneficio) || !beneficio.Activo))
+            resultado.Agregar("beneficioId", "El beneficio no existe o está inactivo.");
         if (solicitud.Nombre is { Length: > 200 })
             resultado.Agregar("nombre", "El nombre admite hasta 200 caracteres.");
         var nombreReferencia = NombreReferencia(solicitud.NombreReferencia, resultado);
         resultado.LanzarSiHayErrores();
 
         var ahora = reloj.GetUtcNow();
-        var bloquesTipo = await catalogoBloques.DeTipoAsync(solicitud.TipoDocumentoId!, ct);
+        var bloquesTipo = await catalogoBloques.DeTipoAsync(tipoId, ct);
         return await unidad.EjecutarAsync(async tx =>
         {
             var consolidado = await EditableAsync(tx, consolidadoId, analista, ct);
-            var identidad = new Identidad(consolidado.UnidadId, solicitud.RubroId!, solicitud.SubRubroId!, solicitud.TipoDocumentoId!, solicitud.ClaseDocumentoId!);
+            var identidad = new Identidad(consolidado.UnidadId, solicitud.RubroId!, solicitud.SubRubroId!, tipoId, claseId, beneficioId);
             await ExigirIdentidadLibreAsync(tx, identidad, ct);
 
             // Clonar: la nueva plantilla parte del contenido vigente de otra, que no cambia.
@@ -177,7 +221,8 @@ public sealed class ServicioPropuestas(
                 SubRubroId = identidad.SubRubroId,
                 TipoDocumentoId = identidad.TipoDocumentoId,
                 ClaseDocumentoId = identidad.ClaseDocumentoId,
-                Nombre = string.IsNullOrWhiteSpace(solicitud.Nombre) ? NombrePredeterminado(tipo!, clase!, subRubro!) : solicitud.Nombre.Trim(),
+                BeneficioId = identidad.BeneficioId,
+                Nombre = string.IsNullOrWhiteSpace(solicitud.Nombre) ? NombrePredeterminado(tipo, clase, subRubro!, beneficio) : solicitud.Nombre.Trim(),
                 NombreReferencia = nombreReferencia,
                 ContenidoPropuesto = contenido,
                 FechaCreacion = ahora,
@@ -315,6 +360,7 @@ public sealed class ServicioPropuestas(
         var nombresTipo = (await tipos.ListarAsync(ct)).ToDictionary(t => t.Id, t => t.Nombre, StringComparer.Ordinal);
         var vigentes = (await versiones.ListarAsync(ct)).Where(v => v.Vigencia == Vigencia.Vigente)
             .ToDictionary(v => v.PlantillaId, StringComparer.Ordinal);
+        var nombresBeneficio = (await beneficios.ListarAsync(ct)).ToDictionary(b => b.Id, b => b.Nombre, StringComparer.Ordinal);
         var abiertas = await AbiertasAsync(await propuestas.ListarAsync(ct), await consolidados.ListarAsync(ct));
         return (await plantillas.ListarAsync(ct))
             .Where(p => vigentes.ContainsKey(p.Id))
@@ -323,12 +369,17 @@ public sealed class ServicioPropuestas(
                 var v = vigentes[p.Id];
                 var bloqueo = abiertas.FirstOrDefault(a => a.Propuesta.PlantillaId == p.Id);
                 return new PlantillaVigente(p.Id, p.Nombre, p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId,
-                    nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId), p.ClaseDocumentoId, v.Id, v.NumeroVersion,
+                    nombresTipo.GetValueOrDefault(p.TipoDocumentoId, p.TipoDocumentoId), p.ClaseDocumentoId,
+                    p.BeneficioId, nombresBeneficio.GetValueOrDefault(p.BeneficioId, p.BeneficioId), v.Id, v.NumeroVersion,
                     v.FechaPublicacion, bloqueo.Consolidado?.Numero);
             })
             .OrderBy(p => p.TipoDocumento, StringComparer.CurrentCulture).ThenBy(p => p.Nombre, StringComparer.CurrentCulture)
             .ToList();
     }
+
+    /// <summary>Plantilla vigente que corresponde a un registro; null si ninguna coincide.</summary>
+    public async Task<PlantillaVigente?> AplicableAsync(ConsultaPlantillaAplicable consulta, CancellationToken ct = default) =>
+        ReglaPlantillaAplicable.Elegir(await VigentesAsync(ct), consulta);
 
     // ---------- Edición del contenido ----------
 
@@ -391,28 +442,34 @@ public sealed class ServicioPropuestas(
 
     // ---------- Internos ----------
 
-    /// <summary>Identidad funcional: la unidad y la combinación de Rubro, Sub Rubro, Tipo Documento y Documento.</summary>
-    private sealed record Identidad(string UnidadId, string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId)
+    /// <summary>Identidad funcional: la unidad y la combinación de Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios.</summary>
+    private sealed record Identidad(string UnidadId, string RubroId, string SubRubroId, string TipoDocumentoId, string ClaseDocumentoId, string BeneficioId)
     {
-        public static Identidad De(Plantilla p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
-        public static Identidad De(Propuesta p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId);
+        public static Identidad De(Plantilla p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId);
+        public static Identidad De(Propuesta p) => new(p.UnidadId, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId);
     }
 
     private sealed record Catalogo(
         Dictionary<string, Rubro> Rubros,
         Dictionary<string, SubRubro> SubRubros,
         Dictionary<string, TipoDocumento> Tipos,
-        Dictionary<string, ClaseDocumento> Clases);
+        Dictionary<string, ClaseDocumento> Clases,
+        Dictionary<string, Beneficio> Beneficios);
 
     private async Task<Catalogo> CatalogoAsync(CancellationToken ct) => new(
         (await rubros.ListarAsync(ct)).ToDictionary(r => r.Id, StringComparer.Ordinal),
         (await subRubros.ListarAsync(ct)).ToDictionary(s => s.Id, StringComparer.Ordinal),
         (await tipos.ListarAsync(ct)).ToDictionary(t => t.Id, StringComparer.Ordinal),
-        (await clases.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal));
+        (await clases.ListarAsync(ct)).ToDictionary(c => c.Id, StringComparer.Ordinal),
+        (await beneficios.ListarAsync(ct)).ToDictionary(b => b.Id, StringComparer.Ordinal));
 
-    private static string NombrePredeterminado(TipoDocumento tipo, ClaseDocumento clase, SubRubro subRubro)
+    private static string NombrePredeterminado(TipoDocumento? tipo, ClaseDocumento? clase, SubRubro subRubro, Beneficio? beneficio)
     {
-        var nombre = $"{tipo.Nombre} ({clase.Nombre}) – {subRubro.Nombre}";
+        var inicio = tipo?.Nombre ?? "Plantilla";
+        var nombre = clase is null ? inicio : $"{inicio} ({clase.Nombre})";
+        nombre += $" – {subRubro.Nombre}";
+        if (beneficio is not null)
+            nombre += $" – {beneficio.Nombre}";
         return nombre.Length > 200 ? nombre[..200] : nombre;
     }
 
@@ -489,6 +546,7 @@ public sealed class ServicioPropuestas(
             SubRubroId = plantilla.SubRubroId,
             TipoDocumentoId = plantilla.TipoDocumentoId,
             ClaseDocumentoId = plantilla.ClaseDocumentoId,
+            BeneficioId = plantilla.BeneficioId,
             Nombre = plantilla.Nombre,
             NombreReferencia = nombreReferencia ?? plantilla.NombreReferencia,
             PlantillaId = plantilla.Id,
@@ -517,10 +575,10 @@ public sealed class ServicioPropuestas(
     {
         var agregadas = new List<Propuesta> { principal };
         var delConsolidado = (await tx.ListarAsync<Propuesta>(ct)).Where(p => p.ConsolidadoId == consolidado.Id && !p.Retirada).ToList();
-        var tipo = catalogo.Tipos[principal.TipoDocumentoId];
+        var tipo = catalogo.Tipos.GetValueOrDefault(principal.TipoDocumentoId);
 
         // Es una Certificación y su Resolución ya está en el consolidado: se ligan.
-        if (tipo.CopiaDeTipoDocumentoId is { } tipoOrigen &&
+        if (tipo?.CopiaDeTipoDocumentoId is { } tipoOrigen &&
             delConsolidado.FirstOrDefault(p => p.TipoDocumentoId == tipoOrigen && MismaCombinacion(p, principal)) is { } resolucion)
         {
             principal.DerivadaDePropuestaId = resolucion.Id;
@@ -530,7 +588,7 @@ public sealed class ServicioPropuestas(
         // Es una Resolución: su Certificación va con ella.
         foreach (var tipoCopia in catalogo.Tipos.Values.Where(t => t.CopiaDeTipoDocumentoId == principal.TipoDocumentoId && t.Activo))
         {
-            var identidad = new Identidad(principal.UnidadId, principal.RubroId, principal.SubRubroId, tipoCopia.Id, principal.ClaseDocumentoId);
+            var identidad = new Identidad(principal.UnidadId, principal.RubroId, principal.SubRubroId, tipoCopia.Id, principal.ClaseDocumentoId, principal.BeneficioId);
             if (delConsolidado.FirstOrDefault(p => p.Id != principal.Id && Identidad.De(p) == identidad) is { } yaIncluida)
             {
                 yaIncluida.DerivadaDePropuestaId = principal.Id;
@@ -546,7 +604,7 @@ public sealed class ServicioPropuestas(
             else
             {
                 await ExigirIdentidadLibreAsync(tx, identidad, ct);
-                var palabra = new CambioPalabra(tipo.Nombre, tipoCopia.Nombre);
+                var palabra = new CambioPalabra(tipo!.Nombre, tipoCopia.Nombre);
                 derivada = await tx.CrearAsync(new Propuesta
                 {
                     ConsolidadoId = consolidado.Id,
@@ -556,7 +614,8 @@ public sealed class ServicioPropuestas(
                     SubRubroId = identidad.SubRubroId,
                     TipoDocumentoId = identidad.TipoDocumentoId,
                     ClaseDocumentoId = identidad.ClaseDocumentoId,
-                    Nombre = NombrePredeterminado(tipoCopia, catalogo.Clases[identidad.ClaseDocumentoId], catalogo.SubRubros[identidad.SubRubroId]),
+                    BeneficioId = identidad.BeneficioId,
+                    Nombre = NombrePredeterminado(tipoCopia, catalogo.Clases.GetValueOrDefault(identidad.ClaseDocumentoId), catalogo.SubRubros[identidad.SubRubroId], catalogo.Beneficios.GetValueOrDefault(identidad.BeneficioId)),
                     ContenidoPropuesto = FusionDerivada.CopiaInicial(principal.ContenidoPropuesto, palabra, NuevoIdParrafo),
                     FechaCreacion = ahora,
                     FechaModificacion = ahora,
@@ -587,7 +646,7 @@ public sealed class ServicioPropuestas(
     }
 
     private static bool MismaCombinacion(Propuesta a, Propuesta b) =>
-        a.UnidadId == b.UnidadId && a.RubroId == b.RubroId && a.SubRubroId == b.SubRubroId && a.ClaseDocumentoId == b.ClaseDocumentoId;
+        a.UnidadId == b.UnidadId && a.RubroId == b.RubroId && a.SubRubroId == b.SubRubroId && a.ClaseDocumentoId == b.ClaseDocumentoId && a.BeneficioId == b.BeneficioId;
 
     private static async Task TocarAsync(ITransaccion tx, DocumentoConsolidado consolidado, DateTimeOffset ahora, CancellationToken ct)
     {
@@ -606,7 +665,7 @@ public sealed class ServicioPropuestas(
     }
 
     private static PlantillaEdicion Edicion(Propuesta p, DocumentoConsolidado c, Usuario usuario, IReadOnlyList<BloqueConfigurado> bloques) => new(
-        p.Id, p.Version, p.Nombre, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId,
+        p.Id, p.Version, p.Nombre, p.RubroId, p.SubRubroId, p.TipoDocumentoId, p.ClaseDocumentoId, p.BeneficioId,
         p.ContenidoPropuesto.Diseno.LogoId, p.ContenidoPropuesto.Diseno.AlineacionLogo, p.ContenidoPropuesto.Diseno.PiePagina,
         p.ContenidoPropuesto.Diseno.EspacioFirmasCm, p.FechaModificacion, p.Operacion, c.Id, c.Numero, c.Estado,
         Editable: c.Estado == EstadoConsolidado.EnRegistro && c.AnalistaId == usuario.Id && usuario.Tiene(Rol.Analista) && !p.Retirada,

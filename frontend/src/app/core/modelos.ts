@@ -45,6 +45,11 @@ export interface ClaseDocumento extends Entidad {
   activo: boolean;
 }
 
+export interface Beneficio extends Entidad {
+  nombre: string;
+  activo: boolean;
+}
+
 export type AlineacionLogo = 'Izquierda' | 'Centro' | 'Derecha';
 
 /**
@@ -59,6 +64,7 @@ export interface PlantillaEdicion extends Entidad {
   subRubroId: string;
   tipoDocumentoId: string;
   claseDocumentoId: string;
+  beneficioId: string;
   /** Logo del encabezado del documento; null si no tiene. */
   logoId?: string | null;
   alineacionLogo?: AlineacionLogo;
@@ -290,7 +296,7 @@ export interface ResumenConsolidado {
   plantillas: PlantillaDelResumen[];
 }
 
-/** Plantilla de un documento en el listado, con los nombres de Rubro, Sub Rubro, Tipo Plantilla y Tipo Documento. */
+/** Plantilla de un documento en el listado, con los nombres de Rubro, Sub Rubro, Tipo Plantilla, Tipo Documento y Beneficio. */
 export interface PlantillaDelResumen {
   propuestaId: string;
   nombre: string;
@@ -305,6 +311,9 @@ export interface PlantillaDelResumen {
   /** Tipo de documento: Original, Modificación o Aclaratoria. */
   claseDocumentoId: string;
   claseDocumento: string;
+  /** Beneficio: ISV, ISR, ACPV o Aportación Solidaria. */
+  beneficioId: string;
+  beneficio: string;
 }
 
 export interface Propuesta extends Entidad {
@@ -315,6 +324,7 @@ export interface Propuesta extends Entidad {
   subRubroId: string;
   tipoDocumentoId: string;
   claseDocumentoId: string;
+  beneficioId: string;
   nombre: string;
   /** «Nombre Plantilla» que escribió el analista (solo de referencia). */
   nombreReferencia?: string | null;
@@ -434,6 +444,8 @@ export interface PlantillaVigente {
   tipoDocumentoId: string;
   tipoDocumento: string;
   claseDocumentoId: string;
+  beneficioId: string;
+  beneficio: string;
   versionId: string;
   numeroVersion: number;
   fechaPublicacion: string;
@@ -531,6 +543,8 @@ export interface PlantillaConVersiones {
   tipoDocumentoId: string;
   tipoDocumento: string;
   claseDocumentoId: string;
+  beneficioId: string;
+  beneficio: string;
   /** De la más reciente a la más antigua. */
   versiones: VersionResumen[];
 }

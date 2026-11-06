@@ -35,7 +35,7 @@ public sealed class ApiPruebas : IDisposable
 
     /// <summary>Operación CREAR de una plantilla nueva dentro de un consolidado nuevo.</summary>
     private async Task<HttpResponseMessage> Crear(string subRubroId = "SUB-002", string rubroId = "RUB-001",
-        string tipo = "TDO-003", string clase = "CDO-001", string? consolidadoId = null)
+        string tipo = "TDO-003", string clase = "CDO-001", string? consolidadoId = null, string beneficio = "BEN-001")
     {
         consolidadoId ??= await Consolidados.CrearAsync(_cliente);
         return await _cliente.PostAsJsonAsync($"/api/consolidados/{consolidadoId}/propuestas/crear", new
@@ -44,6 +44,7 @@ public sealed class ApiPruebas : IDisposable
             subRubroId,
             tipoDocumentoId = tipo,
             claseDocumentoId = clase,
+            beneficioId = beneficio,
             nombre = "Plantilla creada en prueba",
         }, Json);
     }
@@ -112,6 +113,21 @@ public sealed class ApiPruebas : IDisposable
         var sinClase = await Crear(clase: "CDO-NOEXISTE");
         Assert.Equal(HttpStatusCode.BadRequest, sinClase.StatusCode);
         Assert.Contains("claseDocumentoId", await sinClase.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task La_lista_Beneficios_forma_parte_de_la_identidad_de_la_plantilla()
+    {
+        var beneficios = await Leer<List<Beneficio>>("/api/beneficios");
+        Assert.Equal(["ISV", "ISR", "ACPV", "Aportación Solidaria"], beneficios.Select(b => b.Nombre));
+
+        // PLA-001 es RUB-001 / SUB-001 / TDO-001 / Original / ISV: la misma combinación con ISR sí se puede crear.
+        Assert.Equal(HttpStatusCode.OK, (await Crear("SUB-001", tipo: "TDO-001", beneficio: "BEN-002")).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await Crear("SUB-001", tipo: "TDO-001", beneficio: "BEN-001")).StatusCode);
+
+        var sinBeneficio = await Crear(beneficio: "BEN-NOEXISTE");
+        Assert.Equal(HttpStatusCode.BadRequest, sinBeneficio.StatusCode);
+        Assert.Contains("beneficioId", await sinBeneficio.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -235,7 +251,7 @@ public sealed class ApiPruebas : IDisposable
 
         Assert.Equal("correcto", salud.RootElement.GetProperty("estado").GetString());
         // 11 colecciones del editor, 7 del Documento Consolidado y los catálogos de bloques y de unidades.
-        Assert.Equal(20, salud.RootElement.GetProperty("colecciones").GetArrayLength());
+        Assert.Equal(21, salud.RootElement.GetProperty("colecciones").GetArrayLength());
     }
 
     [Theory]

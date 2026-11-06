@@ -27,7 +27,8 @@ function plantillaResumen(propuestaId: string, cambios: Partial<PlantillaDelResu
   return {
     propuestaId, nombre: `Plantilla ${propuestaId}`, operacion: 'Modificar',
     rubroId: '1100', rubro: 'POR TRATADOS Y CONVENIOS', subRubroId: '1107', subRubro: 'FONDOS BILATERALES',
-    tipoDocumentoId: 'TDO-001', tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', claseDocumento: 'Original', ...cambios,
+    tipoDocumentoId: 'TDO-001', tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', claseDocumento: 'Original',
+    beneficioId: 'BEN-001', beneficio: 'ISV', ...cambios,
   };
 }
 
@@ -57,7 +58,7 @@ const LISTA: ResumenConsolidado[] = [
 function propuesta(id: string, cambios: Partial<Propuesta> = {}): Propuesta {
   return {
     id, version: 1, consolidadoId: 'CON-2', unidadId: 'exoneraciones', operacion: 'Modificar', rubroId: '1100', subRubroId: '1107',
-    tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-001', nombre: `Plantilla ${id}`, plantillaId: 'PLA-001',
+    tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', nombre: `Plantilla ${id}`, plantillaId: 'PLA-001',
     retirada: false, fechaCreacion: '2026-10-12T15:00:00Z', fechaModificacion: '2026-10-12T15:00:00Z', ...cambios,
   };
 }
@@ -123,6 +124,7 @@ describe('Documento Consolidado', () => {
 
   afterEach(() => {
     responderUnidades(http);
+    http.match('/api/beneficios').forEach((p) => p.flush([]));
     http.verify();
   });
 
@@ -159,7 +161,7 @@ describe('Documento Consolidado', () => {
       const elemento: HTMLElement = fixture.nativeElement;
 
       expect(Array.from(elemento.querySelectorAll('thead th')).map((t) => t.textContent?.trim())).toEqual([
-        'Acción', 'Nro Documento', 'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento', 'Estado',
+        'Acción', 'Nro Documento', 'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento', 'Beneficio', 'Estado',
       ]);
       const filas = Array.from(elemento.querySelectorAll('tbody tr'));
       expect(filas).toHaveLength(3);
@@ -176,6 +178,25 @@ describe('Documento Consolidado', () => {
       expect(accion(filas[2]).textContent?.trim()).toBe('Ver');
     });
 
+    it('Beneficios muestra el catálogo completo y filtra por beneficio', async () => {
+      const fixture = await abrir('a.perez');
+      const elemento: HTMLElement = fixture.nativeElement;
+      http.match('/api/beneficios').forEach((p) =>
+        p.flush([
+          { id: 'BEN-001', version: 1, nombre: 'ISV', activo: true },
+          { id: 'BEN-002', version: 1, nombre: 'ISR', activo: true },
+        ]),
+      );
+      await estabilizar(fixture);
+      const lista = elemento.querySelectorAll<HTMLSelectElement>('.filtros select')[4];
+      expect(Array.from(lista.options).map((o) => o.textContent)).toEqual(['Todos', 'ISV', 'ISR']);
+
+      lista.value = 'BEN-002';
+      lista.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      expect(elemento.textContent).toContain('Ninguna plantilla coincide con los filtros');
+    });
+
     it('filtra por Rubro, Sub Rubro, Tipo Plantilla y Tipo Documento', async () => {
       const fixture = await abrir('a.perez');
       const elemento: HTMLElement = fixture.nativeElement;
@@ -188,7 +209,7 @@ describe('Documento Consolidado', () => {
       };
 
       expect(Array.from(elemento.querySelectorAll('.filtros label > span')).map((s) => s.textContent)).toEqual([
-        'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento',
+        'Rubro', 'Sub Rubro', 'Tipo Plantilla', 'Tipo Documento', 'Beneficios',
       ]);
       // El sub rubro espera al rubro.
       expect(elemento.querySelectorAll<HTMLSelectElement>('.filtros select')[1].disabled).toBe(true);
@@ -249,7 +270,7 @@ describe('Documento Consolidado', () => {
       http.expectOne('/api/consolidados').flush([
         ...LISTA, { ...LISTA[0], id: 'CON-9', numero: 'PLAN-20260009', plantillas: [], totalPlantillas: 0, tiposDocumento: [] },
       ]);
-      for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/tipos-documento']) {
+      for (const url of ['/api/plantillas-vigentes', '/api/rubros', '/api/clases-documento', '/api/beneficios', '/api/tipos-documento']) {
         http.match(url).forEach((p) => p.flush([]));
       }
       await estabilizar(fixture);
@@ -334,11 +355,11 @@ describe('Documento Consolidado', () => {
       http.expectOne('/api/plantillas-vigentes').flush([
         {
           plantillaId: 'PLA-001', nombre: 'Resolución vigente', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
-          tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', versionId: 'VER-1', numeroVersion: 3, fechaPublicacion: '2026-10-01T00:00:00Z',
+          tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', beneficio: 'ISV', versionId: 'VER-1', numeroVersion: 3, fechaPublicacion: '2026-10-01T00:00:00Z',
         },
         {
           plantillaId: 'PLA-002', nombre: 'Dictamen ocupado', rubroId: '1800', subRubroId: '1801', tipoDocumentoId: 'TDO-002',
-          tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-001', versionId: 'VER-2', numeroVersion: 1, fechaPublicacion: '2026-10-01T00:00:00Z',
+          tipoDocumento: 'Dictamen', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', beneficio: 'ISV', versionId: 'VER-2', numeroVersion: 1, fechaPublicacion: '2026-10-01T00:00:00Z',
           enConsolidado: 'PLAN-20260007',
         },
       ]);
@@ -363,12 +384,13 @@ describe('Documento Consolidado', () => {
     describe('CREAR desde cero o clonando', () => {
       const VIGENTE = {
         plantillaId: 'PLA-001', nombre: 'Resolución vigente', rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001',
-        tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', versionId: 'VER-1', numeroVersion: 3, fechaPublicacion: '2026-10-01T00:00:00Z',
+        tipoDocumento: 'Resolución', claseDocumentoId: 'CDO-001', beneficioId: 'BEN-001', beneficio: 'ISV', versionId: 'VER-1', numeroVersion: 3, fechaPublicacion: '2026-10-01T00:00:00Z',
       };
       const responder = () => {
         http.match('/api/tipos-documento').forEach((p) => p.flush([{ id: 'TDO-001', version: 1, nombre: 'Resolución', activo: true }]));
         http.match('/api/plantillas-vigentes').forEach((p) => p.flush([VIGENTE]));
         http.match('/api/rubros').forEach((p) => p.flush([{ id: '1100', version: 1, nombre: 'Rubro 1100', activo: true }]));
+        http.match('/api/beneficios').forEach((p) => p.flush([{ id: 'BEN-001', version: 1, nombre: 'ISV', activo: true }]));
         http.match('/api/clases-documento').forEach((p) =>
           p.flush([
             { id: 'CDO-001', version: 1, nombre: 'Original', activo: true },
@@ -402,7 +424,25 @@ describe('Documento Consolidado', () => {
         await elegir(fixture, `${prefijo}-subrubro`, '1107');
         await elegir(fixture, `${prefijo}-tipo`, 'TDO-001');
         await elegir(fixture, `${prefijo}-documento`, clase);
+        await elegir(fixture, `${prefijo}-beneficio`, 'BEN-001');
       };
+
+      it('crea con solo Rubro y Sub Rubro: las demás listas son opcionales', async () => {
+        const fixture = await abrirCrear();
+        const elemento: HTMLElement = fixture.nativeElement;
+        await elegir(fixture, 'lista-rubro', '1100');
+        expect(botones(elemento, 'Crear plantilla').at(-1)!.disabled).toBe(true);
+        await elegir(fixture, 'lista-subrubro', '1107');
+
+        botones(elemento, 'Crear plantilla').at(-1)!.click();
+        const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
+        expect(crear.request.body).toMatchObject({
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: null, claseDocumentoId: null, beneficioId: null,
+        });
+        crear.flush([]);
+        await estabilizar(fixture);
+        responder();
+      });
 
       it('desde cero envía la combinación sin plantilla de origen', async () => {
         const fixture = await abrirCrear();
@@ -418,7 +458,7 @@ describe('Documento Consolidado', () => {
 
         const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
         expect(crear.request.body).toEqual({
-          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', plantillaOrigenId: null,
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', beneficioId: 'BEN-001', plantillaOrigenId: null,
           nombreReferencia: 'Exoneración a docentes 2026',
         });
         crear.flush([propuesta('PRO-9')]);
@@ -426,7 +466,7 @@ describe('Documento Consolidado', () => {
         responder();
       });
 
-      it('al clonar elige la plantilla de origen con las mismas cuatro listas', async () => {
+      it('al clonar elige la plantilla de origen con las mismas cinco listas', async () => {
         const fixture = await abrirCrear();
         const elemento: HTMLElement = fixture.nativeElement;
         elemento.querySelector<HTMLInputElement>('input[value="Clonar"]')!.click();
@@ -450,7 +490,7 @@ describe('Documento Consolidado', () => {
 
         const crear = http.expectOne('/api/consolidados/CON-2/propuestas/crear');
         expect(crear.request.body).toEqual({
-          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', plantillaOrigenId: 'PLA-001',
+          rubroId: '1100', subRubroId: '1107', tipoDocumentoId: 'TDO-001', claseDocumentoId: 'CDO-002', beneficioId: 'BEN-001', plantillaOrigenId: 'PLA-001',
           nombreReferencia: null,
         });
         crear.flush([propuesta('PRO-9')]);

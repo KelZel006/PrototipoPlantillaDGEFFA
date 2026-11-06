@@ -86,6 +86,16 @@ CREATE TABLE clases_documento (
     CONSTRAINT uq_clases_documento_nombre UNIQUE (nombre)
 );
 
+-- Lista «Beneficios»: ISV, ISR, ACPV, Aportación Solidaria.
+CREATE TABLE beneficios (
+    id              varchar(20)     NOT NULL,
+    nombre          varchar(150)    NOT NULL,
+    activo          boolean         NOT NULL DEFAULT true,
+    version         integer         NOT NULL DEFAULT 1,
+    CONSTRAINT pk_beneficios PRIMARY KEY (id),
+    CONSTRAINT uq_beneficios_nombre UNIQUE (nombre)
+);
+
 -- Catálogo de bloques documentales: CABECERA, VISTOS, CONSIDERANDO, FUNDAMENTACION_LEGAL…
 CREATE TABLE bloques_documentales (
     id              varchar(40)     NOT NULL,
@@ -190,8 +200,9 @@ CREATE TABLE plantillas (
     unidad_id           varchar(40)     NOT NULL,
     rubro_id            varchar(20)     NOT NULL,
     sub_rubro_id        varchar(20)     NOT NULL,
-    tipo_documento_id   varchar(20)     NOT NULL,
-    clase_documento_id  varchar(20)     NOT NULL,
+    tipo_documento_id   varchar(20)     NULL,
+    clase_documento_id  varchar(20)     NULL,
+    beneficio_id        varchar(20)     NULL,
     fecha_modificacion  timestamptz     NOT NULL,
     version             integer         NOT NULL DEFAULT 1,
     CONSTRAINT pk_plantillas PRIMARY KEY (id),
@@ -199,9 +210,13 @@ CREATE TABLE plantillas (
     CONSTRAINT fk_plantillas_sub_rubro FOREIGN KEY (rubro_id, sub_rubro_id) REFERENCES sub_rubros (rubro_id, id),
     CONSTRAINT fk_plantillas_tipo FOREIGN KEY (tipo_documento_id) REFERENCES tipos_documento (id),
     CONSTRAINT fk_plantillas_clase FOREIGN KEY (clase_documento_id) REFERENCES clases_documento (id),
-    -- Identidad funcional: Unidad + Rubro + Sub Rubro + Tipo Documento + Documento identifican una única plantilla.
-    CONSTRAINT uq_plantillas_identidad UNIQUE (unidad_id, rubro_id, sub_rubro_id, tipo_documento_id, clase_documento_id)
+    CONSTRAINT fk_plantillas_beneficio FOREIGN KEY (beneficio_id) REFERENCES beneficios (id)
 );
+
+-- Identidad funcional: Unidad + Rubro + Sub Rubro + Tipo Documento + Documento + Beneficios identifican una única plantilla.
+-- Tipo Documento, Documento y Beneficios son opcionales: NULL significa que sirve para cualquier valor.
+CREATE UNIQUE INDEX uq_plantillas_identidad ON plantillas
+    (unidad_id, rubro_id, sub_rubro_id, COALESCE(tipo_documento_id, ''), COALESCE(clase_documento_id, ''), COALESCE(beneficio_id, ''));
 
 CREATE TABLE versiones_plantilla (
     id                  varchar(40)     NOT NULL,
@@ -290,8 +305,9 @@ CREATE TABLE propuestas (
     unidad_id                   varchar(40)     NOT NULL,
     rubro_id                    varchar(20)     NOT NULL,
     sub_rubro_id                varchar(20)     NOT NULL,
-    tipo_documento_id           varchar(20)     NOT NULL,
-    clase_documento_id          varchar(20)     NOT NULL,
+    tipo_documento_id           varchar(20)     NULL,
+    clase_documento_id          varchar(20)     NULL,
+    beneficio_id                varchar(20)     NULL,
     nombre                      varchar(200)    NOT NULL,
     plantilla_id                varchar(40),        -- obligatorio en MODIFICAR
     version_origen_id           varchar(40),        -- versión vigente de la que partió (MODIFICAR)
@@ -309,6 +325,7 @@ CREATE TABLE propuestas (
     CONSTRAINT fk_propuestas_sub_rubro FOREIGN KEY (rubro_id, sub_rubro_id) REFERENCES sub_rubros (rubro_id, id),
     CONSTRAINT fk_propuestas_tipo FOREIGN KEY (tipo_documento_id) REFERENCES tipos_documento (id),
     CONSTRAINT fk_propuestas_clase FOREIGN KEY (clase_documento_id) REFERENCES clases_documento (id),
+    CONSTRAINT fk_propuestas_beneficio FOREIGN KEY (beneficio_id) REFERENCES beneficios (id),
     CONSTRAINT fk_propuestas_plantilla FOREIGN KEY (plantilla_id) REFERENCES plantillas (id),
     CONSTRAINT fk_propuestas_version_origen FOREIGN KEY (version_origen_id) REFERENCES versiones_plantilla (id),
     CONSTRAINT fk_propuestas_derivada FOREIGN KEY (derivada_de_propuesta_id) REFERENCES propuestas (id),
@@ -330,16 +347,18 @@ CREATE TABLE bloqueos_plantilla (
     unidad_id           varchar(40)     NOT NULL,
     rubro_id            varchar(20)     NOT NULL,
     sub_rubro_id        varchar(20)     NOT NULL,
-    tipo_documento_id   varchar(20)     NOT NULL,
-    clase_documento_id  varchar(20)     NOT NULL,
+    tipo_documento_id   varchar(20)     NULL,
+    clase_documento_id  varchar(20)     NULL,
+    beneficio_id        varchar(20)     NULL,
     consolidado_id      varchar(40)     NOT NULL,
     propuesta_id        varchar(40)     NOT NULL,
     fecha               timestamptz     NOT NULL,
-    CONSTRAINT pk_bloqueos_plantilla PRIMARY KEY (unidad_id, rubro_id, sub_rubro_id, tipo_documento_id, clase_documento_id),
+    CONSTRAINT pk_bloqueos_plantilla PRIMARY KEY (propuesta_id),
     CONSTRAINT fk_bloqueos_plantilla_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
-    CONSTRAINT fk_bloqueos_plantilla_propuesta FOREIGN KEY (propuesta_id) REFERENCES propuestas (id),
-    CONSTRAINT uq_bloqueos_plantilla_propuesta UNIQUE (propuesta_id)
+    CONSTRAINT fk_bloqueos_plantilla_propuesta FOREIGN KEY (propuesta_id) REFERENCES propuestas (id)
 );
+CREATE UNIQUE INDEX uq_bloqueos_plantilla_identidad ON bloqueos_plantilla
+    (unidad_id, rubro_id, sub_rubro_id, COALESCE(tipo_documento_id, ''), COALESCE(clase_documento_id, ''), COALESCE(beneficio_id, ''));
 
 -- Cada envío a verificación, con la copia congelada de lo enviado y su huella de integridad.
 CREATE TABLE presentaciones (

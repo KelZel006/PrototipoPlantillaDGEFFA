@@ -31,7 +31,7 @@ function detalle(estado: 'EnRegistro' | 'Verificado'): Detalle {
     propuestas: [
       {
         id: 'PRO-1', version: 1, consolidadoId: 'CON-2', unidadId: 'exoneraciones', operacion: 'Modificar', rubroId: 'R', subRubroId: 'S', tipoDocumentoId: 'TDO-001',
-        claseDocumentoId: 'C', nombre: 'Resolución de prueba', plantillaId: 'PLA-001', retirada: false,
+        claseDocumentoId: 'C', beneficioId: 'BEN-001', nombre: 'Resolución de prueba', plantillaId: 'PLA-001', retirada: false,
         fechaCreacion: '2026-10-12T15:00:00Z', fechaModificacion: '2026-10-12T15:00:00Z',
         contenidoPropuesto: { bloques: [{ codigo: 'CABECERA' }, { codigo: 'CONSIDERANDO' }] },
       },

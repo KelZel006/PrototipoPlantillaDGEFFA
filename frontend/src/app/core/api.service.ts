@@ -5,6 +5,7 @@ import {
   AlineacionLogo,
   Ajuste,
   Campo,
+  Beneficio,
   ClaseDocumento,
   ComparacionPropuesta,
   DatosObservacion,
@@ -40,8 +41,10 @@ export type DatosParrafo = Pick<Parrafo, 'bloque' | 'orden' | 'contenido' | 'act
 export interface SolicitudCrear {
   rubroId: string;
   subRubroId: string;
-  tipoDocumentoId: string;
-  claseDocumentoId: string;
+  /** Opcionales: vacíos, la plantilla sirve para cualquier valor de esa lista. */
+  tipoDocumentoId?: string | null;
+  claseDocumentoId?: string | null;
+  beneficioId?: string | null;
   nombre?: string | null;
   /** Plantilla vigente que se clona; sin ella, la plantilla nueva empieza vacía. */
   plantillaOrigenId?: string | null;
@@ -74,6 +77,10 @@ export class ApiService {
 
   clasesDocumento(): Observable<ClaseDocumento[]> {
     return this.http.get<ClaseDocumento[]>(`${this.base}/clases-documento`);
+  }
+
+  beneficios(): Observable<Beneficio[]> {
+    return this.http.get<Beneficio[]>(`${this.base}/beneficios`);
   }
 
   usuarios(): Observable<Usuario[]> {
@@ -156,6 +163,19 @@ export class ApiService {
 
   retirarPropuesta(propuestaId: string, motivo: string): Observable<Propuesta[]> {
     return this.http.post<Propuesta[]>(`${this.propuesta(propuestaId)}/retirar`, { motivo });
+  }
+
+  /** Plantilla vigente más específica para un registro; null si ninguna coincide. */
+  plantillaAplicable(registro: {
+    unidadId: string;
+    rubroId: string;
+    subRubroId: string;
+    tipoDocumentoId?: string;
+    claseDocumentoId?: string;
+    beneficioId?: string;
+  }): Observable<PlantillaVigente | null> {
+    const params = Object.fromEntries(Object.entries(registro).filter(([, valor]) => !!valor));
+    return this.http.get<PlantillaVigente | null>(`${this.base}/plantillas-vigentes/aplicable`, { params });
   }
 
   plantillasVigentes(): Observable<PlantillaVigente[]> {

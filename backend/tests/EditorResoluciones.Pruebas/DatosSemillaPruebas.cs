@@ -45,6 +45,8 @@ public class DatosSemillaPruebas
         // Solo la Certificación se genera con el texto corrido.
         Assert.Equal(["Certificación"], tipos.Where(t => t.TextoCorrido).Select(t => t.Nombre));
         Assert.Equal(["Original", "Modificación", "Aclaratoria"], clases.Select(c => c.Nombre));
+        var beneficios = await almacen.LeerAsync<Beneficio>("beneficios");
+        Assert.Equal(["ISV", "ISR", "ACPV", "Aportación Solidaria"], beneficios.Select(c => c.Nombre));
     }
 
     [Fact]

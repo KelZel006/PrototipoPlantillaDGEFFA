@@ -61,6 +61,18 @@ public class ClaseDocumento : IEntidad
     public bool Activo { get; set; } = true;
 }
 
+/// <summary>Lista 5 del selector de contexto, "Beneficios": ISV, ISR, ACPV o Aportación Solidaria.</summary>
+public class Beneficio : IEntidad
+{
+    public string Id { get; set; } = "";
+    public int Version { get; set; }
+
+    [Required(ErrorMessage = "El nombre es obligatorio."), StringLength(150, ErrorMessage = "El nombre admite hasta 150 caracteres.")]
+    public string Nombre { get; set; } = "";
+
+    public bool Activo { get; set; } = true;
+}
+
 /// <summary>Lista 3 del selector de contexto.</summary>
 public class TipoDocumento : IEntidad
 {

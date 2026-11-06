@@ -1,0 +1,26 @@
+[
+  {
+    "id": "BEN-001",
+    "version": 1,
+    "nombre": "ISV",
+    "activo": true
+  },
+  {
+    "id": "BEN-002",
+    "version": 1,
+    "nombre": "ISR",
+    "activo": true
+  },
+  {
+    "id": "BEN-003",
+    "version": 1,
+    "nombre": "ACPV",
+    "activo": true
+  },
+  {
+    "id": "BEN-004",
+    "version": 1,
+    "nombre": "Aportación Solidaria",
+    "activo": true
+  }
+]

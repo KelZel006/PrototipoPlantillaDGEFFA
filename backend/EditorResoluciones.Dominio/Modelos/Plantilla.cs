@@ -17,8 +17,9 @@ public enum EstadoPlantilla
 }
 
 /// <summary>
-/// Configuración de un documento para una combinación de Rubro, Sub Rubro, Tipo Documento y Documento.
-/// Sus párrafos se guardan aparte, en la colección de párrafos.
+/// Configuración de un documento para una combinación de Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios.
+/// Rubro y Sub Rubro son obligatorios; una lista opcional vacía significa que la plantilla sirve para cualquier valor de
+/// esa lista. Sus párrafos se guardan aparte, en la colección de párrafos.
 /// </summary>
 public class Plantilla : IEntidad, IConMarcaTiempo
 {
@@ -44,12 +45,14 @@ public class Plantilla : IEntidad, IConMarcaTiempo
     [Required(ErrorMessage = "El sub rubro es obligatorio.")]
     public string SubRubroId { get; set; } = "";
 
-    [Required(ErrorMessage = "El tipo de documento es obligatorio.")]
+    /// <summary>Opcional: vacío si la plantilla sirve para cualquier tipo de documento.</summary>
     public string TipoDocumentoId { get; set; } = "";
 
-    /// <summary>Lista "Documento": Original, Modificación o Aclaratoria.</summary>
-    [Required(ErrorMessage = "El documento (Original, Modificación o Aclaratoria) es obligatorio.")]
+    /// <summary>Lista "Documento": Original, Modificación o Aclaratoria. Opcional.</summary>
     public string ClaseDocumentoId { get; set; } = "";
+
+    /// <summary>Lista "Beneficios": ISV, ISR, ACPV o Aportación Solidaria. Opcional.</summary>
+    public string BeneficioId { get; set; } = "";
 
     public EstadoPlantilla Estado { get; set; } = EstadoPlantilla.Borrador;
 

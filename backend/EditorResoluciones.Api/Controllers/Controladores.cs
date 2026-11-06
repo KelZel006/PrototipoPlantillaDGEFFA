@@ -35,6 +35,11 @@ public sealed class UnidadesController(ServicioEntidades<Unidad> servicio) : Con
 [CatalogoDeAdministrador]
 public sealed class ClasesDocumentoController(ServicioEntidades<ClaseDocumento> servicio) : ControladorCrud<ClaseDocumento>(servicio);
 
+/// <summary>Lista "Beneficios": ISV, ISR, ACPV o Aportación Solidaria.</summary>
+[Route("api/beneficios")]
+[CatalogoDeAdministrador]
+public sealed class BeneficiosController(ServicioEntidades<Beneficio> servicio) : ControladorCrud<Beneficio>(servicio);
+
 /// <summary>Tipos de documento con sus bloques (<c>bloques</c>: código, orden y si es obligatorio), decisión D2.</summary>
 [Route("api/tipos-documento")]
 [CatalogoDeAdministrador]
@@ -56,9 +61,9 @@ public sealed class TiposDocumentoController(ServicioEntidades<TipoDocumento> se
 public sealed class BloquesController(ServicioEntidades<BloqueDocumental> servicio) : ControladorCrud<BloqueDocumental>(servicio);
 
 /// <summary>
-/// Identidad de las plantillas (Rubro, Sub Rubro, Tipo Documento y Documento): solo lectura. Las plantillas se crean y
+/// Identidad de las plantillas (Rubro, Sub Rubro, Tipo Documento, Documento y Beneficios): solo lectura. Las plantillas se crean y
 /// se modifican dentro de un Documento Consolidado (decisión D11). Filtros:
-/// <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=&amp;claseDocumentoId=</c>.
+/// <c>?rubroId=&amp;subRubroId=&amp;tipoDocumentoId=&amp;claseDocumentoId=&amp;beneficioId=</c>.
 /// </summary>
 [Route("api/plantillas")]
 [EdicionDirectaCerrada]
@@ -69,7 +74,8 @@ public sealed class PlantillasController(ServicioEntidades<Plantilla> servicio) 
         registros = PorParametro(registros, consulta, "rubroId", (p, v) => p.RubroId == v);
         registros = PorParametro(registros, consulta, "subRubroId", (p, v) => p.SubRubroId == v);
         registros = PorParametro(registros, consulta, "tipoDocumentoId", (p, v) => p.TipoDocumentoId == v);
-        return PorParametro(registros, consulta, "claseDocumentoId", (p, v) => p.ClaseDocumentoId == v);
+        registros = PorParametro(registros, consulta, "claseDocumentoId", (p, v) => p.ClaseDocumentoId == v);
+        return PorParametro(registros, consulta, "beneficioId", (p, v) => p.BeneficioId == v);
     }
 }
 
