@@ -298,45 +298,45 @@ CREATE TABLE dbo.PAM_SECUENCIAS_PLAN (
     CONSTRAINT CK_PAM_SecuenciasPlan_Ultimo CHECK (Ultimo BETWEEN 0 AND 9999)
 );
 
-CREATE TABLE dbo.PAM_CONSOLIDADOS (
+CREATE TABLE dbo.PAM_PLANTILLAS_CONSOLIDADOS (
     Id                  varchar(40)     NOT NULL,
     Numero              char(13)        NOT NULL,
     Anio                int             NOT NULL,
     Secuencia           int             NOT NULL,
-    Estado              varchar(12)     NOT NULL CONSTRAINT DF_PAM_Consolidados_Estado DEFAULT ('EnRegistro'),
+    Estado              varchar(12)     NOT NULL CONSTRAINT DF_PAM_PlantillasConsolidados_Estado DEFAULT ('EnRegistro'),
     UnidadId            varchar(40)     NOT NULL,       -- solo contiene plantillas de su unidad
     AnalistaId          varchar(60)     NOT NULL,
     FechaCreacion       datetimeoffset(7) NOT NULL,
     FechaActualizacion  datetimeoffset(7) NOT NULL,
-    NumeroPresentacion  int             NOT NULL CONSTRAINT DF_PAM_Consolidados_NumeroPresentacion DEFAULT (0),
+    NumeroPresentacion  int             NOT NULL CONSTRAINT DF_PAM_PlantillasConsolidados_NumeroPresentacion DEFAULT (0),
     FechaEnvio          datetimeoffset(7) NULL,
     EnviadoPor          varchar(60)     NULL,
     RevisorId           varchar(60)     NULL,
     FechaRevision       datetimeoffset(7) NULL,
     AprobadorId         varchar(60)     NULL,
     FechaAprobacion     datetimeoffset(7) NULL,
-    Version             int             NOT NULL CONSTRAINT DF_PAM_Consolidados_Version DEFAULT (1),
-    CONSTRAINT PK_PAM_Consolidados PRIMARY KEY (Id),
-    CONSTRAINT UQ_PAM_Consolidados_Numero UNIQUE (Numero),
-    CONSTRAINT UQ_PAM_Consolidados_Secuencia UNIQUE (Anio, Secuencia),
-    CONSTRAINT FK_PAM_Consolidados_Unidad FOREIGN KEY (UnidadId) REFERENCES dbo.PAM_UNIDADES (Id),
-    CONSTRAINT FK_PAM_Consolidados_Analista FOREIGN KEY (AnalistaId) REFERENCES dbo.PAM_USUARIOS (Id),
-    CONSTRAINT FK_PAM_Consolidados_EnviadoPor FOREIGN KEY (EnviadoPor) REFERENCES dbo.PAM_USUARIOS (Id),
-    CONSTRAINT FK_PAM_Consolidados_Revisor FOREIGN KEY (RevisorId) REFERENCES dbo.PAM_USUARIOS (Id),
-    CONSTRAINT FK_PAM_Consolidados_Aprobador FOREIGN KEY (AprobadorId) REFERENCES dbo.PAM_USUARIOS (Id),
-    CONSTRAINT CK_PAM_Consolidados_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
-    CONSTRAINT CK_PAM_Consolidados_Secuencia CHECK (Secuencia BETWEEN 1 AND 9999),
-    CONSTRAINT CK_PAM_Consolidados_Anio CHECK (Anio BETWEEN 2000 AND 2999),
+    Version             int             NOT NULL CONSTRAINT DF_PAM_PlantillasConsolidados_Version DEFAULT (1),
+    CONSTRAINT PK_PAM_PlantillasConsolidados PRIMARY KEY (Id),
+    CONSTRAINT UQ_PAM_PlantillasConsolidados_Numero UNIQUE (Numero),
+    CONSTRAINT UQ_PAM_PlantillasConsolidados_Secuencia UNIQUE (Anio, Secuencia),
+    CONSTRAINT FK_PAM_PlantillasConsolidados_Unidad FOREIGN KEY (UnidadId) REFERENCES dbo.PAM_UNIDADES (Id),
+    CONSTRAINT FK_PAM_PlantillasConsolidados_Analista FOREIGN KEY (AnalistaId) REFERENCES dbo.PAM_USUARIOS (Id),
+    CONSTRAINT FK_PAM_PlantillasConsolidados_EnviadoPor FOREIGN KEY (EnviadoPor) REFERENCES dbo.PAM_USUARIOS (Id),
+    CONSTRAINT FK_PAM_PlantillasConsolidados_Revisor FOREIGN KEY (RevisorId) REFERENCES dbo.PAM_USUARIOS (Id),
+    CONSTRAINT FK_PAM_PlantillasConsolidados_Aprobador FOREIGN KEY (AprobadorId) REFERENCES dbo.PAM_USUARIOS (Id),
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Secuencia CHECK (Secuencia BETWEEN 1 AND 9999),
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Anio CHECK (Anio BETWEEN 2000 AND 2999),
     -- El número se deriva del año y la secuencia: PLAN-20260001.
-    CONSTRAINT CK_PAM_Consolidados_Numero CHECK (Numero = CONCAT('PLAN-', Anio, RIGHT(CONCAT('000', Secuencia), 4))),
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Numero CHECK (Numero = CONCAT('PLAN-', Anio, RIGHT(CONCAT('000', Secuencia), 4))),
     -- Lo aprobado tiene aprobador y fecha, y nunca lo aprueba quien lo preparó (separación de funciones).
-    CONSTRAINT CK_PAM_Consolidados_Aprobacion CHECK (Estado <> 'Aprobado' OR (AprobadorId IS NOT NULL AND FechaAprobacion IS NOT NULL)),
-    CONSTRAINT CK_PAM_Consolidados_Separacion CHECK (AprobadorId IS NULL OR (AprobadorId <> AnalistaId AND (EnviadoPor IS NULL OR AprobadorId <> EnviadoPor)))
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Aprobacion CHECK (Estado <> 'Aprobado' OR (AprobadorId IS NOT NULL AND FechaAprobacion IS NOT NULL)),
+    CONSTRAINT CK_PAM_PlantillasConsolidados_Separacion CHECK (AprobadorId IS NULL OR (AprobadorId <> AnalistaId AND (EnviadoPor IS NULL OR AprobadorId <> EnviadoPor)))
 );
 
-CREATE INDEX IX_PAM_Consolidados_Bandeja ON dbo.PAM_CONSOLIDADOS (UnidadId, Estado, AnalistaId) INCLUDE (Numero, FechaActualizacion);
+CREATE INDEX IX_PAM_PlantillasConsolidados_Bandeja ON dbo.PAM_PLANTILLAS_CONSOLIDADOS (UnidadId, Estado, AnalistaId) INCLUDE (Numero, FechaActualizacion);
 
-CREATE TABLE dbo.PAM_PROPUESTAS (
+CREATE TABLE dbo.PAM_PLANTILLA_DOC (
     Id                      varchar(40)     NOT NULL,
     ConsolidadoId           varchar(40)     NOT NULL,
     Operacion               varchar(10)     NOT NULL,
@@ -353,32 +353,32 @@ CREATE TABLE dbo.PAM_PROPUESTAS (
     HuellaOrigen            char(64)        NULL,
     ContenidoPropuesto      nvarchar(max)   NOT NULL,   -- JSON con el mismo formato del contenido de una versión
     DerivadaDePropuestaId   varchar(40)     NULL,       -- Certificación derivada de su Resolución (D3)
-    Retirada                bit             NOT NULL CONSTRAINT DF_PAM_Propuestas_Retirada DEFAULT (0),
+    Retirada                bit             NOT NULL CONSTRAINT DF_PAM_PlantillaDoc_Retirada DEFAULT (0),
     MotivoRetiro            nvarchar(500)   NULL,
     FechaCreacion           datetimeoffset(7) NOT NULL,
     FechaModificacion       datetimeoffset(7) NOT NULL,
-    Version                 int             NOT NULL CONSTRAINT DF_PAM_Propuestas_Version DEFAULT (1),
-    CONSTRAINT PK_PAM_Propuestas PRIMARY KEY (Id),
-    CONSTRAINT FK_PAM_Propuestas_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_CONSOLIDADOS (Id),
-    CONSTRAINT FK_PAM_Propuestas_Unidad FOREIGN KEY (UnidadId) REFERENCES dbo.PAM_UNIDADES (Id),
-    CONSTRAINT FK_PAM_Propuestas_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES dbo.PAM_SUB_RUBROS (RubroId, Id),
-    CONSTRAINT FK_PAM_Propuestas_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES dbo.PAM_TIPOS_DOCUMENTO (Id),
-    CONSTRAINT FK_PAM_Propuestas_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES dbo.PAM_CLASES_DOCUMENTO (Id),
-    CONSTRAINT FK_PAM_Propuestas_Beneficio FOREIGN KEY (BeneficioId) REFERENCES dbo.PAM_BENEFICIOS (Id),
-    CONSTRAINT FK_PAM_Propuestas_Plantilla FOREIGN KEY (PlantillaId) REFERENCES dbo.PAM_PLANTILLAS (Id),
-    CONSTRAINT FK_PAM_Propuestas_VersionOrigen FOREIGN KEY (VersionOrigenId) REFERENCES dbo.PAM_VERSIONES_PLANTILLA (Id),
-    CONSTRAINT FK_PAM_Propuestas_Derivada FOREIGN KEY (DerivadaDePropuestaId) REFERENCES dbo.PAM_PROPUESTAS (Id),
-    CONSTRAINT CK_PAM_Propuestas_Operacion CHECK (Operacion IN ('Crear', 'Modificar')),
-    CONSTRAINT CK_PAM_Propuestas_Contenido CHECK (ISJSON(ContenidoPropuesto) = 1),
-    CONSTRAINT CK_PAM_Propuestas_Modificar CHECK (Operacion <> 'Modificar' OR (PlantillaId IS NOT NULL AND VersionOrigenId IS NOT NULL)),
-    CONSTRAINT CK_PAM_Propuestas_Retiro CHECK (Retirada = 0 OR (MotivoRetiro IS NOT NULL AND LEN(MotivoRetiro) >= 5))
+    Version                 int             NOT NULL CONSTRAINT DF_PAM_PlantillaDoc_Version DEFAULT (1),
+    CONSTRAINT PK_PAM_PlantillaDoc PRIMARY KEY (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_PLANTILLAS_CONSOLIDADOS (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Unidad FOREIGN KEY (UnidadId) REFERENCES dbo.PAM_UNIDADES (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES dbo.PAM_SUB_RUBROS (RubroId, Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES dbo.PAM_TIPOS_DOCUMENTO (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES dbo.PAM_CLASES_DOCUMENTO (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Beneficio FOREIGN KEY (BeneficioId) REFERENCES dbo.PAM_BENEFICIOS (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Plantilla FOREIGN KEY (PlantillaId) REFERENCES dbo.PAM_PLANTILLAS (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_VersionOrigen FOREIGN KEY (VersionOrigenId) REFERENCES dbo.PAM_VERSIONES_PLANTILLA (Id),
+    CONSTRAINT FK_PAM_PlantillaDoc_Derivada FOREIGN KEY (DerivadaDePropuestaId) REFERENCES dbo.PAM_PLANTILLA_DOC (Id),
+    CONSTRAINT CK_PAM_PlantillaDoc_Operacion CHECK (Operacion IN ('Crear', 'Modificar')),
+    CONSTRAINT CK_PAM_PlantillaDoc_Contenido CHECK (ISJSON(ContenidoPropuesto) = 1),
+    CONSTRAINT CK_PAM_PlantillaDoc_Modificar CHECK (Operacion <> 'Modificar' OR (PlantillaId IS NOT NULL AND VersionOrigenId IS NOT NULL)),
+    CONSTRAINT CK_PAM_PlantillaDoc_Retiro CHECK (Retirada = 0 OR (MotivoRetiro IS NOT NULL AND LEN(MotivoRetiro) >= 5))
 );
 
-CREATE INDEX IX_PAM_Propuestas_Consolidado ON dbo.PAM_PROPUESTAS (ConsolidadoId);
-CREATE INDEX IX_PAM_Propuestas_Plantilla ON dbo.PAM_PROPUESTAS (PlantillaId) WHERE PlantillaId IS NOT NULL;
+CREATE INDEX IX_PAM_PlantillaDoc_Consolidado ON dbo.PAM_PLANTILLA_DOC (ConsolidadoId);
+CREATE INDEX IX_PAM_PlantillaDoc_Plantilla ON dbo.PAM_PLANTILLA_DOC (PlantillaId) WHERE PlantillaId IS NOT NULL;
 
 ALTER TABLE dbo.PAM_VERSIONES_PLANTILLA
-    ADD CONSTRAINT FK_PAM_VersionesPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_CONSOLIDADOS (Id);
+    ADD CONSTRAINT FK_PAM_VersionesPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_PLANTILLAS_CONSOLIDADOS (Id);
 
 -- D4: una plantilla (por su identidad funcional) solo puede estar en un documento abierto. La aplicación inserta la
 -- fila al agregar la propuesta y la borra al retirarla o al aprobar el documento.
@@ -394,8 +394,8 @@ CREATE TABLE dbo.PAM_BLOQUEOS_PLANTILLA (
     Fecha               datetimeoffset(7) NOT NULL,
     CONSTRAINT PK_PAM_BloqueosPlantilla PRIMARY KEY (PropuestaId),
     CONSTRAINT UQ_PAM_BloqueosPlantilla_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId, BeneficioId),
-    CONSTRAINT FK_PAM_BloqueosPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_CONSOLIDADOS (Id),
-    CONSTRAINT FK_PAM_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES dbo.PAM_PROPUESTAS (Id)
+    CONSTRAINT FK_PAM_BloqueosPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_PLANTILLAS_CONSOLIDADOS (Id),
+    CONSTRAINT FK_PAM_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES dbo.PAM_PLANTILLA_DOC (Id)
 );
 
 -- Cada envío a verificación, con la copia congelada de lo enviado y su huella de integridad.
@@ -410,7 +410,7 @@ CREATE TABLE dbo.PAM_PRESENTACIONES (
     Propuestas          nvarchar(max)   NOT NULL,       -- JSON: arreglo de las propuestas tal como se enviaron
     Version             int             NOT NULL CONSTRAINT DF_PAM_Presentaciones_Version DEFAULT (1),
     CONSTRAINT PK_PAM_Presentaciones PRIMARY KEY (Id),
-    CONSTRAINT FK_PAM_Presentaciones_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_CONSOLIDADOS (Id),
+    CONSTRAINT FK_PAM_Presentaciones_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_PLANTILLAS_CONSOLIDADOS (Id),
     CONSTRAINT FK_PAM_Presentaciones_Usuario FOREIGN KEY (Usuario) REFERENCES dbo.PAM_USUARIOS (Id),
     CONSTRAINT UQ_PAM_Presentaciones_Numero UNIQUE (ConsolidadoId, Numero),
     CONSTRAINT CK_PAM_Presentaciones_Numero CHECK (Numero >= 1),
@@ -444,7 +444,7 @@ CREATE TABLE dbo.PAM_OBSERVACIONES (
     Recomendacion       nvarchar(2000)  NULL,
     CONSTRAINT PK_PAM_Observaciones PRIMARY KEY (Id),
     CONSTRAINT FK_PAM_Observaciones_Devolucion FOREIGN KEY (DevolucionId) REFERENCES dbo.PAM_DEVOLUCIONES (Id),
-    CONSTRAINT FK_PAM_Observaciones_Propuesta FOREIGN KEY (PropuestaId) REFERENCES dbo.PAM_PROPUESTAS (Id),
+    CONSTRAINT FK_PAM_Observaciones_Propuesta FOREIGN KEY (PropuestaId) REFERENCES dbo.PAM_PLANTILLA_DOC (Id),
     CONSTRAINT UQ_PAM_Observaciones_Orden UNIQUE (DevolucionId, Orden)
 );
 
@@ -463,7 +463,7 @@ CREATE TABLE dbo.PAM_MOVIMIENTOS (
     Detalle             nvarchar(1000)  NOT NULL,
     Version             int             NOT NULL CONSTRAINT DF_PAM_Movimientos_Version DEFAULT (1),
     CONSTRAINT PK_PAM_Movimientos PRIMARY KEY (Id),
-    CONSTRAINT FK_PAM_Movimientos_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_CONSOLIDADOS (Id),
+    CONSTRAINT FK_PAM_Movimientos_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES dbo.PAM_PLANTILLAS_CONSOLIDADOS (Id),
     CONSTRAINT CK_PAM_Movimientos_Tipo CHECK (Tipo IN ('Creacion', 'PropuestaAgregada', 'PropuestaModificada', 'PropuestaRetirada',
         'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion', 'Eliminacion')),
     CONSTRAINT CK_PAM_Movimientos_EstadoOrigen CHECK (EstadoOrigen IS NULL OR EstadoOrigen IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
@@ -606,7 +606,7 @@ END;
 GO
 
 -- Un documento aprobado no cambia de estado ni se elimina; un documento solo se elimina si nunca se envió.
-CREATE OR ALTER TRIGGER dbo.TR_PAM_Consolidados_Aprobado ON dbo.PAM_CONSOLIDADOS AFTER UPDATE, DELETE AS
+CREATE OR ALTER TRIGGER dbo.TR_PAM_PlantillasConsolidados_Aprobado ON dbo.PAM_PLANTILLAS_CONSOLIDADOS AFTER UPDATE, DELETE AS
 BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM deleted d LEFT JOIN inserted i ON i.Id = d.Id
@@ -641,8 +641,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_ARCHIVOS TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_PLANTILLAS TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_VERSIONES_PLANTILLA TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_SECUENCIAS_PLAN TO PAM_ROL_EDITOR;
-GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_CONSOLIDADOS TO PAM_ROL_EDITOR;
-GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_PROPUESTAS TO PAM_ROL_EDITOR;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_PLANTILLAS_CONSOLIDADOS TO PAM_ROL_EDITOR;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_PLANTILLA_DOC TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_BLOQUEOS_PLANTILLA TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_PRESENTACIONES TO PAM_ROL_EDITOR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.PAM_DEVOLUCIONES TO PAM_ROL_EDITOR;

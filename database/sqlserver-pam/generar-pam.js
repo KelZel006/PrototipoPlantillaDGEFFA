@@ -18,8 +18,8 @@ const TABLAS = {
   BloquesDocumentales: 'PAM_BLOQUES_DOCUMENTALES', BloqueReemplazos: 'PAM_BLOQUE_REEMPLAZOS',
   TiposDocumento: 'PAM_TIPOS_DOCUMENTO', TipoDocumentoBloques: 'PAM_TIPO_DOCUMENTO_BLOQUES', Campos: 'PAM_CAMPOS',
   CampoContextos: 'PAM_CAMPO_CONTEXTOS', Archivos: 'PAM_ARCHIVOS', Plantillas: 'PAM_PLANTILLAS',
-  VersionesPlantilla: 'PAM_VERSIONES_PLANTILLA', SecuenciasPlan: 'PAM_SECUENCIAS_PLAN', Consolidados: 'PAM_CONSOLIDADOS',
-  Propuestas: 'PAM_PROPUESTAS', BloqueosPlantilla: 'PAM_BLOQUEOS_PLANTILLA', Presentaciones: 'PAM_PRESENTACIONES',
+  VersionesPlantilla: 'PAM_VERSIONES_PLANTILLA', SecuenciasPlan: 'PAM_SECUENCIAS_PLAN', Consolidados: 'PAM_PLANTILLAS_CONSOLIDADOS',
+  Propuestas: 'PAM_PLANTILLA_DOC', BloqueosPlantilla: 'PAM_BLOQUEOS_PLANTILLA', Presentaciones: 'PAM_PRESENTACIONES',
   Devoluciones: 'PAM_DEVOLUCIONES', Observaciones: 'PAM_OBSERVACIONES', Movimientos: 'PAM_MOVIMIENTOS',
   Historial: 'PAM_HISTORIAL', Solicitudes: 'PAM_SOLICITUDES', DetallesBienes: 'PAM_DETALLES_BIENES',
 };
@@ -120,6 +120,9 @@ CREATE TABLE plantillas.VersionesPlantilla (`);
     return `dbo.${tabla.replace(/^TR_/, 'TR_PAM_')}`;
   });
   sql = sql.replace(/\b(PK|FK|UQ|CK|DF|IX|UX|TR)_(?!PAM_)/g, '$1_PAM_');
+  // Tablas renombradas: sus restricciones, índices y triggers siguen el nombre nuevo de la tabla.
+  sql = sql.replace(/_PAM_Propuestas(?![A-Za-z])/g, '_PAM_PlantillaDoc');
+  sql = sql.replace(/_PAM_Consolidados(?![A-Za-z])/g, '_PAM_PlantillasConsolidados');
 
   const nombres = Object.values(tablas);
   const soloInsercion = ['PAM_HISTORIAL', 'PAM_MOVIMIENTOS', 'PAM_PRESENTACIONES', 'PAM_DEVOLUCIONES', 'PAM_OBSERVACIONES'];
@@ -267,13 +270,13 @@ function generarDatos() {
         ['CamposUsados', 'camposUsados', 'j', []], version],
       leer('parrafos')),
     insertar('PAM_SECUENCIAS_PLAN', col('Anio:n Ultimo:n'), secuencias),
-    insertar('PAM_CONSOLIDADOS',
+    insertar('PAM_PLANTILLAS_CONSOLIDADOS',
       [...col('Id Numero Anio:n Secuencia:n Estado UnidadId AnalistaId FechaCreacion FechaActualizacion NumeroPresentacion:n FechaEnvio EnviadoPor RevisorId FechaRevision AprobadorId FechaAprobacion'), version],
       consolidados),
     insertar('PAM_VERSIONES_PLANTILLA',
       [...col('Id PlantillaId NumeroVersion:n Vigencia Contenido:j Huella VersionAnteriorId ConsolidadoId CargaInicial:b PublicadaPor FechaPublicacion InicioVigencia FinVigencia'), version],
       versiones),
-    insertar('PAM_PROPUESTAS',
+    insertar('PAM_PLANTILLA_DOC',
       [...col('Id ConsolidadoId Operacion UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o Nombre NombreReferencia PlantillaId VersionOrigenId HuellaOrigen ContenidoPropuesto:j DerivadaDePropuestaId Retirada:b MotivoRetiro FechaCreacion FechaModificacion'), version],
       propuestas),
     insertar('PAM_BLOQUEOS_PLANTILLA', col('UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o ConsolidadoId PropuestaId Fecha'), bloqueos),
