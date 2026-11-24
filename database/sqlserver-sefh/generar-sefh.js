@@ -1,7 +1,7 @@
-// Genera los scripts de SQL Server con las tablas PAM_*:
-//   01-PAM-esquema.sql  a partir de ../sqlserver/01-esquema.sql, más lo que ese esquema no guardaba
-//   02-PAM-datos.sql    a partir de backend/EditorResoluciones.Api/Data (inicie la API una vez antes)
-// Uso, desde la raíz del repositorio: node database/sqlserver-pam/generar-pam.js
+// Genera los scripts de SQL Server con las tablas SEFH_*:
+//   01-SEFH-esquema.sql  a partir de ../sqlserver/01-esquema.sql, más lo que ese esquema no guardaba
+//   02-SEFH-datos.sql    a partir de backend/EditorResoluciones.Api/Data (inicie la API una vez antes)
+// Uso, desde la raíz del repositorio: node database/sqlserver-sefh/generar-sefh.js
 // Falla si una colección trae una propiedad sin columna: así ningún dato se pierde sin avisar.
 const fs = require('fs');
 const path = require('path');
@@ -13,15 +13,46 @@ const leer = (nombre) => JSON.parse(fs.readFileSync(path.join(DATA, `${nombre}.j
 const escribir = (nombre, texto) => fs.writeFileSync(path.join(__dirname, nombre), `﻿${texto.replace(/\r?\n/g, '\r\n')}`);
 
 const TABLAS = {
-  Usuarios: 'PAM_USUARIOS', UsuarioRoles: 'PAM_USUARIO_ROLES', Unidades: 'PAM_UNIDADES', Rubros: 'PAM_RUBROS',
-  SubRubros: 'PAM_SUB_RUBROS', ClasesDocumento: 'PAM_CLASES_DOCUMENTO', Beneficios: 'PAM_BENEFICIOS',
-  BloquesDocumentales: 'PAM_BLOQUES_DOCUMENTALES', BloqueReemplazos: 'PAM_BLOQUE_REEMPLAZOS',
-  TiposDocumento: 'PAM_TIPOS_DOCUMENTO', TipoDocumentoBloques: 'PAM_TIPO_DOCUMENTO_BLOQUES', Campos: 'PAM_CAMPOS',
-  CampoContextos: 'PAM_CAMPO_CONTEXTOS', Archivos: 'PAM_ARCHIVOS', Plantillas: 'PAM_PLANTILLAS',
-  VersionesPlantilla: 'PAM_VERSIONES_PLANTILLA', SecuenciasPlan: 'PAM_SECUENCIAS_PLAN', Consolidados: 'PAM_PLANTILLAS_CONSOLIDADOS',
-  Propuestas: 'PAM_PLANTILLA_DOC', BloqueosPlantilla: 'PAM_BLOQUEOS_PLANTILLA', Presentaciones: 'PAM_PRESENTACIONES',
-  Devoluciones: 'PAM_DEVOLUCIONES', Observaciones: 'PAM_OBSERVACIONES', Movimientos: 'PAM_MOVIMIENTOS',
-  Historial: 'PAM_HISTORIAL', Solicitudes: 'PAM_SOLICITUDES', DetallesBienes: 'PAM_DETALLES_BIENES',
+  Usuarios: 'SEFH_USUARIOS', UsuarioRoles: 'SEFH_USUARIO_ROLES', Unidades: 'SEFH_UNIDADES', Rubros: 'SEFH_RUBROS',
+  SubRubros: 'SEFH_SUB_RUBROS', ClasesDocumento: 'SEFH_CLASES_DOCUMENTO', Beneficios: 'SEFH_BENEFICIOS',
+  BloquesDocumentales: 'SEFH_BLOQUES_DOCUMENTALES', BloqueReemplazos: 'SEFH_BLOQUE_REEMPLAZOS',
+  TiposDocumento: 'SEFH_TIPOS_DOCUMENTO', TipoDocumentoBloques: 'SEFH_TIPO_DOCUMENTO_BLOQUES', Campos: 'SEFH_CAMPOS',
+  CampoContextos: 'SEFH_CAMPO_CONTEXTOS', Archivos: 'SEFH_ARCHIVOS', Plantillas: 'SEFH_PLANTILLAS',
+  VersionesPlantilla: 'SEFH_PLANTILLAS_CONSOLIDADO', SecuenciasPlan: 'SEFH_SECUENCIAS_PLAN', Consolidados: 'SEFH_PLANTILLAS_DOC_CAB',
+  Propuestas: 'SEFH_PLANTILLA_DOC', BloqueosPlantilla: 'SEFH_BLOQUEOS_PLANTILLA', Presentaciones: 'SEFH_PRESENTACIONES',
+  Devoluciones: 'SEFH_DEVOLUCIONES', Observaciones: 'SEFH_OBSERVACIONES', Movimientos: 'SEFH_MOVIMIENTOS',
+  Historial: 'SEFH_HISTORIAL', Solicitudes: 'SEFH_SOLICITUDES', DetallesBienes: 'SEFH_DETALLES_BIENES',
+};
+
+// Llave primaria de cada tabla que tenía la columna Id: ID_<siglas de la tabla>_SEQ (el valor sigue siendo el mismo código).
+// Las tablas con llave compuesta (roles, reemplazos, bloques de un tipo, contextos, secuencias y bloqueos) no tienen Id.
+const LLAVES = {
+  SEFH_USUARIOS: 'ID_USU_SEQ', SEFH_UNIDADES: 'ID_UNI_SEQ', SEFH_RUBROS: 'ID_RUBRO_SEQ', SEFH_SUB_RUBROS: 'ID_SUBRUBRO_SEQ',
+  SEFH_CLASES_DOCUMENTO: 'ID_CLADOC_SEQ', SEFH_BENEFICIOS: 'ID_BEN_SEQ', SEFH_BLOQUES_DOCUMENTALES: 'ID_BLODOC_SEQ',
+  SEFH_TIPOS_DOCUMENTO: 'ID_TIPDOC_SEQ', SEFH_CAMPOS: 'ID_CAMPO_SEQ', SEFH_ARCHIVOS: 'ID_ARCH_SEQ', SEFH_PLANTILLAS: 'ID_PLA_SEQ',
+  SEFH_PARRAFOS: 'ID_PARR_SEQ', SEFH_PLANTILLAS_CONSOLIDADO: 'ID_VERPLA_SEQ', SEFH_PLANTILLAS_DOC_CAB: 'ID_CONS_SEQ',
+  SEFH_PLANTILLA_DOC: 'ID_PLADOC_SEQ', SEFH_PRESENTACIONES: 'ID_PRES_SEQ', SEFH_DEVOLUCIONES: 'ID_DEV_SEQ', SEFH_OBSERVACIONES: 'ID_OBS_SEQ',
+  SEFH_MOVIMIENTOS: 'ID_MOV_SEQ', SEFH_HISTORIAL: 'ID_HIST_SEQ', SEFH_SOLICITUDES: 'ID_SOL_SEQ', SEFH_DETALLES_BIENES: 'ID_DETBIEN_SEQ',
+};
+
+// Columnas que apuntan a otra tabla: llevan el nombre de la llave a la que apuntan. Las que apuntan a su propia tabla
+// (CopiaDeTipoDocumentoId, VersionAnteriorId, DerivadaDePropuestaId) o a una tabla a la que la fila ya apunta con otra
+// columna (ReemplazaBloqueId, AnalistaId, EnviadoPor, RevisorId, AprobadorId) conservan su nombre.
+const FORANEAS = {
+  UsuarioId: 'ID_USU_SEQ', UnidadId: 'ID_UNI_SEQ', RubroId: 'ID_RUBRO_SEQ', SubRubroId: 'ID_SUBRUBRO_SEQ',
+  TipoDocumentoId: 'ID_TIPDOC_SEQ', ClaseDocumentoId: 'ID_CLADOC_SEQ', BeneficioId: 'ID_BEN_SEQ', BloqueId: 'ID_BLODOC_SEQ',
+  CampoId: 'ID_CAMPO_SEQ', LogoId: 'ID_ARCH_SEQ', PlantillaId: 'ID_PLA_SEQ', VersionOrigenId: 'ID_VERPLA_SEQ',
+  ConsolidadoId: 'ID_CONS_SEQ', PropuestaId: 'ID_PLADOC_SEQ', DevolucionId: 'ID_DEV_SEQ', SolicitudId: 'ID_SOL_SEQ',
+};
+
+// Columnas propias que cambian de nombre en una tabla: el Estado del negocio deja el nombre ESTADO a la auditoría, y el
+// Usuario de presentaciones y devoluciones es una llave foránea a los usuarios. [columna nueva, sufijo de sus restricciones]
+const PROPIAS = {
+  SEFH_PLANTILLAS: { Estado: ['ESTADO_PLANTILLA', 'EstadoPlantilla'] },
+  SEFH_PLANTILLAS_DOC_CAB: { Estado: ['ESTADO_DOCUMENTO', 'EstadoDocumento'] },
+  SEFH_SOLICITUDES: { Estado: ['ESTADO_SOLICITUD', 'EstadoSolicitud'] },
+  SEFH_PRESENTACIONES: { Usuario: ['ID_USU_SEQ', 'Usuario'] },
+  SEFH_DEVOLUCIONES: { Usuario: ['ID_USU_SEQ', 'Usuario'] },
 };
 
 // ---------- Esquema ----------
@@ -36,7 +67,7 @@ function reemplazar(texto, buscado, nuevo) {
 function generarEsquema() {
   let sql = fs.readFileSync(path.join(raiz, 'database', 'sqlserver', '01-esquema.sql'), 'utf8').replace(/^﻿/, '').replace(/\r\n/g, '\n');
 
-  // Encabezado, esquema propio y permisos: se reescriben para las tablas PAM_* en dbo.
+  // Encabezado, esquema propio y permisos: se reescriben para las tablas SEFH_* en dbo.
   sql = sql.slice(sql.indexOf('BEGIN TRANSACTION;'));
   sql = sql.slice(0, sql.indexOf('/* ---------------------------------------------------------------------------------------------------------------------\n   9. Permisos'));
 
@@ -111,37 +142,48 @@ CREATE INDEX IX_Parrafos_Plantilla ON plantillas.Parrafos (PlantillaId, Seccion,
 
 CREATE TABLE plantillas.VersionesPlantilla (`);
 
-  // Nombres: tablas PAM_* en dbo; restricciones, índices y triggers con el mismo prefijo.
-  const tablas = { ...TABLAS, Parrafos: 'PAM_PARRAFOS' };
+  // Nombres: tablas SEFH_* en dbo; restricciones, índices y triggers con el mismo prefijo.
+  const tablas = { ...TABLAS, Parrafos: 'SEFH_PARRAFOS' };
   sql = sql.replace(/plantillas\.([A-Za-z]+)/g, (_, tabla) => {
     if (tablas[tabla]) {
       return `dbo.${tablas[tabla]}`;
     }
-    return `dbo.${tabla.replace(/^TR_/, 'TR_PAM_')}`;
+    return `dbo.${tabla.replace(/^TR_/, 'TR_SEFH_')}`;
   });
-  sql = sql.replace(/\b(PK|FK|UQ|CK|DF|IX|UX|TR)_(?!PAM_)/g, '$1_PAM_');
+  sql = sql.replace(/\b(PK|FK|UQ|CK|DF|IX|UX|TR)_(?!SEFH_)/g, '$1_SEFH_');
   // Tablas renombradas: sus restricciones, índices y triggers siguen el nombre nuevo de la tabla.
-  sql = sql.replace(/_PAM_Propuestas(?![A-Za-z])/g, '_PAM_PlantillaDoc');
-  sql = sql.replace(/_PAM_Consolidados(?![A-Za-z])/g, '_PAM_PlantillasConsolidados');
+  sql = sql.replace(/_SEFH_Propuestas(?![A-Za-z])/g, '_SEFH_PlantillaDoc');
+  sql = sql.replace(/_SEFH_Consolidados(?![A-Za-z])/g, '_SEFH_PlantillasDocCab');
+  sql = sql.replace(/_SEFH_VersionesPlantilla(?![A-Za-z])/g, '_SEFH_PlantillasConsolidado');
+
+  // OrdenRegistro: la aplicación lista los registros en el orden en que se agregaron, como en los archivos JSON.
+  // SEFH_OBSERVACIONES no la lleva: ya tiene su columna Orden (y SQL Server admite una sola columna IDENTITY por tabla).
+  sql = sql.replace(/CREATE TABLE dbo\.(SEFH_\w+) \(\n/g, (linea, tabla) =>
+    tabla === 'SEFH_OBSERVACIONES' ? linea : `${linea}    OrdenRegistro       int IDENTITY(1, 1) NOT NULL,\n`);
+
+  sql = renombrarColumnas(sql);
+  sql = agregarAuditoria(sql);
 
   const nombres = Object.values(tablas);
-  const soloInsercion = ['PAM_HISTORIAL', 'PAM_MOVIMIENTOS', 'PAM_PRESENTACIONES', 'PAM_DEVOLUCIONES', 'PAM_OBSERVACIONES'];
+  const soloInsercion = ['SEFH_HISTORIAL', 'SEFH_MOVIMIENTOS', 'SEFH_PRESENTACIONES', 'SEFH_DEVOLUCIONES', 'SEFH_OBSERVACIONES'];
   const permisos = [
-    ...nombres.map((t) => `GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.${t} TO PAM_ROL_EDITOR;`),
-    ...soloInsercion.map((t) => `DENY UPDATE, DELETE ON dbo.${t} TO PAM_ROL_EDITOR;`),
-    'DENY DELETE ON dbo.PAM_VERSIONES_PLANTILLA TO PAM_ROL_EDITOR;',
+    ...nombres.map((t) => `GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.${t} TO SEFH_ROL_EDITOR;`),
+    ...soloInsercion.map((t) => `DENY UPDATE, DELETE ON dbo.${t} TO SEFH_ROL_EDITOR;`),
+    'DENY DELETE ON dbo.SEFH_PLANTILLAS_CONSOLIDADO TO SEFH_ROL_EDITOR;',
   ].join('\n');
 
   return `/* =====================================================================================================================
-   Sistema de Gestión de Plantillas DGEFFA — Esquema para SQL Server 2019 con tablas PAM_*
+   Sistema de Gestión de Plantillas DGEFFA — Esquema para SQL Server 2019 con tablas SEFH_*
    ---------------------------------------------------------------------------------------------------------------------
-   Generado por generar-pam.js a partir de ../sqlserver/01-esquema.sql. No lo edite a mano.
-   - Crea ${nombres.length} tablas en el esquema dbo, todas con el prefijo PAM_.
-   - Los identificadores son los mismos de los archivos JSON (por ejemplo, PLA-001, CON-0001).
+   Generado por generar-sefh.js a partir de ../sqlserver/01-esquema.sql. No lo edite a mano.
+   - Crea ${nombres.length} tablas en el esquema dbo, todas con el prefijo SEFH_.
+   - La llave primaria se llama ID_<siglas>_SEQ (ID_UNI_SEQ, ID_PLA_SEQ…) y guarda los mismos identificadores de los
+     archivos JSON (por ejemplo, PLA-001, CON-0001). Las columnas que apuntan a otra tabla llevan el nombre de esa llave.
+   - Todas las tablas llevan la auditoría ESTADO ('ACTIVO'/'INACTIVO'), USU_CRE, FEC_CRE, USU_MOD y FEC_MOD.
    - Los valores de las enumeraciones se guardan como texto, igual que en el JSON ('EnRegistro', 'Vigente'…).
    - El contenido de una versión o propuesta (diseño, bloques y párrafos) se guarda como JSON.
    - La columna Version es el control de concurrencia optimista de la aplicación.
-   Se ejecuta una vez. Después ejecute 02-PAM-datos.sql.
+   Se ejecuta una vez. Después ejecute 02-SEFH-datos.sql.
    ===================================================================================================================== */
 
 -- Base de datos recomendada (ejecutar aparte, con un usuario administrador):
@@ -158,13 +200,76 @@ GO
 ${sql}/* ---------------------------------------------------------------------------------------------------------------------
    9. Permisos del usuario de la aplicación (ajustar el nombre del usuario o rol institucional)
    --------------------------------------------------------------------------------------------------------------------- */
-IF DATABASE_PRINCIPAL_ID(N'PAM_ROL_EDITOR') IS NULL
-    CREATE ROLE PAM_ROL_EDITOR;
+IF DATABASE_PRINCIPAL_ID(N'SEFH_ROL_EDITOR') IS NULL
+    CREATE ROLE SEFH_ROL_EDITOR;
 GO
 ${permisos}
--- ALTER ROLE PAM_ROL_EDITOR ADD MEMBER [usuario_de_la_aplicacion];
+-- ALTER ROLE SEFH_ROL_EDITOR ADD MEMBER [usuario_de_la_aplicacion];
 GO
 `;
+}
+
+/** Aplica a un fragmento los nombres nuevos de las columnas de una tabla: su llave Id y sus columnas propias. */
+function renombrarEnTabla(tabla, fragmento) {
+  let resultado = fragmento;
+  if (LLAVES[tabla]) {
+    resultado = resultado.replace(/\bId\b/g, LLAVES[tabla]);
+  }
+  for (const [columna, [nueva, sufijo]] of Object.entries(PROPIAS[tabla] ?? {})) {
+    resultado = resultado.replace(new RegExp(`\\b${columna}\\b`, 'g'), nueva);
+    // Restricciones con el nombre de la columna (DF_SEFH_Plantillas_Estado): así no chocan con las de la auditoría.
+    resultado = resultado.replace(new RegExp(`_${columna}\\b`, 'g'), `_${sufijo}`);
+  }
+  return resultado;
+}
+
+function renombrarColumnas(texto) {
+  let sql = texto;
+  // 1. La lista de columnas de cada REFERENCES es de la tabla referida.
+  sql = sql.replace(/REFERENCES dbo\.(\w+) \(([^)]*)\)/g,
+    (_, tabla, columnas) => `REFERENCES dbo.${tabla} (${renombrarEnTabla(tabla, columnas)})`);
+  // 2. Cada tabla, cada índice y cada trigger, con las columnas de su tabla.
+  sql = sql.replace(/CREATE TABLE dbo\.(\w+) \(\n[\s\S]*?\n\);/g, (bloque, tabla) => renombrarEnTabla(tabla, bloque));
+  sql = sql.replace(/CREATE (?:UNIQUE )?INDEX \w+ ON dbo\.(\w+) .*/g, (linea, tabla) => renombrarEnTabla(tabla, linea));
+  sql = sql.replace(/CREATE OR ALTER TRIGGER dbo\.\w+ ON dbo\.(\w+)[\s\S]*?\nGO/g, (bloque, tabla) => renombrarEnTabla(tabla, bloque));
+  // 3. Las llaves foráneas, en todo el script.
+  sql = sql.replace(new RegExp(`\\b(${Object.keys(FORANEAS).join('|')})\\b`, 'g'), (columna) => FORANEAS[columna]);
+  // 4. Activo pasa a ser la columna ESTADO de la auditoría.
+  sql = sql.replace(/^ {4}Activo +bit .*\n/gm, '');
+  const sinComentarios = sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  if (/\b(Id|Activo)\b/.test(sinComentarios)) {
+    throw new Error('Quedó una columna Id o Activo sin renombrar.');
+  }
+  return sql;
+}
+
+/** Agrega a cada tabla las columnas de auditoría, con su regla de ESTADO, y alinea las definiciones de columnas. */
+function agregarAuditoria(texto) {
+  return texto.replace(/CREATE TABLE dbo\.(\w+) \(\n([\s\S]*?)\n\);/g, (_, tabla, cuerpo) => {
+    const nombre = /CONSTRAINT PK_SEFH_(\w+) PRIMARY KEY/.exec(cuerpo)?.[1];
+    if (!nombre) {
+      throw new Error(`La tabla ${tabla} no tiene llave primaria.`);
+    }
+    const lineas = cuerpo.split('\n');
+    lineas.splice(lineas.findIndex((l) => l.startsWith('    CONSTRAINT ')), 0,
+      `    ESTADO varchar(10)     NOT NULL CONSTRAINT DF_SEFH_${nombre}_ESTADO DEFAULT ('ACTIVO'),`,
+      `    USU_CRE varchar(60)     NOT NULL CONSTRAINT DF_SEFH_${nombre}_USU_CRE DEFAULT (LEFT(SUSER_SNAME(), 60)),`,
+      `    FEC_CRE datetime2(7)    NOT NULL CONSTRAINT DF_SEFH_${nombre}_FEC_CRE DEFAULT (SYSDATETIME()),`,
+      '    USU_MOD varchar(60)     NULL,',
+      '    FEC_MOD datetime2(7)    NULL,');
+    // La regla de ESTADO va al final: la línea anterior (sin contar comentarios) necesita su coma.
+    let ultima = lineas.length - 1;
+    while (/^\s*--/.test(lineas[ultima])) {
+      ultima -= 1;
+    }
+    lineas[ultima] = lineas[ultima].replace(/^(.*?)(\s+--.*)?$/, (__, codigo, comentario = '') => `${codigo},${comentario}`);
+    lineas.push(`    CONSTRAINT CK_SEFH_${nombre}_ESTADO CHECK (ESTADO IN ('ACTIVO', 'INACTIVO'))`);
+    // Columnas alineadas: los nombres nuevos son más largos que los anteriores.
+    const columnas = lineas.map((l) => /^ {4}(?!CONSTRAINT )(\w+) +(\S.*)$/.exec(l));
+    const ancho = Math.max(...columnas.filter(Boolean).map((m) => m[1].length)) + 4;
+    const alineadas = lineas.map((l, i) => (columnas[i] ? `    ${columnas[i][1].padEnd(ancho)}${columnas[i][2]}` : l));
+    return `CREATE TABLE dbo.${tabla} (\n${alineadas.join('\n')}\n);`;
+  });
 }
 
 // ---------- Datos ----------
@@ -178,10 +283,22 @@ const valor = {
   n: (v) => (v === undefined || v === null ? 'NULL' : String(Number(v))),
   b: (v) => (v ? '1' : '0'),
   j: (v) => (v === undefined || v === null ? 'NULL' : texto(JSON.stringify(v))),
+  /** Lógico guardado en la columna ESTADO de la auditoría. */
+  e: (v) => (v ? "'ACTIVO'" : "'INACTIVO'"),
 };
 
+/** Nombre de la columna en las tablas SEFH_ (las definiciones de abajo usan los nombres de las propiedades). */
+function columnaNueva(tabla, [columna, propiedad, tipo, predeterminado]) {
+  if (columna === 'Activo') {
+    return ['ESTADO', propiedad, 'e', predeterminado];
+  }
+  const nueva = (columna === 'Id' && LLAVES[tabla]) || PROPIAS[tabla]?.[columna]?.[0] || FORANEAS[columna] || columna;
+  return [nueva, propiedad, tipo, predeterminado];
+}
+
 /** Una columna: [columna, propiedad del JSON, tipo, valor si falta]. */
-function insertar(tabla, columnas, filas, omitir = []) {
+function insertar(tabla, definiciones, filas, omitir = []) {
+  const columnas = definiciones.map((d) => columnaNueva(tabla, d));
   const conocidas = new Set([...columnas.map(([, propiedad]) => propiedad), ...omitir]);
   const lineas = filas.map((fila) => {
     for (const clave of Object.keys(fila)) {
@@ -245,51 +362,51 @@ function generarDatos() {
       { unidadId, rubroId, subRubroId, tipoDocumentoId, claseDocumentoId, beneficioId, consolidadoId, propuestaId: id, fecha: fechaCreacion }));
 
   const partes = [
-    insertar('PAM_USUARIOS', [...col('Id NombreCompleto Activo:b'), version], usuarios, ['roles']),
-    insertar('PAM_USUARIO_ROLES', col('UsuarioId Rol'), usuarios.flatMap((u) => u.roles.map((rol) => ({ usuarioId: u.id, rol })))),
-    insertar('PAM_UNIDADES', [...col('Id Nombre Orden:n Activo:b'), version], leer('unidades')),
-    insertar('PAM_RUBROS', [...col('Id Nombre Activo:b'), version], leer('rubros')),
-    insertar('PAM_SUB_RUBROS', [...col('Id RubroId Nombre Activo:b'), version], leer('subRubros')),
-    insertar('PAM_CLASES_DOCUMENTO', [...col('Id Nombre Activo:b'), version], leer('clasesDocumento')),
-    insertar('PAM_BENEFICIOS', [...col('Id Nombre Activo:b'), version], leer('beneficios')),
-    insertar('PAM_BLOQUES_DOCUMENTALES', [...col('Id Nombre Titulo Numeracion EsFirmas:b ContextoCampos Descripcion Activo:b'), version], bloques, ['reemplaza']),
-    insertar('PAM_BLOQUE_REEMPLAZOS', col('BloqueId ReemplazaBloqueId'),
+    insertar('SEFH_USUARIOS', [...col('Id NombreCompleto Activo:b'), version], usuarios, ['roles']),
+    insertar('SEFH_USUARIO_ROLES', col('UsuarioId Rol'), usuarios.flatMap((u) => u.roles.map((rol) => ({ usuarioId: u.id, rol })))),
+    insertar('SEFH_UNIDADES', [...col('Id Nombre Orden:n Activo:b'), version], leer('unidades')),
+    insertar('SEFH_RUBROS', [...col('Id Nombre Activo:b'), version], leer('rubros')),
+    insertar('SEFH_SUB_RUBROS', [...col('Id RubroId Nombre Activo:b'), version], leer('subRubros')),
+    insertar('SEFH_CLASES_DOCUMENTO', [...col('Id Nombre Activo:b'), version], leer('clasesDocumento')),
+    insertar('SEFH_BENEFICIOS', [...col('Id Nombre Activo:b'), version], leer('beneficios')),
+    insertar('SEFH_BLOQUES_DOCUMENTALES', [...col('Id Nombre Titulo Numeracion EsFirmas:b ContextoCampos Descripcion Activo:b'), version], bloques, ['reemplaza']),
+    insertar('SEFH_BLOQUE_REEMPLAZOS', col('BloqueId ReemplazaBloqueId'),
       bloques.flatMap((b) => (b.reemplaza ?? []).map((r) => ({ bloqueId: b.id, reemplazaBloqueId: r })))),
-    insertar('PAM_TIPOS_DOCUMENTO', [...col('Id Nombre TextoCorrido:b CopiaDeTipoDocumentoId Activo:b'), version], tipos, ['bloques']),
-    insertar('PAM_TIPO_DOCUMENTO_BLOQUES', col('TipoDocumentoId BloqueId Orden:n Obligatorio:b'),
+    insertar('SEFH_TIPOS_DOCUMENTO', [...col('Id Nombre TextoCorrido:b CopiaDeTipoDocumentoId Activo:b'), version], tipos, ['bloques']),
+    insertar('SEFH_TIPO_DOCUMENTO_BLOQUES', col('TipoDocumentoId BloqueId Orden:n Obligatorio:b'),
       tipos.flatMap((t) => (t.bloques ?? []).map((b) => ({ tipoDocumentoId: t.id, ...b })))),
-    insertar('PAM_CAMPOS', [...col('Id Etiqueta Categoria TipoDato OrigenColeccion OrigenPropiedad Descripcion AlertarCambios:b'), version],
+    insertar('SEFH_CAMPOS', [...col('Id Etiqueta Categoria TipoDato OrigenColeccion OrigenPropiedad Descripcion AlertarCambios:b'), version],
       campos.map(({ origen, ...c }) => ({ ...c, origenColeccion: origen.coleccion, origenPropiedad: origen.propiedad })), ['contextos']),
-    insertar('PAM_CAMPO_CONTEXTOS', col('CampoId Contexto'), campos.flatMap((c) => c.contextos.map((contexto) => ({ campoId: c.id, contexto })))),
-    insertar('PAM_ARCHIVOS', [...col('Id NombreOriginal TipoContenido Tamano:n Sha256 FechaCarga'), version], leer('archivos')),
-    insertar('PAM_PLANTILLAS',
+    insertar('SEFH_CAMPO_CONTEXTOS', col('CampoId Contexto'), campos.flatMap((c) => c.contextos.map((contexto) => ({ campoId: c.id, contexto })))),
+    insertar('SEFH_ARCHIVOS', [...col('Id NombreOriginal TipoContenido Tamano:n Sha256 FechaCarga'), version], leer('archivos')),
+    insertar('SEFH_PLANTILLAS',
       [...col('Id Nombre NombreReferencia UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o Estado:t:Borrador Descripcion LogoId AlineacionLogo:t:Centro PiePagina EspacioFirmasCm:n:1.2 FechaModificacion'), version],
       leer('plantillas')),
-    insertar('PAM_PARRAFOS',
+    insertar('SEFH_PARRAFOS',
       [...col('Id PlantillaId Seccion Orden:n Contenido:j Activo:b MostrarSoloSiCumple:b UnirConAnterior:b EsTitulo:b Condicion:j OrigenParrafoId FechaModificacion'),
         ['CamposUsados', 'camposUsados', 'j', []], version],
       leer('parrafos')),
-    insertar('PAM_SECUENCIAS_PLAN', col('Anio:n Ultimo:n'), secuencias),
-    insertar('PAM_PLANTILLAS_CONSOLIDADOS',
+    insertar('SEFH_SECUENCIAS_PLAN', col('Anio:n Ultimo:n'), secuencias),
+    insertar('SEFH_PLANTILLAS_DOC_CAB',
       [...col('Id Numero Anio:n Secuencia:n Estado UnidadId AnalistaId FechaCreacion FechaActualizacion NumeroPresentacion:n FechaEnvio EnviadoPor RevisorId FechaRevision AprobadorId FechaAprobacion'), version],
       consolidados),
-    insertar('PAM_VERSIONES_PLANTILLA',
+    insertar('SEFH_PLANTILLAS_CONSOLIDADO',
       [...col('Id PlantillaId NumeroVersion:n Vigencia Contenido:j Huella VersionAnteriorId ConsolidadoId CargaInicial:b PublicadaPor FechaPublicacion InicioVigencia FinVigencia'), version],
       versiones),
-    insertar('PAM_PLANTILLA_DOC',
+    insertar('SEFH_PLANTILLA_DOC',
       [...col('Id ConsolidadoId Operacion UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o Nombre NombreReferencia PlantillaId VersionOrigenId HuellaOrigen ContenidoPropuesto:j DerivadaDePropuestaId Retirada:b MotivoRetiro FechaCreacion FechaModificacion'), version],
       propuestas),
-    insertar('PAM_BLOQUEOS_PLANTILLA', col('UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o ConsolidadoId PropuestaId Fecha'), bloqueos),
-    insertar('PAM_PRESENTACIONES', [...col('Id ConsolidadoId Numero:n Usuario Fecha CantidadPlantillas:n HuellaIntegridad Propuestas:j'), version], leer('presentaciones')),
-    insertar('PAM_DEVOLUCIONES', [...col('Id ConsolidadoId NumeroPresentacion:n Usuario Fecha Justificacion'), version], devoluciones, ['observaciones']),
-    insertar('PAM_OBSERVACIONES', col('DevolucionId Orden:n PropuestaId BloqueCodigo ParrafoId Problema Recomendacion'),
+    insertar('SEFH_BLOQUEOS_PLANTILLA', col('UnidadId RubroId SubRubroId TipoDocumentoId:o ClaseDocumentoId:o BeneficioId:o ConsolidadoId PropuestaId Fecha'), bloqueos),
+    insertar('SEFH_PRESENTACIONES', [...col('Id ConsolidadoId Numero:n Usuario Fecha CantidadPlantillas:n HuellaIntegridad Propuestas:j'), version], leer('presentaciones')),
+    insertar('SEFH_DEVOLUCIONES', [...col('Id ConsolidadoId NumeroPresentacion:n Usuario Fecha Justificacion'), version], devoluciones, ['observaciones']),
+    insertar('SEFH_OBSERVACIONES', col('DevolucionId Orden:n PropuestaId BloqueCodigo ParrafoId Problema Recomendacion'),
       devoluciones.flatMap((d) => (d.observaciones ?? []).map((o, i) => ({ ...o, devolucionId: d.id, orden: i + 1 })))),
-    insertar('PAM_MOVIMIENTOS', [...col('Id ConsolidadoId Tipo Usuario Fecha EstadoOrigen EstadoDestino NumeroPresentacion:n Detalle'), version], leer('movimientos')),
-    insertar('PAM_HISTORIAL', [...col('Id Fecha Usuario Coleccion EntidadId Accion VersionEntidad:n Anterior:j Nuevo:j'), version], leer('historial')),
-    insertar('PAM_SOLICITUDES',
+    insertar('SEFH_MOVIMIENTOS', [...col('Id ConsolidadoId Tipo Usuario Fecha EstadoOrigen EstadoDestino NumeroPresentacion:n Detalle'), version], leer('movimientos')),
+    insertar('SEFH_HISTORIAL', [...col('Id Fecha Usuario Coleccion EntidadId Accion VersionEntidad:n Anterior:j Nuevo:j'), version], leer('historial')),
+    insertar('SEFH_SOLICITUDES',
       [...col('Id NumeroSolicitud Operador Beneficiario RubroId SubRubroId TipoBeneficio Estado FechaResolucion AnioGestion:n MontoExoneracion:n UnidadEjecutora Departamento Municipio EsDatoPrueba:b'), version],
       leer('solicitudes')),
-    insertar('PAM_DETALLES_BIENES',
+    insertar('SEFH_DETALLES_BIENES',
       [...col('Id SolicitudId CodigoArancelario Descripcion UnidadMedida Cantidad:n ValorEstimado:n DescripcionArancelaria MontoAutorizado:n EsDatoPrueba:b'), version],
       leer('detallesBienes')),
   ];
@@ -297,10 +414,10 @@ function generarDatos() {
   const resumen = conteos.map(([t, n]) => `SELECT N'${t}' AS Tabla, ${n} AS Esperadas, COUNT(*) AS Cargadas FROM dbo.${t}`).join('\nUNION ALL ');
 
   return `/* =====================================================================================================================
-   Sistema de Gestión de Plantillas DGEFFA — Datos de las tablas PAM_*
+   Sistema de Gestión de Plantillas DGEFFA — Datos de las tablas SEFH_*
    ---------------------------------------------------------------------------------------------------------------------
-   Generado por generar-pam.js a partir de los archivos JSON en uso (backend/EditorResoluciones.Api/Data).
-   Todos los datos son ficticios, de prueba. Ejecute antes 01-PAM-esquema.sql.
+   Generado por generar-sefh.js a partir de los archivos JSON en uso (backend/EditorResoluciones.Api/Data).
+   Todos los datos son ficticios, de prueba. Ejecute antes 01-SEFH-esquema.sql.
    Es una sola transacción: si una fila falla, no se carga nada. Al final muestra las filas esperadas y las cargadas.
    ===================================================================================================================== */
 
@@ -318,8 +435,8 @@ ${resumen};
 `;
 }
 
-escribir('01-PAM-esquema.sql', generarEsquema());
-escribir('02-PAM-datos.sql', generarDatos());
+escribir('01-SEFH-esquema.sql', generarEsquema());
+escribir('02-SEFH-datos.sql', generarDatos());
 for (const [tabla, filas] of conteos) {
   console.log(tabla.padEnd(30), filas);
 }

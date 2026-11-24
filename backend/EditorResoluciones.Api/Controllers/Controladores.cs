@@ -162,7 +162,7 @@ public sealed class HistorialController(IRepositorio<RegistroHistorial> reposito
     }
 }
 
-/// <summary>Diagnóstico del almacenamiento de prueba.</summary>
+/// <summary>Diagnóstico del almacenamiento: cuál se usa y qué colecciones se pueden leer.</summary>
 [ApiController]
 [Route("api/salud")]
 public sealed class SaludController(IDiagnosticoAlmacenamiento diagnostico) : ControllerBase
@@ -174,7 +174,7 @@ public sealed class SaludController(IDiagnosticoAlmacenamiento diagnostico) : Co
         return Ok(new
         {
             estado = colecciones.All(c => c.Disponible) ? "correcto" : "con errores",
-            almacenamiento = "Archivos JSON (datos de prueba, sin base de datos)",
+            almacenamiento = diagnostico.Descripcion,
             colecciones,
         });
     }

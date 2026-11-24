@@ -40,5 +40,8 @@ public sealed record EstadoColeccion(string Nombre, bool Disponible, int Registr
 /// <summary>Diagnóstico del almacenamiento (qué colecciones se pueden leer).</summary>
 public interface IDiagnosticoAlmacenamiento
 {
+    /// <summary>Qué almacenamiento se usa, para mostrarlo en el diagnóstico.</summary>
+    string Descripcion { get; }
+
     Task<IReadOnlyList<EstadoColeccion>> VerificarAsync(CancellationToken ct = default);
 }

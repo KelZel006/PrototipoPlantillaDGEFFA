@@ -41,17 +41,22 @@ public static class Rutas
     /// <summary>Copia fija de los datos de prueba que usan las pruebas de comportamiento (no cambia con el uso).</summary>
     public static string DatosPrueba { get; } = Path.Combine(AppContext.BaseDirectory, "DatosPrueba");
 
-    private static string BuscarDatosSemilla()
+    /// <summary>Scripts de SQL Server con las tablas SEFH_ y sus datos (database/sqlserver-sefh).</summary>
+    public static string ScriptsSefh => Buscar(Path.Combine("database", "sqlserver-sefh"));
+
+    private static string BuscarDatosSemilla() => Buscar(Path.Combine("EditorResoluciones.Api", "DatosSemilla"));
+
+    private static string Buscar(string relativa)
     {
         var carpeta = new DirectoryInfo(AppContext.BaseDirectory);
         while (carpeta is not null)
         {
-            var candidata = Path.Combine(carpeta.FullName, "EditorResoluciones.Api", "DatosSemilla");
+            var candidata = Path.Combine(carpeta.FullName, relativa);
             if (Directory.Exists(candidata))
                 return candidata;
             carpeta = carpeta.Parent;
         }
-        throw new DirectoryNotFoundException("No se encontró la carpeta DatosSemilla.");
+        throw new DirectoryNotFoundException($"No se encontró la carpeta {relativa}.");
     }
 
     public static AlmacenJson CrearAlmacen(string directorio, string? semilla = null) =>
@@ -68,6 +73,8 @@ public sealed class FabricaApi(string directorioDatos, string? semilla = null, T
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        // Las pruebas no dependen de una base instalada: usan una copia propia de los datos en archivos JSON.
+        builder.UseSetting("Almacenamiento:Proveedor", "Json");
         builder.UseSetting("AlmacenJson:Directorio", directorioDatos);
         builder.UseSetting("AlmacenJson:DirectorioSemilla", semilla ?? Rutas.DatosPrueba);
         if (reloj is not null)
