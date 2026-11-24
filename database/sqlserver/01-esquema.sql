@@ -222,7 +222,7 @@ CREATE TABLE plantillas.Plantillas (
     CONSTRAINT UQ_Plantillas_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId, BeneficioId)
 );
 
-CREATE TABLE plantillas.VersionesPlantilla (
+CREATE TABLE plantillas.PlantillasConsolidado (
     Id                  varchar(40)     NOT NULL,
     PlantillaId         varchar(40)     NOT NULL,
     NumeroVersion       int             NOT NULL,
@@ -231,26 +231,26 @@ CREATE TABLE plantillas.VersionesPlantilla (
     Huella              char(64)        NOT NULL,       -- SHA-256 del contenido
     VersionAnteriorId   varchar(40)     NULL,
     ConsolidadoId       varchar(40)     NULL,           -- documento que la originó; nulo en la carga inicial
-    CargaInicial        bit             NOT NULL CONSTRAINT DF_VersionesPlantilla_CargaInicial DEFAULT (0),
+    CargaInicial        bit             NOT NULL CONSTRAINT DF_PlantillasConsolidado_CargaInicial DEFAULT (0),
     PublicadaPor        varchar(60)     NOT NULL,
     FechaPublicacion    datetimeoffset(7) NOT NULL,
     InicioVigencia      datetimeoffset(7) NOT NULL,
     FinVigencia         datetimeoffset(7) NULL,
-    Version             int             NOT NULL CONSTRAINT DF_VersionesPlantilla_Version DEFAULT (1),
-    CONSTRAINT PK_VersionesPlantilla PRIMARY KEY (Id),
-    CONSTRAINT FK_VersionesPlantilla_Plantilla FOREIGN KEY (PlantillaId) REFERENCES plantillas.Plantillas (Id),
-    CONSTRAINT FK_VersionesPlantilla_Anterior FOREIGN KEY (VersionAnteriorId) REFERENCES plantillas.VersionesPlantilla (Id),
-    CONSTRAINT UQ_VersionesPlantilla_Numero UNIQUE (PlantillaId, NumeroVersion),
-    CONSTRAINT CK_VersionesPlantilla_Vigencia CHECK (Vigencia IN ('Vigente', 'NoVigente')),
-    CONSTRAINT CK_VersionesPlantilla_Contenido CHECK (ISJSON(Contenido) = 1),
-    CONSTRAINT CK_VersionesPlantilla_Numero CHECK (NumeroVersion >= 1),
+    Version             int             NOT NULL CONSTRAINT DF_PlantillasConsolidado_Version DEFAULT (1),
+    CONSTRAINT PK_PlantillasConsolidado PRIMARY KEY (Id),
+    CONSTRAINT FK_PlantillasConsolidado_Plantilla FOREIGN KEY (PlantillaId) REFERENCES plantillas.Plantillas (Id),
+    CONSTRAINT FK_PlantillasConsolidado_Anterior FOREIGN KEY (VersionAnteriorId) REFERENCES plantillas.PlantillasConsolidado (Id),
+    CONSTRAINT UQ_PlantillasConsolidado_Numero UNIQUE (PlantillaId, NumeroVersion),
+    CONSTRAINT CK_PlantillasConsolidado_Vigencia CHECK (Vigencia IN ('Vigente', 'NoVigente')),
+    CONSTRAINT CK_PlantillasConsolidado_Contenido CHECK (ISJSON(Contenido) = 1),
+    CONSTRAINT CK_PlantillasConsolidado_Numero CHECK (NumeroVersion >= 1),
     -- Una versión vigente no tiene fin de vigencia; una no vigente sí.
-    CONSTRAINT CK_VersionesPlantilla_Fin CHECK ((Vigencia = 'Vigente' AND FinVigencia IS NULL) OR (Vigencia = 'NoVigente' AND FinVigencia IS NOT NULL)),
-    CONSTRAINT CK_VersionesPlantilla_Origen CHECK (CargaInicial = 1 OR ConsolidadoId IS NOT NULL)
+    CONSTRAINT CK_PlantillasConsolidado_Fin CHECK ((Vigencia = 'Vigente' AND FinVigencia IS NULL) OR (Vigencia = 'NoVigente' AND FinVigencia IS NOT NULL)),
+    CONSTRAINT CK_PlantillasConsolidado_Origen CHECK (CargaInicial = 1 OR ConsolidadoId IS NOT NULL)
 );
 
 -- Regla 14: como máximo una versión vigente por plantilla, garantizado por el motor.
-CREATE UNIQUE INDEX UX_VersionesPlantilla_Vigente ON plantillas.VersionesPlantilla (PlantillaId) WHERE Vigencia = 'Vigente';
+CREATE UNIQUE INDEX UX_PlantillasConsolidado_Vigente ON plantillas.PlantillasConsolidado (PlantillaId) WHERE Vigencia = 'Vigente';
 
 /* ---------------------------------------------------------------------------------------------------------------------
    5. Documento Consolidado (PLAN-AAAANNNN)
@@ -263,45 +263,45 @@ CREATE TABLE plantillas.SecuenciasPlan (
     CONSTRAINT CK_SecuenciasPlan_Ultimo CHECK (Ultimo BETWEEN 0 AND 9999)
 );
 
-CREATE TABLE plantillas.Consolidados (
+CREATE TABLE plantillas.PlantillasDocCab (
     Id                  varchar(40)     NOT NULL,
     Numero              char(13)        NOT NULL,
     Anio                int             NOT NULL,
     Secuencia           int             NOT NULL,
-    Estado              varchar(12)     NOT NULL CONSTRAINT DF_Consolidados_Estado DEFAULT ('EnRegistro'),
+    Estado              varchar(12)     NOT NULL CONSTRAINT DF_PlantillasDocCab_Estado DEFAULT ('EnRegistro'),
     UnidadId            varchar(40)     NOT NULL,       -- solo contiene plantillas de su unidad
     AnalistaId          varchar(60)     NOT NULL,
     FechaCreacion       datetimeoffset(7) NOT NULL,
     FechaActualizacion  datetimeoffset(7) NOT NULL,
-    NumeroPresentacion  int             NOT NULL CONSTRAINT DF_Consolidados_NumeroPresentacion DEFAULT (0),
+    NumeroPresentacion  int             NOT NULL CONSTRAINT DF_PlantillasDocCab_NumeroPresentacion DEFAULT (0),
     FechaEnvio          datetimeoffset(7) NULL,
     EnviadoPor          varchar(60)     NULL,
     RevisorId           varchar(60)     NULL,
     FechaRevision       datetimeoffset(7) NULL,
     AprobadorId         varchar(60)     NULL,
     FechaAprobacion     datetimeoffset(7) NULL,
-    Version             int             NOT NULL CONSTRAINT DF_Consolidados_Version DEFAULT (1),
-    CONSTRAINT PK_Consolidados PRIMARY KEY (Id),
-    CONSTRAINT UQ_Consolidados_Numero UNIQUE (Numero),
-    CONSTRAINT UQ_Consolidados_Secuencia UNIQUE (Anio, Secuencia),
-    CONSTRAINT FK_Consolidados_Unidad FOREIGN KEY (UnidadId) REFERENCES plantillas.Unidades (Id),
-    CONSTRAINT FK_Consolidados_Analista FOREIGN KEY (AnalistaId) REFERENCES plantillas.Usuarios (Id),
-    CONSTRAINT FK_Consolidados_EnviadoPor FOREIGN KEY (EnviadoPor) REFERENCES plantillas.Usuarios (Id),
-    CONSTRAINT FK_Consolidados_Revisor FOREIGN KEY (RevisorId) REFERENCES plantillas.Usuarios (Id),
-    CONSTRAINT FK_Consolidados_Aprobador FOREIGN KEY (AprobadorId) REFERENCES plantillas.Usuarios (Id),
-    CONSTRAINT CK_Consolidados_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
-    CONSTRAINT CK_Consolidados_Secuencia CHECK (Secuencia BETWEEN 1 AND 9999),
-    CONSTRAINT CK_Consolidados_Anio CHECK (Anio BETWEEN 2000 AND 2999),
+    Version             int             NOT NULL CONSTRAINT DF_PlantillasDocCab_Version DEFAULT (1),
+    CONSTRAINT PK_PlantillasDocCab PRIMARY KEY (Id),
+    CONSTRAINT UQ_PlantillasDocCab_Numero UNIQUE (Numero),
+    CONSTRAINT UQ_PlantillasDocCab_Secuencia UNIQUE (Anio, Secuencia),
+    CONSTRAINT FK_PlantillasDocCab_Unidad FOREIGN KEY (UnidadId) REFERENCES plantillas.Unidades (Id),
+    CONSTRAINT FK_PlantillasDocCab_Analista FOREIGN KEY (AnalistaId) REFERENCES plantillas.Usuarios (Id),
+    CONSTRAINT FK_PlantillasDocCab_EnviadoPor FOREIGN KEY (EnviadoPor) REFERENCES plantillas.Usuarios (Id),
+    CONSTRAINT FK_PlantillasDocCab_Revisor FOREIGN KEY (RevisorId) REFERENCES plantillas.Usuarios (Id),
+    CONSTRAINT FK_PlantillasDocCab_Aprobador FOREIGN KEY (AprobadorId) REFERENCES plantillas.Usuarios (Id),
+    CONSTRAINT CK_PlantillasDocCab_Estado CHECK (Estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
+    CONSTRAINT CK_PlantillasDocCab_Secuencia CHECK (Secuencia BETWEEN 1 AND 9999),
+    CONSTRAINT CK_PlantillasDocCab_Anio CHECK (Anio BETWEEN 2000 AND 2999),
     -- El número se deriva del año y la secuencia: PLAN-20260001.
-    CONSTRAINT CK_Consolidados_Numero CHECK (Numero = CONCAT('PLAN-', Anio, RIGHT(CONCAT('000', Secuencia), 4))),
+    CONSTRAINT CK_PlantillasDocCab_Numero CHECK (Numero = CONCAT('PLAN-', Anio, RIGHT(CONCAT('000', Secuencia), 4))),
     -- Lo aprobado tiene aprobador y fecha, y nunca lo aprueba quien lo preparó (separación de funciones).
-    CONSTRAINT CK_Consolidados_Aprobacion CHECK (Estado <> 'Aprobado' OR (AprobadorId IS NOT NULL AND FechaAprobacion IS NOT NULL)),
-    CONSTRAINT CK_Consolidados_Separacion CHECK (AprobadorId IS NULL OR (AprobadorId <> AnalistaId AND (EnviadoPor IS NULL OR AprobadorId <> EnviadoPor)))
+    CONSTRAINT CK_PlantillasDocCab_Aprobacion CHECK (Estado <> 'Aprobado' OR (AprobadorId IS NOT NULL AND FechaAprobacion IS NOT NULL)),
+    CONSTRAINT CK_PlantillasDocCab_Separacion CHECK (AprobadorId IS NULL OR (AprobadorId <> AnalistaId AND (EnviadoPor IS NULL OR AprobadorId <> EnviadoPor)))
 );
 
-CREATE INDEX IX_Consolidados_Bandeja ON plantillas.Consolidados (UnidadId, Estado, AnalistaId) INCLUDE (Numero, FechaActualizacion);
+CREATE INDEX IX_PlantillasDocCab_Bandeja ON plantillas.PlantillasDocCab (UnidadId, Estado, AnalistaId) INCLUDE (Numero, FechaActualizacion);
 
-CREATE TABLE plantillas.Propuestas (
+CREATE TABLE plantillas.PlantillaDoc (
     Id                      varchar(40)     NOT NULL,
     ConsolidadoId           varchar(40)     NOT NULL,
     Operacion               varchar(10)     NOT NULL,
@@ -317,32 +317,32 @@ CREATE TABLE plantillas.Propuestas (
     HuellaOrigen            char(64)        NULL,
     ContenidoPropuesto      nvarchar(max)   NOT NULL,   -- JSON con el mismo formato del contenido de una versión
     DerivadaDePropuestaId   varchar(40)     NULL,       -- Certificación derivada de su Resolución (D3)
-    Retirada                bit             NOT NULL CONSTRAINT DF_Propuestas_Retirada DEFAULT (0),
+    Retirada                bit             NOT NULL CONSTRAINT DF_PlantillaDoc_Retirada DEFAULT (0),
     MotivoRetiro            nvarchar(500)   NULL,
     FechaCreacion           datetimeoffset(7) NOT NULL,
     FechaModificacion       datetimeoffset(7) NOT NULL,
-    Version                 int             NOT NULL CONSTRAINT DF_Propuestas_Version DEFAULT (1),
-    CONSTRAINT PK_Propuestas PRIMARY KEY (Id),
-    CONSTRAINT FK_Propuestas_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
-    CONSTRAINT FK_Propuestas_Unidad FOREIGN KEY (UnidadId) REFERENCES plantillas.Unidades (Id),
-    CONSTRAINT FK_Propuestas_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES plantillas.SubRubros (RubroId, Id),
-    CONSTRAINT FK_Propuestas_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES plantillas.TiposDocumento (Id),
-    CONSTRAINT FK_Propuestas_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES plantillas.ClasesDocumento (Id),
-    CONSTRAINT FK_Propuestas_Beneficio FOREIGN KEY (BeneficioId) REFERENCES plantillas.Beneficios (Id),
-    CONSTRAINT FK_Propuestas_Plantilla FOREIGN KEY (PlantillaId) REFERENCES plantillas.Plantillas (Id),
-    CONSTRAINT FK_Propuestas_VersionOrigen FOREIGN KEY (VersionOrigenId) REFERENCES plantillas.VersionesPlantilla (Id),
-    CONSTRAINT FK_Propuestas_Derivada FOREIGN KEY (DerivadaDePropuestaId) REFERENCES plantillas.Propuestas (Id),
-    CONSTRAINT CK_Propuestas_Operacion CHECK (Operacion IN ('Crear', 'Modificar')),
-    CONSTRAINT CK_Propuestas_Contenido CHECK (ISJSON(ContenidoPropuesto) = 1),
-    CONSTRAINT CK_Propuestas_Modificar CHECK (Operacion <> 'Modificar' OR (PlantillaId IS NOT NULL AND VersionOrigenId IS NOT NULL)),
-    CONSTRAINT CK_Propuestas_Retiro CHECK (Retirada = 0 OR (MotivoRetiro IS NOT NULL AND LEN(MotivoRetiro) >= 5))
+    Version                 int             NOT NULL CONSTRAINT DF_PlantillaDoc_Version DEFAULT (1),
+    CONSTRAINT PK_PlantillaDoc PRIMARY KEY (Id),
+    CONSTRAINT FK_PlantillaDoc_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.PlantillasDocCab (Id),
+    CONSTRAINT FK_PlantillaDoc_Unidad FOREIGN KEY (UnidadId) REFERENCES plantillas.Unidades (Id),
+    CONSTRAINT FK_PlantillaDoc_SubRubro FOREIGN KEY (RubroId, SubRubroId) REFERENCES plantillas.SubRubros (RubroId, Id),
+    CONSTRAINT FK_PlantillaDoc_Tipo FOREIGN KEY (TipoDocumentoId) REFERENCES plantillas.TiposDocumento (Id),
+    CONSTRAINT FK_PlantillaDoc_Clase FOREIGN KEY (ClaseDocumentoId) REFERENCES plantillas.ClasesDocumento (Id),
+    CONSTRAINT FK_PlantillaDoc_Beneficio FOREIGN KEY (BeneficioId) REFERENCES plantillas.Beneficios (Id),
+    CONSTRAINT FK_PlantillaDoc_Plantilla FOREIGN KEY (PlantillaId) REFERENCES plantillas.Plantillas (Id),
+    CONSTRAINT FK_PlantillaDoc_VersionOrigen FOREIGN KEY (VersionOrigenId) REFERENCES plantillas.PlantillasConsolidado (Id),
+    CONSTRAINT FK_PlantillaDoc_Derivada FOREIGN KEY (DerivadaDePropuestaId) REFERENCES plantillas.PlantillaDoc (Id),
+    CONSTRAINT CK_PlantillaDoc_Operacion CHECK (Operacion IN ('Crear', 'Modificar')),
+    CONSTRAINT CK_PlantillaDoc_Contenido CHECK (ISJSON(ContenidoPropuesto) = 1),
+    CONSTRAINT CK_PlantillaDoc_Modificar CHECK (Operacion <> 'Modificar' OR (PlantillaId IS NOT NULL AND VersionOrigenId IS NOT NULL)),
+    CONSTRAINT CK_PlantillaDoc_Retiro CHECK (Retirada = 0 OR (MotivoRetiro IS NOT NULL AND LEN(MotivoRetiro) >= 5))
 );
 
-CREATE INDEX IX_Propuestas_Consolidado ON plantillas.Propuestas (ConsolidadoId);
-CREATE INDEX IX_Propuestas_Plantilla ON plantillas.Propuestas (PlantillaId) WHERE PlantillaId IS NOT NULL;
+CREATE INDEX IX_PlantillaDoc_Consolidado ON plantillas.PlantillaDoc (ConsolidadoId);
+CREATE INDEX IX_PlantillaDoc_Plantilla ON plantillas.PlantillaDoc (PlantillaId) WHERE PlantillaId IS NOT NULL;
 
-ALTER TABLE plantillas.VersionesPlantilla
-    ADD CONSTRAINT FK_VersionesPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id);
+ALTER TABLE plantillas.PlantillasConsolidado
+    ADD CONSTRAINT FK_PlantillasConsolidado_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.PlantillasDocCab (Id);
 
 -- D4: una plantilla (por su identidad funcional) solo puede estar en un documento abierto. La aplicación inserta la
 -- fila al agregar la propuesta y la borra al retirarla o al aprobar el documento.
@@ -358,8 +358,8 @@ CREATE TABLE plantillas.BloqueosPlantilla (
     Fecha               datetimeoffset(7) NOT NULL,
     CONSTRAINT PK_BloqueosPlantilla PRIMARY KEY (PropuestaId),
     CONSTRAINT UQ_BloqueosPlantilla_Identidad UNIQUE (UnidadId, RubroId, SubRubroId, TipoDocumentoId, ClaseDocumentoId, BeneficioId),
-    CONSTRAINT FK_BloqueosPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
-    CONSTRAINT FK_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.Propuestas (Id)
+    CONSTRAINT FK_BloqueosPlantilla_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.PlantillasDocCab (Id),
+    CONSTRAINT FK_BloqueosPlantilla_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.PlantillaDoc (Id)
 );
 
 -- Cada envío a verificación, con la copia congelada de lo enviado y su huella de integridad.
@@ -374,7 +374,7 @@ CREATE TABLE plantillas.Presentaciones (
     Propuestas          nvarchar(max)   NOT NULL,       -- JSON: arreglo de las propuestas tal como se enviaron
     Version             int             NOT NULL CONSTRAINT DF_Presentaciones_Version DEFAULT (1),
     CONSTRAINT PK_Presentaciones PRIMARY KEY (Id),
-    CONSTRAINT FK_Presentaciones_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
+    CONSTRAINT FK_Presentaciones_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.PlantillasDocCab (Id),
     CONSTRAINT FK_Presentaciones_Usuario FOREIGN KEY (Usuario) REFERENCES plantillas.Usuarios (Id),
     CONSTRAINT UQ_Presentaciones_Numero UNIQUE (ConsolidadoId, Numero),
     CONSTRAINT CK_Presentaciones_Numero CHECK (Numero >= 1),
@@ -408,7 +408,7 @@ CREATE TABLE plantillas.Observaciones (
     Recomendacion       nvarchar(2000)  NULL,
     CONSTRAINT PK_Observaciones PRIMARY KEY (Id),
     CONSTRAINT FK_Observaciones_Devolucion FOREIGN KEY (DevolucionId) REFERENCES plantillas.Devoluciones (Id),
-    CONSTRAINT FK_Observaciones_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.Propuestas (Id),
+    CONSTRAINT FK_Observaciones_Propuesta FOREIGN KEY (PropuestaId) REFERENCES plantillas.PlantillaDoc (Id),
     CONSTRAINT UQ_Observaciones_Orden UNIQUE (DevolucionId, Orden)
 );
 
@@ -427,7 +427,7 @@ CREATE TABLE plantillas.Movimientos (
     Detalle             nvarchar(1000)  NOT NULL,
     Version             int             NOT NULL CONSTRAINT DF_Movimientos_Version DEFAULT (1),
     CONSTRAINT PK_Movimientos PRIMARY KEY (Id),
-    CONSTRAINT FK_Movimientos_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.Consolidados (Id),
+    CONSTRAINT FK_Movimientos_Consolidado FOREIGN KEY (ConsolidadoId) REFERENCES plantillas.PlantillasDocCab (Id),
     CONSTRAINT CK_Movimientos_Tipo CHECK (Tipo IN ('Creacion', 'PropuestaAgregada', 'PropuestaModificada', 'PropuestaRetirada',
         'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion', 'Eliminacion')),
     CONSTRAINT CK_Movimientos_EstadoOrigen CHECK (EstadoOrigen IS NULL OR EstadoOrigen IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
@@ -544,7 +544,7 @@ END;
 GO
 
 -- Una versión publicada no se elimina, y de ella solo cambian la vigencia, el fin de vigencia y la versión de registro.
-CREATE OR ALTER TRIGGER plantillas.TR_VersionesPlantilla_Inmutable ON plantillas.VersionesPlantilla AFTER UPDATE, DELETE AS
+CREATE OR ALTER TRIGGER plantillas.TR_PlantillasConsolidado_Inmutable ON plantillas.PlantillasConsolidado AFTER UPDATE, DELETE AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM inserted)
@@ -569,7 +569,7 @@ END;
 GO
 
 -- Un documento aprobado no cambia de estado ni se elimina; un documento solo se elimina si nunca se envió.
-CREATE OR ALTER TRIGGER plantillas.TR_Consolidados_Aprobado ON plantillas.Consolidados AFTER UPDATE, DELETE AS
+CREATE OR ALTER TRIGGER plantillas.TR_PlantillasDocCab_Aprobado ON plantillas.PlantillasDocCab AFTER UPDATE, DELETE AS
 BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM deleted d LEFT JOIN inserted i ON i.Id = d.Id
@@ -593,6 +593,6 @@ DENY UPDATE, DELETE ON plantillas.Movimientos TO rol_editor_plantillas;
 DENY UPDATE, DELETE ON plantillas.Presentaciones TO rol_editor_plantillas;
 DENY UPDATE, DELETE ON plantillas.Devoluciones TO rol_editor_plantillas;
 DENY UPDATE, DELETE ON plantillas.Observaciones TO rol_editor_plantillas;
-DENY DELETE ON plantillas.VersionesPlantilla TO rol_editor_plantillas;
+DENY DELETE ON plantillas.PlantillasConsolidado TO rol_editor_plantillas;
 -- ALTER ROLE rol_editor_plantillas ADD MEMBER [usuario_de_la_aplicacion];
 GO

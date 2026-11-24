@@ -218,7 +218,7 @@ CREATE TABLE plantillas (
 CREATE UNIQUE INDEX uq_plantillas_identidad ON plantillas
     (unidad_id, rubro_id, sub_rubro_id, COALESCE(tipo_documento_id, ''), COALESCE(clase_documento_id, ''), COALESCE(beneficio_id, ''));
 
-CREATE TABLE versiones_plantilla (
+CREATE TABLE plantillas_consolidado (
     id                  varchar(40)     NOT NULL,
     plantilla_id        varchar(40)     NOT NULL,
     numero_version      integer         NOT NULL,
@@ -233,20 +233,20 @@ CREATE TABLE versiones_plantilla (
     inicio_vigencia     timestamptz     NOT NULL,
     fin_vigencia        timestamptz,
     version             integer         NOT NULL DEFAULT 1,
-    CONSTRAINT pk_versiones_plantilla PRIMARY KEY (id),
-    CONSTRAINT fk_versiones_plantilla_plantilla FOREIGN KEY (plantilla_id) REFERENCES plantillas (id),
-    CONSTRAINT fk_versiones_plantilla_anterior FOREIGN KEY (version_anterior_id) REFERENCES versiones_plantilla (id),
-    CONSTRAINT uq_versiones_plantilla_numero UNIQUE (plantilla_id, numero_version),
-    CONSTRAINT ck_versiones_plantilla_vigencia CHECK (vigencia IN ('Vigente', 'NoVigente')),
-    CONSTRAINT ck_versiones_plantilla_contenido CHECK (jsonb_typeof(contenido) = 'object'),
-    CONSTRAINT ck_versiones_plantilla_numero CHECK (numero_version >= 1),
+    CONSTRAINT pk_plantillas_consolidado PRIMARY KEY (id),
+    CONSTRAINT fk_plantillas_consolidado_plantilla FOREIGN KEY (plantilla_id) REFERENCES plantillas (id),
+    CONSTRAINT fk_plantillas_consolidado_anterior FOREIGN KEY (version_anterior_id) REFERENCES plantillas_consolidado (id),
+    CONSTRAINT uq_plantillas_consolidado_numero UNIQUE (plantilla_id, numero_version),
+    CONSTRAINT ck_plantillas_consolidado_vigencia CHECK (vigencia IN ('Vigente', 'NoVigente')),
+    CONSTRAINT ck_plantillas_consolidado_contenido CHECK (jsonb_typeof(contenido) = 'object'),
+    CONSTRAINT ck_plantillas_consolidado_numero CHECK (numero_version >= 1),
     -- Una versión vigente no tiene fin de vigencia; una no vigente sí.
-    CONSTRAINT ck_versiones_plantilla_fin CHECK ((vigencia = 'Vigente' AND fin_vigencia IS NULL) OR (vigencia = 'NoVigente' AND fin_vigencia IS NOT NULL)),
-    CONSTRAINT ck_versiones_plantilla_origen CHECK (carga_inicial OR consolidado_id IS NOT NULL)
+    CONSTRAINT ck_plantillas_consolidado_fin CHECK ((vigencia = 'Vigente' AND fin_vigencia IS NULL) OR (vigencia = 'NoVigente' AND fin_vigencia IS NOT NULL)),
+    CONSTRAINT ck_plantillas_consolidado_origen CHECK (carga_inicial OR consolidado_id IS NOT NULL)
 );
 
 -- Regla 14: como máximo una versión vigente por plantilla, garantizado por el motor.
-CREATE UNIQUE INDEX ux_versiones_plantilla_vigente ON versiones_plantilla (plantilla_id) WHERE vigencia = 'Vigente';
+CREATE UNIQUE INDEX ux_plantillas_consolidado_vigente ON plantillas_consolidado (plantilla_id) WHERE vigencia = 'Vigente';
 
 /* ---------------------------------------------------------------------------------------------------------------------
    5. Documento Consolidado (PLAN-AAAANNNN)
@@ -260,7 +260,7 @@ CREATE TABLE secuencias_plan (
     CONSTRAINT ck_secuencias_plan_ultimo CHECK (ultimo BETWEEN 0 AND 9999)
 );
 
-CREATE TABLE consolidados (
+CREATE TABLE plantillas_doc_cab (
     id                  varchar(40)     NOT NULL,
     numero              char(13)        NOT NULL,
     anio                integer         NOT NULL,
@@ -278,27 +278,27 @@ CREATE TABLE consolidados (
     aprobador_id        varchar(60),
     fecha_aprobacion    timestamptz,
     version             integer         NOT NULL DEFAULT 1,
-    CONSTRAINT pk_consolidados PRIMARY KEY (id),
-    CONSTRAINT uq_consolidados_numero UNIQUE (numero),
-    CONSTRAINT uq_consolidados_secuencia UNIQUE (anio, secuencia),
-    CONSTRAINT fk_consolidados_unidad FOREIGN KEY (unidad_id) REFERENCES unidades (id),
-    CONSTRAINT fk_consolidados_analista FOREIGN KEY (analista_id) REFERENCES usuarios (id),
-    CONSTRAINT fk_consolidados_enviado_por FOREIGN KEY (enviado_por) REFERENCES usuarios (id),
-    CONSTRAINT fk_consolidados_revisor FOREIGN KEY (revisor_id) REFERENCES usuarios (id),
-    CONSTRAINT fk_consolidados_aprobador FOREIGN KEY (aprobador_id) REFERENCES usuarios (id),
-    CONSTRAINT ck_consolidados_estado CHECK (estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
-    CONSTRAINT ck_consolidados_secuencia CHECK (secuencia BETWEEN 1 AND 9999),
-    CONSTRAINT ck_consolidados_anio CHECK (anio BETWEEN 2000 AND 2999),
+    CONSTRAINT pk_plantillas_doc_cab PRIMARY KEY (id),
+    CONSTRAINT uq_plantillas_doc_cab_numero UNIQUE (numero),
+    CONSTRAINT uq_plantillas_doc_cab_secuencia UNIQUE (anio, secuencia),
+    CONSTRAINT fk_plantillas_doc_cab_unidad FOREIGN KEY (unidad_id) REFERENCES unidades (id),
+    CONSTRAINT fk_plantillas_doc_cab_analista FOREIGN KEY (analista_id) REFERENCES usuarios (id),
+    CONSTRAINT fk_plantillas_doc_cab_enviado_por FOREIGN KEY (enviado_por) REFERENCES usuarios (id),
+    CONSTRAINT fk_plantillas_doc_cab_revisor FOREIGN KEY (revisor_id) REFERENCES usuarios (id),
+    CONSTRAINT fk_plantillas_doc_cab_aprobador FOREIGN KEY (aprobador_id) REFERENCES usuarios (id),
+    CONSTRAINT ck_plantillas_doc_cab_estado CHECK (estado IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
+    CONSTRAINT ck_plantillas_doc_cab_secuencia CHECK (secuencia BETWEEN 1 AND 9999),
+    CONSTRAINT ck_plantillas_doc_cab_anio CHECK (anio BETWEEN 2000 AND 2999),
     -- El número se deriva del año y la secuencia: PLAN-20260001.
-    CONSTRAINT ck_consolidados_numero CHECK (numero = 'PLAN-' || anio::text || lpad(secuencia::text, 4, '0')),
+    CONSTRAINT ck_plantillas_doc_cab_numero CHECK (numero = 'PLAN-' || anio::text || lpad(secuencia::text, 4, '0')),
     -- Lo aprobado tiene aprobador y fecha, y nunca lo aprueba quien lo preparó (separación de funciones).
-    CONSTRAINT ck_consolidados_aprobacion CHECK (estado <> 'Aprobado' OR (aprobador_id IS NOT NULL AND fecha_aprobacion IS NOT NULL)),
-    CONSTRAINT ck_consolidados_separacion CHECK (aprobador_id IS NULL OR (aprobador_id <> analista_id AND (enviado_por IS NULL OR aprobador_id <> enviado_por)))
+    CONSTRAINT ck_plantillas_doc_cab_aprobacion CHECK (estado <> 'Aprobado' OR (aprobador_id IS NOT NULL AND fecha_aprobacion IS NOT NULL)),
+    CONSTRAINT ck_plantillas_doc_cab_separacion CHECK (aprobador_id IS NULL OR (aprobador_id <> analista_id AND (enviado_por IS NULL OR aprobador_id <> enviado_por)))
 );
 
-CREATE INDEX ix_consolidados_bandeja ON consolidados (unidad_id, estado, analista_id) INCLUDE (numero, fecha_actualizacion);
+CREATE INDEX ix_plantillas_doc_cab_bandeja ON plantillas_doc_cab (unidad_id, estado, analista_id) INCLUDE (numero, fecha_actualizacion);
 
-CREATE TABLE propuestas (
+CREATE TABLE plantilla_doc (
     id                          varchar(40)     NOT NULL,
     consolidado_id              varchar(40)     NOT NULL,
     operacion                   varchar(10)     NOT NULL,
@@ -319,27 +319,27 @@ CREATE TABLE propuestas (
     fecha_creacion              timestamptz     NOT NULL,
     fecha_modificacion          timestamptz     NOT NULL,
     version                     integer         NOT NULL DEFAULT 1,
-    CONSTRAINT pk_propuestas PRIMARY KEY (id),
-    CONSTRAINT fk_propuestas_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
-    CONSTRAINT fk_propuestas_unidad FOREIGN KEY (unidad_id) REFERENCES unidades (id),
-    CONSTRAINT fk_propuestas_sub_rubro FOREIGN KEY (rubro_id, sub_rubro_id) REFERENCES sub_rubros (rubro_id, id),
-    CONSTRAINT fk_propuestas_tipo FOREIGN KEY (tipo_documento_id) REFERENCES tipos_documento (id),
-    CONSTRAINT fk_propuestas_clase FOREIGN KEY (clase_documento_id) REFERENCES clases_documento (id),
-    CONSTRAINT fk_propuestas_beneficio FOREIGN KEY (beneficio_id) REFERENCES beneficios (id),
-    CONSTRAINT fk_propuestas_plantilla FOREIGN KEY (plantilla_id) REFERENCES plantillas (id),
-    CONSTRAINT fk_propuestas_version_origen FOREIGN KEY (version_origen_id) REFERENCES versiones_plantilla (id),
-    CONSTRAINT fk_propuestas_derivada FOREIGN KEY (derivada_de_propuesta_id) REFERENCES propuestas (id),
-    CONSTRAINT ck_propuestas_operacion CHECK (operacion IN ('Crear', 'Modificar')),
-    CONSTRAINT ck_propuestas_contenido CHECK (jsonb_typeof(contenido_propuesto) = 'object'),
-    CONSTRAINT ck_propuestas_modificar CHECK (operacion <> 'Modificar' OR (plantilla_id IS NOT NULL AND version_origen_id IS NOT NULL)),
-    CONSTRAINT ck_propuestas_retiro CHECK (NOT retirada OR (motivo_retiro IS NOT NULL AND length(motivo_retiro) >= 5))
+    CONSTRAINT pk_plantilla_doc PRIMARY KEY (id),
+    CONSTRAINT fk_plantilla_doc_consolidado FOREIGN KEY (consolidado_id) REFERENCES plantillas_doc_cab (id),
+    CONSTRAINT fk_plantilla_doc_unidad FOREIGN KEY (unidad_id) REFERENCES unidades (id),
+    CONSTRAINT fk_plantilla_doc_sub_rubro FOREIGN KEY (rubro_id, sub_rubro_id) REFERENCES sub_rubros (rubro_id, id),
+    CONSTRAINT fk_plantilla_doc_tipo FOREIGN KEY (tipo_documento_id) REFERENCES tipos_documento (id),
+    CONSTRAINT fk_plantilla_doc_clase FOREIGN KEY (clase_documento_id) REFERENCES clases_documento (id),
+    CONSTRAINT fk_plantilla_doc_beneficio FOREIGN KEY (beneficio_id) REFERENCES beneficios (id),
+    CONSTRAINT fk_plantilla_doc_plantilla FOREIGN KEY (plantilla_id) REFERENCES plantillas (id),
+    CONSTRAINT fk_plantilla_doc_version_origen FOREIGN KEY (version_origen_id) REFERENCES plantillas_consolidado (id),
+    CONSTRAINT fk_plantilla_doc_derivada FOREIGN KEY (derivada_de_propuesta_id) REFERENCES plantilla_doc (id),
+    CONSTRAINT ck_plantilla_doc_operacion CHECK (operacion IN ('Crear', 'Modificar')),
+    CONSTRAINT ck_plantilla_doc_contenido CHECK (jsonb_typeof(contenido_propuesto) = 'object'),
+    CONSTRAINT ck_plantilla_doc_modificar CHECK (operacion <> 'Modificar' OR (plantilla_id IS NOT NULL AND version_origen_id IS NOT NULL)),
+    CONSTRAINT ck_plantilla_doc_retiro CHECK (NOT retirada OR (motivo_retiro IS NOT NULL AND length(motivo_retiro) >= 5))
 );
 
-CREATE INDEX ix_propuestas_consolidado ON propuestas (consolidado_id);
-CREATE INDEX ix_propuestas_plantilla ON propuestas (plantilla_id) WHERE plantilla_id IS NOT NULL;
+CREATE INDEX ix_plantilla_doc_consolidado ON plantilla_doc (consolidado_id);
+CREATE INDEX ix_plantilla_doc_plantilla ON plantilla_doc (plantilla_id) WHERE plantilla_id IS NOT NULL;
 
-ALTER TABLE versiones_plantilla
-    ADD CONSTRAINT fk_versiones_plantilla_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id);
+ALTER TABLE plantillas_consolidado
+    ADD CONSTRAINT fk_plantillas_consolidado_consolidado FOREIGN KEY (consolidado_id) REFERENCES plantillas_doc_cab (id);
 
 -- D4: una plantilla (por su identidad funcional) solo puede estar en un documento abierto. La aplicación inserta la
 -- fila al agregar la propuesta y la borra al retirarla o al aprobar el documento.
@@ -354,8 +354,8 @@ CREATE TABLE bloqueos_plantilla (
     propuesta_id        varchar(40)     NOT NULL,
     fecha               timestamptz     NOT NULL,
     CONSTRAINT pk_bloqueos_plantilla PRIMARY KEY (propuesta_id),
-    CONSTRAINT fk_bloqueos_plantilla_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
-    CONSTRAINT fk_bloqueos_plantilla_propuesta FOREIGN KEY (propuesta_id) REFERENCES propuestas (id)
+    CONSTRAINT fk_bloqueos_plantilla_consolidado FOREIGN KEY (consolidado_id) REFERENCES plantillas_doc_cab (id),
+    CONSTRAINT fk_bloqueos_plantilla_propuesta FOREIGN KEY (propuesta_id) REFERENCES plantilla_doc (id)
 );
 CREATE UNIQUE INDEX uq_bloqueos_plantilla_identidad ON bloqueos_plantilla
     (unidad_id, rubro_id, sub_rubro_id, COALESCE(tipo_documento_id, ''), COALESCE(clase_documento_id, ''), COALESCE(beneficio_id, ''));
@@ -372,7 +372,7 @@ CREATE TABLE presentaciones (
     propuestas          jsonb           NOT NULL,       -- arreglo de las propuestas tal como se enviaron
     version             integer         NOT NULL DEFAULT 1,
     CONSTRAINT pk_presentaciones PRIMARY KEY (id),
-    CONSTRAINT fk_presentaciones_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
+    CONSTRAINT fk_presentaciones_consolidado FOREIGN KEY (consolidado_id) REFERENCES plantillas_doc_cab (id),
     CONSTRAINT fk_presentaciones_usuario FOREIGN KEY (usuario) REFERENCES usuarios (id),
     CONSTRAINT uq_presentaciones_numero UNIQUE (consolidado_id, numero),
     CONSTRAINT ck_presentaciones_numero CHECK (numero >= 1),
@@ -406,7 +406,7 @@ CREATE TABLE observaciones (
     recomendacion       varchar(2000),
     CONSTRAINT pk_observaciones PRIMARY KEY (id),
     CONSTRAINT fk_observaciones_devolucion FOREIGN KEY (devolucion_id) REFERENCES devoluciones (id),
-    CONSTRAINT fk_observaciones_propuesta FOREIGN KEY (propuesta_id) REFERENCES propuestas (id),
+    CONSTRAINT fk_observaciones_propuesta FOREIGN KEY (propuesta_id) REFERENCES plantilla_doc (id),
     CONSTRAINT uq_observaciones_orden UNIQUE (devolucion_id, orden)
 );
 
@@ -425,7 +425,7 @@ CREATE TABLE movimientos (
     detalle             varchar(1000)   NOT NULL,
     version             integer         NOT NULL DEFAULT 1,
     CONSTRAINT pk_movimientos PRIMARY KEY (id),
-    CONSTRAINT fk_movimientos_consolidado FOREIGN KEY (consolidado_id) REFERENCES consolidados (id),
+    CONSTRAINT fk_movimientos_consolidado FOREIGN KEY (consolidado_id) REFERENCES plantillas_doc_cab (id),
     CONSTRAINT ck_movimientos_tipo CHECK (tipo IN ('Creacion', 'PropuestaAgregada', 'PropuestaModificada', 'PropuestaRetirada',
         'EnvioVerificacion', 'Devolucion', 'Aprobacion', 'Publicacion', 'CambioVigencia', 'ErrorPublicacion', 'Reasignacion', 'Eliminacion')),
     CONSTRAINT ck_movimientos_estado_origen CHECK (estado_origen IS NULL OR estado_origen IN ('EnRegistro', 'Verificado', 'Aprobado', 'Eliminado')),
@@ -519,7 +519,7 @@ CREATE TRIGGER tr_solo_insercion BEFORE UPDATE OR DELETE ON devoluciones FOR EAC
 CREATE TRIGGER tr_solo_insercion BEFORE UPDATE OR DELETE ON observaciones FOR EACH ROW EXECUTE FUNCTION fn_solo_insercion();
 
 -- Una versión publicada no se elimina, y de ella solo cambian la vigencia, el fin de vigencia y la versión de registro.
-CREATE OR REPLACE FUNCTION fn_versiones_plantilla_inmutable() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION fn_plantillas_consolidado_inmutable() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
     IF TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'Las versiones publicadas no se eliminan.' USING ERRCODE = 'P0015';
@@ -541,11 +541,11 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER tr_versiones_plantilla_inmutable BEFORE UPDATE OR DELETE ON versiones_plantilla
-    FOR EACH ROW EXECUTE FUNCTION fn_versiones_plantilla_inmutable();
+CREATE TRIGGER tr_plantillas_consolidado_inmutable BEFORE UPDATE OR DELETE ON plantillas_consolidado
+    FOR EACH ROW EXECUTE FUNCTION fn_plantillas_consolidado_inmutable();
 
 -- Un documento aprobado no cambia de estado ni se elimina; un documento solo se elimina si nunca se envió.
-CREATE OR REPLACE FUNCTION fn_consolidados_aprobado() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION fn_plantillas_doc_cab_aprobado() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
     IF OLD.estado = 'Aprobado' AND (TG_OP = 'DELETE' OR NEW.estado <> 'Aprobado') THEN
         RAISE EXCEPTION 'Un Documento Consolidado aprobado no cambia de estado ni se elimina.' USING ERRCODE = 'P0017';
@@ -560,8 +560,8 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER tr_consolidados_aprobado BEFORE UPDATE OR DELETE ON consolidados
-    FOR EACH ROW EXECUTE FUNCTION fn_consolidados_aprobado();
+CREATE TRIGGER tr_plantillas_doc_cab_aprobado BEFORE UPDATE OR DELETE ON plantillas_doc_cab
+    FOR EACH ROW EXECUTE FUNCTION fn_plantillas_doc_cab_aprobado();
 
 /* ---------------------------------------------------------------------------------------------------------------------
    9. Permisos del usuario de la aplicación (ajustar el nombre del usuario o rol institucional)
@@ -578,7 +578,7 @@ GRANT USAGE ON SCHEMA plantillas TO rol_editor_plantillas;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA plantillas TO rol_editor_plantillas;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA plantillas TO rol_editor_plantillas;
 REVOKE UPDATE, DELETE ON historial, movimientos, presentaciones, devoluciones, observaciones FROM rol_editor_plantillas;
-REVOKE DELETE ON versiones_plantilla FROM rol_editor_plantillas;
+REVOKE DELETE ON plantillas_consolidado FROM rol_editor_plantillas;
 -- GRANT rol_editor_plantillas TO usuario_de_la_aplicacion;
 
 COMMIT;

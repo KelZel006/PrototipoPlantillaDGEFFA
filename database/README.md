@@ -6,8 +6,8 @@ del motor (decisión D12) sigue pendiente.
 
 | Motor | Script | Convención de nombres |
 |---|---|---|
-| SQL Server 2019 | [sqlserver/01-esquema.sql](sqlserver/01-esquema.sql) | `plantillas.VersionesPlantilla.NumeroVersion` |
-| PostgreSQL | [postgresql/01-esquema.sql](postgresql/01-esquema.sql) | `plantillas.versiones_plantilla.numero_version` |
+| SQL Server 2019 | [sqlserver/01-esquema.sql](sqlserver/01-esquema.sql) | `plantillas.PlantillasConsolidado.NumeroVersion` |
+| PostgreSQL | [postgresql/01-esquema.sql](postgresql/01-esquema.sql) | `plantillas.plantillas_consolidado.numero_version` |
 
 ## Cómo ejecutarlos
 
@@ -97,10 +97,10 @@ datos, las 312 respuestas de lectura de la API fueron idénticas leyendo de SQL 
 | | `campos` (con sus contextos) | `Campos`, `CampoContextos` | `campos`, `campo_contextos` |
 | Archivos | `archivos` y la carpeta `archivos/` | `Archivos` | `archivos` |
 | Plantillas | `plantillas` (identidad) | `Plantillas` | `plantillas` |
-| | `versionesPlantilla` | `VersionesPlantilla` | `versiones_plantilla` |
+| | `versionesPlantilla` | `PlantillasConsolidado` | `plantillas_consolidado` |
 | Documento Consolidado | número PLAN | `SecuenciasPlan` | `secuencias_plan` |
-| | `consolidados` | `Consolidados` | `consolidados` |
-| | `propuestas` | `Propuestas` | `propuestas` |
+| | `consolidados` | `PlantillasDocCab` | `plantillas_doc_cab` |
+| | `propuestas` | `PlantillaDoc` | `plantilla_doc` |
 | | (D4, nueva) | `BloqueosPlantilla` | `bloqueos_plantilla` |
 | | `presentaciones` | `Presentaciones` | `presentaciones` |
 | | `devoluciones` (con sus observaciones) | `Devoluciones`, `Observaciones` | `devoluciones`, `observaciones` |
@@ -134,7 +134,7 @@ datos, las 312 respuestas de lectura de la API fueron idénticas leyendo de SQL 
 | Separación de funciones | `CHECK`: quien aprueba no es quien preparó ni quien envió |
 | Lo publicado no cambia (regla 15) | Trigger: de una versión solo cambian la vigencia (de VIGENTE a NO VIGENTE), el fin de vigencia y `Version`; no se elimina |
 | Auditoría de solo inserción | Triggers y permisos: `Historial`, `Movimientos`, `Presentaciones`, `Devoluciones` y `Observaciones` no se modifican ni se eliminan |
-| Un aprobado no vuelve atrás | Trigger en `Consolidados` |
+| Un aprobado no vuelve atrás | Trigger en `PlantillasDocCab` |
 
 Las validaciones del dominio se mantienen: dan los mensajes en español, y el motor queda como última barrera.
 

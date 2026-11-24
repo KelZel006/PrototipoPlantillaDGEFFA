@@ -18,8 +18,8 @@ const TABLAS = {
   BloquesDocumentales: 'SEFH_BLOQUES_DOCUMENTALES', BloqueReemplazos: 'SEFH_BLOQUE_REEMPLAZOS',
   TiposDocumento: 'SEFH_TIPOS_DOCUMENTO', TipoDocumentoBloques: 'SEFH_TIPO_DOCUMENTO_BLOQUES', Campos: 'SEFH_CAMPOS',
   CampoContextos: 'SEFH_CAMPO_CONTEXTOS', Archivos: 'SEFH_ARCHIVOS', Plantillas: 'SEFH_PLANTILLAS',
-  VersionesPlantilla: 'SEFH_PLANTILLAS_CONSOLIDADO', SecuenciasPlan: 'SEFH_SECUENCIAS_PLAN', Consolidados: 'SEFH_PLANTILLAS_DOC_CAB',
-  Propuestas: 'SEFH_PLANTILLA_DOC', BloqueosPlantilla: 'SEFH_BLOQUEOS_PLANTILLA', Presentaciones: 'SEFH_PRESENTACIONES',
+  PlantillasConsolidado: 'SEFH_PLANTILLAS_CONSOLIDADO', SecuenciasPlan: 'SEFH_SECUENCIAS_PLAN', PlantillasDocCab: 'SEFH_PLANTILLAS_DOC_CAB',
+  PlantillaDoc: 'SEFH_PLANTILLA_DOC', BloqueosPlantilla: 'SEFH_BLOQUEOS_PLANTILLA', Presentaciones: 'SEFH_PRESENTACIONES',
   Devoluciones: 'SEFH_DEVOLUCIONES', Observaciones: 'SEFH_OBSERVACIONES', Movimientos: 'SEFH_MOVIMIENTOS',
   Historial: 'SEFH_HISTORIAL', Solicitudes: 'SEFH_SOLICITUDES', DetallesBienes: 'SEFH_DETALLES_BIENES',
 };
@@ -113,7 +113,7 @@ function generarEsquema() {
     Nuevo               nvarchar(max)   NULL,           -- JSON del estado nuevo
     Version             int             NOT NULL CONSTRAINT DF_Historial_Version DEFAULT (1),
 `);
-  sql = reemplazar(sql, `CREATE TABLE plantillas.VersionesPlantilla (`, `-- Párrafos anteriores a las versiones publicadas: la aplicación los usa para la carga inicial de cada plantilla.
+  sql = reemplazar(sql, `CREATE TABLE plantillas.PlantillasConsolidado (`, `-- Párrafos anteriores a las versiones publicadas: la aplicación los usa para la carga inicial de cada plantilla.
 CREATE TABLE plantillas.Parrafos (
     Id                  varchar(40)     NOT NULL,
     PlantillaId         varchar(40)     NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE plantillas.Parrafos (
 
 CREATE INDEX IX_Parrafos_Plantilla ON plantillas.Parrafos (PlantillaId, Seccion, Orden);
 
-CREATE TABLE plantillas.VersionesPlantilla (`);
+CREATE TABLE plantillas.PlantillasConsolidado (`);
 
   // Nombres: tablas SEFH_* en dbo; restricciones, índices y triggers con el mismo prefijo.
   const tablas = { ...TABLAS, Parrafos: 'SEFH_PARRAFOS' };
@@ -151,10 +151,6 @@ CREATE TABLE plantillas.VersionesPlantilla (`);
     return `dbo.${tabla.replace(/^TR_/, 'TR_SEFH_')}`;
   });
   sql = sql.replace(/\b(PK|FK|UQ|CK|DF|IX|UX|TR)_(?!SEFH_)/g, '$1_SEFH_');
-  // Tablas renombradas: sus restricciones, índices y triggers siguen el nombre nuevo de la tabla.
-  sql = sql.replace(/_SEFH_Propuestas(?![A-Za-z])/g, '_SEFH_PlantillaDoc');
-  sql = sql.replace(/_SEFH_Consolidados(?![A-Za-z])/g, '_SEFH_PlantillasDocCab');
-  sql = sql.replace(/_SEFH_VersionesPlantilla(?![A-Za-z])/g, '_SEFH_PlantillasConsolidado');
 
   // OrdenRegistro: la aplicación lista los registros en el orden en que se agregaron, como en los archivos JSON.
   // SEFH_OBSERVACIONES no la lleva: ya tiene su columna Orden (y SQL Server admite una sola columna IDENTITY por tabla).
