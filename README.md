@@ -3,8 +3,8 @@
 Editor dinámico de resoluciones administrativas: Cabecera, Considerando y Resuelve, con campos dinámicos,
 condiciones de visualización y tablas configurables.
 
-> **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en archivos JSON. Todavía no hay base
-> de datos. Los documentos que genere este prototipo no son resoluciones oficiales.
+> **Prototipo con datos de prueba.** Todos los datos son ficticios y se guardan en la base SQL Server
+> `PlantillasDGEFFA` (tablas `SEFH_`). Los documentos que genere este prototipo no son resoluciones oficiales.
 
 **Estado actual: Fase 3g (cuatro listas: Rubro, Sub Rubro, Tipo Documento y Documento; cinco secciones: Cabecera, Considerando numerado, Por Tanto, Resuelve con PRIMERO, SEGUNDO… y Firmas).** Detalle en
 [docs/FASE3C.md](docs/FASE3C.md), [docs/FASE3B.md](docs/FASE3B.md),
@@ -29,7 +29,7 @@ verificación, revisión jurídica y devoluciones) en [docs/CONSOLIDADO-FASE5.md
 |---|---|
 | Backend | C# · ASP.NET Core 10 (LTS) (API REST con controladores) |
 | Frontend | Angular 22 (componentes standalone, signals, sin zone.js) · TypeScript · CSS |
-| Datos | Archivos JSON (almacenamiento simulado) |
+| Datos | SQL Server 2019 o superior (tablas `SEFH_`); archivos JSON solo para las pruebas automáticas |
 | Pruebas | xUnit (backend) · Vitest (frontend) |
 | Entorno | Visual Studio Code (también abre en Visual Studio 2022/2026) |
 
@@ -43,7 +43,7 @@ PrototipoPlantillaDGEFFA/
 │   │   ├── DatosSemilla/                  Datos de prueba iniciales (versionados)
 │   │   └── Data/                          Datos en ejecución (se crea solo; no se versiona)
 │   ├── EditorResoluciones.Dominio/        Modelos, interfaz IRepositorio<T>, validaciones y servicios
-│   ├── EditorResoluciones.Infraestructura/ Almacenamiento JSON (AlmacenJson, RepositorioJson<T>)
+│   ├── EditorResoluciones.Infraestructura/ Almacenamiento SQL Server (Sql/) y JSON para las pruebas (Json/)
 │   └── tests/EditorResoluciones.Pruebas/  Pruebas unitarias y de integración
 ├── frontend/                              Aplicación Angular
 │   └── src/app/
@@ -56,16 +56,29 @@ PrototipoPlantillaDGEFFA/
 
 - SDK de .NET 10 (`dotnet --list-sdks`)
 - Node.js 22.22+ o 24.15+ y npm (`node -v`)
+- SQL Server 2019 o superior, con acceso por autenticación de Windows
 - Visual Studio Code con las extensiones recomendadas (C# Dev Kit y Angular Language Service)
 
 ## Ejecutar
 
 Primera vez:
 
-```bash
-cd frontend
-npm install
-```
+1. Cree la base y cargue las tablas y los datos (en SSMS o con `sqlcmd`):
+   ```sql
+   CREATE DATABASE PlantillasDGEFFA COLLATE Modern_Spanish_CI_AI;
+   ```
+   ```bash
+   sqlcmd -S localhost -E -C -b -f 65001 -d PlantillasDGEFFA -i database/sqlserver-sefh/01-SEFH-esquema.sql
+   sqlcmd -S localhost -E -C -b -f 65001 -d PlantillasDGEFFA -i database/sqlserver-sefh/02-SEFH-datos.sql
+   ```
+2. Instale las dependencias del frontend:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+La conexión está en `backend/EditorResoluciones.Api/appsettings.json`, sección `Almacenamiento`
+(`Server=localhost;Database=PlantillasDGEFFA;Integrated Security=True`). Cámbiela si su servidor o base tienen otro nombre.
 
 En dos terminales:
 
@@ -82,18 +95,19 @@ Abra <http://localhost:4200>. Angular envía `/api` a la API en `http://localhos
 
 En VS Code: **Terminal → Ejecutar tarea → Iniciar todo**, o en **Ejecutar y depurar** elija **API + Frontend**.
 
-### Datos de prueba
+### Datos
 
-- Al iniciar, la API copia cada archivo de `DatosSemilla/` a `Data/` si todavía no existe ahí. Los cambios se guardan
-  en `Data/` y se conservan al reiniciar.
-- **Para volver a los datos iniciales**, detenga la API y borre la carpeta `backend/EditorResoluciones.Api/Data`.
-- Para que los datos actuales pasen a ser los iniciales, copie los `*.json` de `Data/` (sin los `.bak`) a
-  `DatosSemilla/` y súbalos al repositorio.
-- Las pruebas automáticas no usan `DatosSemilla/`: tienen su propia copia fija en
-  `backend/tests/EditorResoluciones.Pruebas/DatosPrueba/`. Así, cambiar los datos iniciales no las rompe.
-- Cada escritura deja la versión anterior del archivo como `*.json.bak`.
-- Si un archivo está dañado, la API no lo sobrescribe. Guarda una copia en `Data/cuarentena/` y responde con un error
-  claro (503). Para recuperarlo, restaure el `.bak` o borre el archivo.
+- La API lee y escribe en las tablas `SEFH_` de la base `PlantillasDGEFFA`. Los logos se guardan en `SEFH_ARCHIVOS`.
+- Cada operación que cambia varias tablas es una transacción del motor: se guarda todo o nada. Una escritura con una
+  versión desactualizada responde 409.
+- `SEFH_BLOQUEOS_PLANTILLA` y `SEFH_SECUENCIAS_PLAN` se recalculan solas cada vez que cambian los documentos.
+- `OrdenRegistro` conserva el orden en que se agregó cada registro; la aplicación lista en ese orden.
+- Cada tabla lleva la auditoría `ESTADO` (`ACTIVO`/`INACTIVO`), `USU_CRE`, `FEC_CRE`, `USU_MOD` y `FEC_MOD`: la API guarda el
+  usuario que crea o modifica cada registro. La llave primaria de cada tabla se llama `ID_<siglas>_SEQ` (`ID_PLA_SEQ`…).
+- **Para volver a los datos iniciales**, borre la base, créela otra vez y ejecute los dos scripts.
+- La carpeta `Data/` y `DatosSemilla/` ya no las usa la aplicación. `generar-sefh.js` todavía toma de `Data/` los datos de
+  `02-SEFH-datos.sql`.
+- Para volver a los archivos JSON, ponga `"Proveedor": "Json"` en la sección `Almacenamiento`.
 
 ### Plantillas generales y específicas
 
@@ -106,6 +120,14 @@ ONGS. Se consulta en `GET /api/plantillas-vigentes/aplicable` y en la pantalla *
 
 ```bash
 dotnet test EditorResoluciones.sln
+```
+
+Las pruebas usan su propia copia de datos en archivos JSON (`backend/tests/EditorResoluciones.Pruebas/DatosPrueba/`) y
+no necesitan SQL Server. Las del almacenamiento en SQL Server (`AlmacenSqlServerPruebas`) solo se ejecutan si existe la
+variable `PRUEBAS_SQLSERVER` con la conexión al servidor; cada una crea una base temporal y la borra:
+
+```bash
+PRUEBAS_SQLSERVER="Server=localhost;Integrated Security=True;TrustServerCertificate=True" dotnet test EditorResoluciones.sln
 ```
 ```bash
 cd frontend

@@ -117,6 +117,8 @@ internal static class GeneradorIds
 /// <summary>Verifica que cada colección registrada se pueda leer.</summary>
 public sealed class DiagnosticoAlmacenamientoJson(AlmacenJson almacen) : IDiagnosticoAlmacenamiento
 {
+    public string Descripcion => "Archivos JSON (datos de prueba, sin base de datos)";
+
     public async Task<IReadOnlyList<EstadoColeccion>> VerificarAsync(CancellationToken ct = default)
     {
         var estados = new List<EstadoColeccion>();

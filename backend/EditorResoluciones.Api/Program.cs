@@ -2,6 +2,7 @@ using EditorResoluciones.Api.Configuracion;
 using EditorResoluciones.Dominio.Comun;
 using EditorResoluciones.Infraestructura;
 using EditorResoluciones.Infraestructura.Json;
+using EditorResoluciones.Infraestructura.Sql;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,21 @@ builder.Services.PostConfigure<OpcionesAlmacenJson>(opciones =>
         opciones.DirectorioSemilla = Path.GetFullPath(opciones.DirectorioSemilla, raiz);
 });
 
-builder.Services.AgregarAlmacenamientoJson();
+// Almacenamiento: SQL Server (tablas SEFH_) o, para las pruebas automáticas, archivos JSON.
+var proveedor = builder.Configuration["Almacenamiento:Proveedor"] ?? "SqlServer";
+if (proveedor.Equals("Json", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AgregarAlmacenamientoJson();
+}
+else if (proveedor.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.Configure<OpcionesAlmacenSql>(builder.Configuration.GetSection("Almacenamiento"));
+    builder.Services.AgregarAlmacenamientoSqlServer();
+}
+else
+{
+    throw new InvalidOperationException($"Almacenamiento:Proveedor debe ser «SqlServer» o «Json», no «{proveedor}».");
+}
 builder.Services.AgregarDominio();
 
 builder.Services
